@@ -1,6 +1,12 @@
+using Primal.Application;
+using Primal.Infrastructure;
+
 var builder = WebApplication.CreateBuilder(args);
 {
-	builder.Services.AddControllers();
+	builder.Services
+		.AddApplication()
+		.AddInfrastructure()
+		.AddPresentation();
 }
 
 var app = builder.Build();

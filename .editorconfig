@@ -11,6 +11,18 @@ charset = utf-8
 trim_trailing_whitespace = true
 insert_final_newline = true
 
+# MA0004: Use Task.ConfigureAwait(false)
+dotnet_diagnostic.MA0004.severity = none
+
+# MA0053: Make class sealed
+dotnet_diagnostic.MA0053.severity = error
+
+# Report public classes without inheritors (default: false)
+MA0053.public_class_should_be_sealed = true
+
+# Report class without inheritors even if there is virtual members (default: false)
+MA0053.class_with_virtual_member_shoud_be_sealed = true
+
 # SA0001: XML comment analysis is disabled due to project configuration
 dotnet_diagnostic.SA0001.severity = none
 
