@@ -2,8 +2,8 @@ using ErrorOr;
 using MapsterMapper;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Primal.Application.Authentication;
 using Primal.Application.Authentication.Commands;
-using Primal.Application.Authentication.Common;
 using Primal.Application.Authentication.Queries;
 using Primal.Contracts.Authentication;
 
