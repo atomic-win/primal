@@ -1,5 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
-using Primal.Application.Authentication;
+using Primal.Application.Common.Interfaces.Authentication;
 using Primal.Infrastructure.Authentication;
 
 namespace Primal.Infrastructure;

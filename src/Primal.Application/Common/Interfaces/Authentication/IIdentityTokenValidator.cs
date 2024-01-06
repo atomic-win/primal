@@ -1,7 +1,7 @@
 using ErrorOr;
 using Primal.Domain.Users;
 
-namespace Primal.Application.Authentication;
+namespace Primal.Application.Common.Interfaces.Authentication;
 
 public interface IIdentityTokenValidator
 {

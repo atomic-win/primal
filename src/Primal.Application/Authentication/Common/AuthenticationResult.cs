@@ -1,3 +1,3 @@
-namespace Primal.Application.Authentication;
+namespace Primal.Application.Authentication.Common;
 
 public sealed record AuthenticationResult(string AccessToken);

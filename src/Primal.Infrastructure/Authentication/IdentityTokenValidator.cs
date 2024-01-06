@@ -1,6 +1,6 @@
 using ErrorOr;
 using Google.Apis.Auth;
-using Primal.Application.Authentication;
+using Primal.Application.Common.Interfaces.Authentication;
 using Primal.Domain.Users;
 
 namespace Primal.Infrastructure.Authentication;

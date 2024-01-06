@@ -1,5 +1,6 @@
 using ErrorOr;
 using MediatR;
+using Primal.Application.Authentication.Common;
 
 namespace Primal.Application.Authentication.Commands;
 
