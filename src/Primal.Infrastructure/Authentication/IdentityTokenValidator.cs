@@ -5,9 +5,9 @@ using Primal.Domain.Users;
 
 namespace Primal.Infrastructure.Authentication;
 
-internal sealed class IdentityProvider : IIdentityProvider
+internal sealed class IdentityTokenValidator : IIdentityTokenValidator
 {
-	public async Task<ErrorOr<IdentityUser>> Get(string idToken)
+	public async Task<ErrorOr<IdentityUser>> Validate(string idToken)
 	{
 		GoogleJsonWebSignature.Payload payload = await GoogleJsonWebSignature.ValidateAsync(idToken);
 

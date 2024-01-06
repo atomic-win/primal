@@ -8,7 +8,7 @@ public static class DependencyInjection
 {
 	public static IServiceCollection AddInfrastructure(this IServiceCollection services)
 	{
-		services.AddSingleton<IIdentityProvider, IdentityProvider>();
+		services.AddSingleton<IIdentityTokenValidator, IdentityTokenValidator>();
 		return services;
 	}
 }

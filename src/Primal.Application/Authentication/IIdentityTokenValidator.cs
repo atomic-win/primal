@@ -3,7 +3,7 @@ using Primal.Domain.Users;
 
 namespace Primal.Application.Authentication;
 
-public interface IIdentityProvider
+public interface IIdentityTokenValidator
 {
-	Task<ErrorOr<IdentityUser>> Get(string idToken);
+	Task<ErrorOr<IdentityUser>> Validate(string idToken);
 }

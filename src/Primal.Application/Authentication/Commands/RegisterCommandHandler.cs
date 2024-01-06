@@ -6,16 +6,16 @@ namespace Primal.Application.Authentication.Commands;
 
 internal sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, ErrorOr<AuthenticationResult>>
 {
-	private readonly IIdentityProvider identityProvider;
+	private readonly IIdentityTokenValidator identityTokenValidator;
 
-	public RegisterCommandHandler(IIdentityProvider identityProvider)
+	public RegisterCommandHandler(IIdentityTokenValidator identityTokenValidator)
 	{
-		this.identityProvider = identityProvider;
+		this.identityTokenValidator = identityTokenValidator;
 	}
 
 	public async Task<ErrorOr<AuthenticationResult>> Handle(RegisterCommand request, CancellationToken cancellationToken)
 	{
-		ErrorOr<IdentityUser> identityUser = await this.identityProvider.Get(request.IdToken);
+		ErrorOr<IdentityUser> identityUser = await this.identityTokenValidator.Validate(request.IdToken);
 		return new AuthenticationResult(request.IdToken);
 	}
 }
