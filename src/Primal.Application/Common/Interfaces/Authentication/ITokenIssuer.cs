@@ -3,7 +3,7 @@ using Primal.Domain.Users;
 
 namespace Primal.Application.Common.Interfaces.Authentication;
 
-public interface IIdentityTokenValidator
+public interface ITokenIssuer
 {
-	Task<ErrorOr<IdentityProviderUser>> Validate(string idToken);
+	Task<ErrorOr<string>> IssueToken(User user, CancellationToken cancellationToken);
 }

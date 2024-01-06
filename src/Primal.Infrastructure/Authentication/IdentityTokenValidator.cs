@@ -7,10 +7,10 @@ namespace Primal.Infrastructure.Authentication;
 
 internal sealed class IdentityTokenValidator : IIdentityTokenValidator
 {
-	public async Task<ErrorOr<IdentityUser>> Validate(string idToken)
+	public async Task<ErrorOr<IdentityProviderUser>> Validate(string idToken)
 	{
 		GoogleJsonWebSignature.Payload payload = await GoogleJsonWebSignature.ValidateAsync(idToken);
 
-		return new IdentityUser(new IdentityUserId(payload.Subject), payload.Email);
+		return new IdentityProviderUser(new IdentityProviderUserId(payload.Subject), IdentityProvider.Google, payload.Email);
 	}
 }

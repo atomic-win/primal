@@ -35,6 +35,9 @@ dotnet_diagnostic.SA1600.severity = none
 # SA1601: Partial elements must be documented.
 dotnet_diagnostic.SA1601.severity = none
 
+# SA1602: Enumeration items must be documented.
+dotnet_diagnostic.SA1602.severity = none
+
 # SA1633: File must have header.
 dotnet_diagnostic.SA1633.severity = none
 
