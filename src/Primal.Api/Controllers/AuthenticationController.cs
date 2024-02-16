@@ -10,8 +10,7 @@ using Primal.Contracts.Authentication;
 namespace Primal.Api.Controllers;
 
 [ApiController]
-[Route("api/[controller]/[action]")]
-public sealed class AuthenticationController : ControllerBase
+public sealed class AuthenticationController : ApiController
 {
 	private readonly ISender mediator;
 	private readonly IMapper mapper;
@@ -31,7 +30,7 @@ public sealed class AuthenticationController : ControllerBase
 
 		return authResult.Match(
 			authenticationResult => this.Ok(this.mapper.Map<AuthenticationResponse>(authenticationResult)),
-			error => this.Ok(error));
+			errors => this.Problem(errors));
 	}
 
 	[HttpGet]
@@ -43,6 +42,6 @@ public sealed class AuthenticationController : ControllerBase
 
 		return authResult.Match(
 			authenticationResult => this.Ok(this.mapper.Map<AuthenticationResponse>(authenticationResult)),
-			error => this.Ok(error));
+			errors => this.Problem(errors));
 	}
 }
