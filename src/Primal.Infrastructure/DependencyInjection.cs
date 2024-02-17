@@ -1,7 +1,10 @@
+using System.Text;
 using Azure.Data.Tables;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using Primal.Application.Common.Interfaces.Authentication;
 using Primal.Application.Common.Interfaces.Persistence;
 using Primal.Infrastructure.Authentication;
@@ -15,22 +18,19 @@ public static class DependencyInjection
 	{
 		return services
 			.AddSingleton<TimeProvider>(TimeProvider.System)
-			.AddConfiguration(configuration)
-			.AddAuthentication()
-			.AddPersistence();
+			.AddAuthentication(configuration)
+			.AddPersistence(configuration);
 	}
 
-	private static IServiceCollection AddConfiguration(this IServiceCollection services, ConfigurationManager configuration)
+	private static IServiceCollection AddAuthentication(this IServiceCollection services, ConfigurationManager configuration)
 	{
-		services.Configure<TokenIssuerSettings>(configuration.GetSection(TokenIssuerSettings.SectionName));
-		services.Configure<AzureStorageSettings>(configuration.GetSection(AzureStorageSettings.SectionName));
+		var tokenIssuerSettings = new TokenIssuerSettings();
+		configuration.GetSection(TokenIssuerSettings.SectionName).Bind(tokenIssuerSettings);
 
-		return services;
-	}
+		services.AddSingleton(Options.Create(tokenIssuerSettings));
 
-	private static IServiceCollection AddAuthentication(this IServiceCollection services)
-	{
-		services.AddSingleton<IIdentityTokenValidator, IdentityTokenValidator>();
+		services.AddSingleton<IIdTokenValidator, IdTokenValidator>();
+
 		services.AddSingleton<ITokenIssuer>(serviceProvider =>
 		{
 			return new TokenIssuer(
@@ -38,11 +38,31 @@ public static class DependencyInjection
 				timeProvider: serviceProvider.GetRequiredService<TimeProvider>());
 		});
 
+		services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+			.AddJwtBearer(options =>
+			{
+				options.RequireHttpsMetadata = false;
+				options.SaveToken = true;
+
+				options.TokenValidationParameters = new TokenValidationParameters
+				{
+					ValidateIssuer = true,
+					ValidateAudience = true,
+					ValidateLifetime = true,
+					ValidateIssuerSigningKey = true,
+					ValidIssuer = tokenIssuerSettings.Issuer,
+					ValidAudience = tokenIssuerSettings.Audience,
+					IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(tokenIssuerSettings.SecretKey)),
+				};
+			});
+
 		return services;
 	}
 
-	private static IServiceCollection AddPersistence(this IServiceCollection services)
+	private static IServiceCollection AddPersistence(this IServiceCollection services, ConfigurationManager configuration)
 	{
+		services.Configure<AzureStorageSettings>(configuration.GetSection(AzureStorageSettings.SectionName));
+
 		services.AddSingleton<TableServiceClient>(serviceProvider =>
 		{
 			var azureStorageSettings = serviceProvider.GetRequiredService<IOptions<AzureStorageSettings>>().Value;

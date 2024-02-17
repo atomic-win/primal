@@ -1,6 +1,7 @@
 using ErrorOr;
 using MapsterMapper;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Primal.Application.Authentication.Commands;
 using Primal.Application.Authentication.Common;
@@ -9,7 +10,7 @@ using Primal.Contracts.Authentication;
 
 namespace Primal.Api.Controllers;
 
-[ApiController]
+[AllowAnonymous]
 public sealed class AuthenticationController : ApiController
 {
 	private readonly ISender mediator;

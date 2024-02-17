@@ -1,10 +1,12 @@
 using ErrorOr;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace Primal.Api.Controllers;
 
 [ApiController]
+[Authorize]
 [Route("api/[controller]/[action]")]
 public abstract class ApiController : ControllerBase
 {
@@ -30,7 +32,7 @@ public abstract class ApiController : ControllerBase
 			ErrorType.Conflict => StatusCodes.Status409Conflict,
 			ErrorType.Validation => StatusCodes.Status400BadRequest,
 			ErrorType.NotFound => StatusCodes.Status404NotFound,
-			ErrorType.Unauthorized => StatusCodes.Status403Forbidden,
+			ErrorType.Unauthorized => StatusCodes.Status401Unauthorized,
 			_ => StatusCodes.Status500InternalServerError,
 		};
 

@@ -9,12 +9,12 @@ namespace Primal.Application.Authentication.Queries;
 
 internal sealed class LoginQueryHandler : IRequestHandler<LoginQuery, ErrorOr<AuthenticationResult>>
 {
-	private readonly IIdentityTokenValidator identityTokenValidator;
+	private readonly IIdTokenValidator identityTokenValidator;
 	private readonly IUserIdRepository userIdRepository;
 	private readonly IUserRepository userRepository;
 	private readonly ITokenIssuer tokenIssuer;
 
-	public LoginQueryHandler(IIdentityTokenValidator identityTokenValidator, IUserIdRepository userIdRepository, IUserRepository userRepository, ITokenIssuer tokenIssuer)
+	public LoginQueryHandler(IIdTokenValidator identityTokenValidator, IUserIdRepository userIdRepository, IUserRepository userRepository, ITokenIssuer tokenIssuer)
 	{
 		this.identityTokenValidator = identityTokenValidator;
 		this.userIdRepository = userIdRepository;

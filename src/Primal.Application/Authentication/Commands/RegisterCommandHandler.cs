@@ -9,12 +9,12 @@ namespace Primal.Application.Authentication.Commands;
 
 internal sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, ErrorOr<AuthenticationResult>>
 {
-	private readonly IIdentityTokenValidator identityTokenValidator;
+	private readonly IIdTokenValidator identityTokenValidator;
 	private readonly IUserIdRepository userIdRepository;
 	private readonly IUserRepository userRepository;
 	private readonly ITokenIssuer tokenIssuer;
 
-	public RegisterCommandHandler(IIdentityTokenValidator identityTokenValidator, IUserIdRepository userIdRepository, IUserRepository userRepository, ITokenIssuer tokenIssuer)
+	public RegisterCommandHandler(IIdTokenValidator identityTokenValidator, IUserIdRepository userIdRepository, IUserRepository userRepository, ITokenIssuer tokenIssuer)
 	{
 		this.identityTokenValidator = identityTokenValidator;
 		this.userIdRepository = userIdRepository;
