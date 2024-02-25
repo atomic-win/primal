@@ -11,6 +11,7 @@ using Primal.Contracts.Authentication;
 namespace Primal.Api.Controllers;
 
 [AllowAnonymous]
+[Route("api/[controller]/[action]")]
 public sealed class AuthenticationController : ApiController
 {
 	private readonly ISender mediator;

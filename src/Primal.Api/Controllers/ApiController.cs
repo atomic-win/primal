@@ -7,7 +7,7 @@ namespace Primal.Api.Controllers;
 
 [ApiController]
 [Authorize]
-[Route("api/[controller]/[action]")]
+[Route("api/[controller]")]
 public abstract class ApiController : ControllerBase
 {
 	protected ActionResult Problem(IReadOnlyList<Error> errors)
