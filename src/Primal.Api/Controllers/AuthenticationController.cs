@@ -3,9 +3,7 @@ using MapsterMapper;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Primal.Application.Authentication.Commands;
-using Primal.Application.Authentication.Common;
-using Primal.Application.Authentication.Queries;
+using Primal.Application.Authentication;
 using Primal.Contracts.Authentication;
 
 namespace Primal.Api.Controllers;
@@ -24,26 +22,14 @@ public sealed class AuthenticationController : ApiController
 	}
 
 	[HttpPost]
-	public async Task<ActionResult<AuthenticationResponse>> Register(RegisterRequest request, CancellationToken cancellationToken)
+	public async Task<ActionResult<SignInResponse>> SignIn(SignInRequest request, CancellationToken cancellationToken)
 	{
-		RegisterCommand registerCommand = this.mapper.Map<RegisterCommand>(request);
+		SignInCommand registerCommand = this.mapper.Map<SignInCommand>(request);
 
-		ErrorOr<AuthenticationResult> authResult = await this.mediator.Send(registerCommand, cancellationToken);
+		ErrorOr<Application.Authentication.SignInResult> authResult = await this.mediator.Send(registerCommand, cancellationToken);
 
 		return authResult.Match(
-			authenticationResult => this.Ok(this.mapper.Map<AuthenticationResponse>(authenticationResult)),
-			errors => this.Problem(errors));
-	}
-
-	[HttpGet]
-	public async Task<ActionResult<AuthenticationResponse>> Login(LoginRequest request, CancellationToken cancellationToken)
-	{
-		LoginQuery loginQuery = this.mapper.Map<LoginQuery>(request);
-
-		ErrorOr<AuthenticationResult> authResult = await this.mediator.Send(loginQuery, cancellationToken);
-
-		return authResult.Match(
-			authenticationResult => this.Ok(this.mapper.Map<AuthenticationResponse>(authenticationResult)),
+			authenticationResult => this.Ok(this.mapper.Map<SignInResponse>(authenticationResult)),
 			errors => this.Problem(errors));
 	}
 }

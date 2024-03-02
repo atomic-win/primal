@@ -1,20 +1,19 @@
 using ErrorOr;
 using MediatR;
-using Primal.Application.Authentication.Common;
 using Primal.Application.Common.Interfaces.Authentication;
 using Primal.Application.Common.Interfaces.Persistence;
 using Primal.Domain.Users;
 
-namespace Primal.Application.Authentication.Commands;
+namespace Primal.Application.Authentication;
 
-internal sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, ErrorOr<AuthenticationResult>>
+internal sealed class SignInCommandHandler : IRequestHandler<SignInCommand, ErrorOr<SignInResult>>
 {
 	private readonly IIdTokenValidator identityTokenValidator;
 	private readonly IUserIdRepository userIdRepository;
 	private readonly IUserRepository userRepository;
 	private readonly ITokenIssuer tokenIssuer;
 
-	public RegisterCommandHandler(IIdTokenValidator identityTokenValidator, IUserIdRepository userIdRepository, IUserRepository userRepository, ITokenIssuer tokenIssuer)
+	public SignInCommandHandler(IIdTokenValidator identityTokenValidator, IUserIdRepository userIdRepository, IUserRepository userRepository, ITokenIssuer tokenIssuer)
 	{
 		this.identityTokenValidator = identityTokenValidator;
 		this.userIdRepository = userIdRepository;
@@ -22,16 +21,16 @@ internal sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, 
 		this.tokenIssuer = tokenIssuer;
 	}
 
-	public async Task<ErrorOr<AuthenticationResult>> Handle(RegisterCommand request, CancellationToken cancellationToken)
+	public async Task<ErrorOr<SignInResult>> Handle(SignInCommand request, CancellationToken cancellationToken)
 	{
 		var errorOrIdentityUser = await this.identityTokenValidator.Validate(request.IdToken);
 
 		return await errorOrIdentityUser.MatchAsync(
 			identityProviderUser => this.HandleTokenValidationSuccess(identityProviderUser, cancellationToken),
-			errors => Task.FromResult((ErrorOr<AuthenticationResult>)errors));
+			errors => Task.FromResult((ErrorOr<SignInResult>)errors));
 	}
 
-	private async Task<ErrorOr<AuthenticationResult>> HandleTokenValidationSuccess(IdentityProviderUser identityProviderUser, CancellationToken cancellationToken)
+	private async Task<ErrorOr<SignInResult>> HandleTokenValidationSuccess(IdentityProviderUser identityProviderUser, CancellationToken cancellationToken)
 	{
 		var errorOrUserId = await this.userIdRepository.GetUserId(identityProviderUser, cancellationToken);
 
@@ -45,10 +44,10 @@ internal sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, 
 			return await this.HandleUserIdNotFound(identityProviderUser, cancellationToken);
 		}
 
-		return (ErrorOr<AuthenticationResult>)errorOrUserId.Errors;
+		return (ErrorOr<SignInResult>)errorOrUserId.Errors;
 	}
 
-	private async Task<ErrorOr<AuthenticationResult>> HandleGetUserIdSuccess(UserId userId, IdentityProviderUser identityProviderUser, CancellationToken cancellationToken)
+	private async Task<ErrorOr<SignInResult>> HandleGetUserIdSuccess(UserId userId, IdentityProviderUser identityProviderUser, CancellationToken cancellationToken)
 	{
 		var errorOrUser = await this.userRepository.GetUser(userId, cancellationToken);
 
@@ -62,10 +61,10 @@ internal sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, 
 			return await this.HandleUserNotFound(userId, identityProviderUser, cancellationToken);
 		}
 
-		return (ErrorOr<AuthenticationResult>)errorOrUser.Errors;
+		return (ErrorOr<SignInResult>)errorOrUser.Errors;
 	}
 
-	private async Task<ErrorOr<AuthenticationResult>> HandleUserIdNotFound(IdentityProviderUser identityProviderUser, CancellationToken cancellationToken)
+	private async Task<ErrorOr<SignInResult>> HandleUserIdNotFound(IdentityProviderUser identityProviderUser, CancellationToken cancellationToken)
 	{
 		var userId = UserId.New();
 
@@ -81,19 +80,19 @@ internal sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, 
 			return await this.HandleTokenValidationSuccess(identityProviderUser, cancellationToken);
 		}
 
-		return (ErrorOr<AuthenticationResult>)errorOrAddUserId.Errors;
+		return (ErrorOr<SignInResult>)errorOrAddUserId.Errors;
 	}
 
-	private async Task<ErrorOr<AuthenticationResult>> HandleGetUserSuccess(User user, CancellationToken cancellationToken)
+	private async Task<ErrorOr<SignInResult>> HandleGetUserSuccess(User user, CancellationToken cancellationToken)
 	{
 		var errorOrToken = await this.tokenIssuer.IssueToken(user, cancellationToken);
 
 		return errorOrToken.Match(
-			token => new AuthenticationResult(token),
-			errors => (ErrorOr<AuthenticationResult>)errors);
+			token => new SignInResult(token),
+			errors => (ErrorOr<SignInResult>)errors);
 	}
 
-	private async Task<ErrorOr<AuthenticationResult>> HandleUserNotFound(UserId userId, IdentityProviderUser identityProviderUser, CancellationToken cancellationToken)
+	private async Task<ErrorOr<SignInResult>> HandleUserNotFound(UserId userId, IdentityProviderUser identityProviderUser, CancellationToken cancellationToken)
 	{
 		var user = new User(userId, identityProviderUser.Email);
 
@@ -109,6 +108,6 @@ internal sealed class RegisterCommandHandler : IRequestHandler<RegisterCommand, 
 			return await this.HandleGetUserIdSuccess(userId, identityProviderUser, cancellationToken);
 		}
 
-		return (ErrorOr<AuthenticationResult>)errorOrAddUser.Errors;
+		return (ErrorOr<SignInResult>)errorOrAddUser.Errors;
 	}
 }
