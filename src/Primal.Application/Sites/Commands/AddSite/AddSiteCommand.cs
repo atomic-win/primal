@@ -1,8 +1,7 @@
 using ErrorOr;
 using MediatR;
-using Primal.Application.Sites.Common;
 using Primal.Domain.Users;
 
-namespace Primal.Application.Sites.Commands;
+namespace Primal.Application.Sites;
 
-public sealed record AddSiteCommand(UserId UserId, string Host, int DailyLimitInMinutes) : IRequest<ErrorOr<SiteResult>>;
+public sealed record AddSiteCommand(UserId UserId, string Host, int DailyLimitInMinutes) : IRequest<ErrorOr<AddSiteResult>>;

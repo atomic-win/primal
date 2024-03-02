@@ -1,7 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Primal.Api.Common;
-using Primal.Application.Sites.Commands;
+using Primal.Application.Sites;
 using Primal.Contracts.Sites;
 using Primal.Domain.Users;
 

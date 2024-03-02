@@ -1,6 +1,6 @@
 using FluentValidation;
 
-namespace Primal.Application.Sites.Commands;
+namespace Primal.Application.Sites;
 
 internal sealed class AddSiteCommandValidator : AbstractValidator<AddSiteCommand>
 {
