@@ -69,23 +69,32 @@ public static class DependencyInjection
 			return new TableServiceClient(azureStorageSettings.ConnectionString);
 		});
 
-		services.AddSingleton<TableClient>(serviceProvider =>
+		foreach (string tableName in Constants.TableNames.All)
 		{
-			var tableServiceClient = serviceProvider.GetRequiredService<TableServiceClient>();
-			tableServiceClient.CreateTableIfNotExists("Default");
-			return tableServiceClient.GetTableClient("Default");
-		});
+			services.AddKeyedSingleton<TableClient>(tableName, (serviceProvider, _) =>
+			{
+				var tableServiceClient = serviceProvider.GetRequiredService<TableServiceClient>();
+				tableServiceClient.CreateTableIfNotExists(tableName);
+				return tableServiceClient.GetTableClient(tableName);
+			});
+		}
 
 		services.AddSingleton<IUserIdRepository>(serviceProvider =>
 		{
-			var tableClient = serviceProvider.GetRequiredService<TableClient>();
+			var tableClient = serviceProvider.GetKeyedService<TableClient>(Constants.TableNames.UserIds);
 			return new UserIdRepository(tableClient);
 		});
 
 		services.AddSingleton<IUserRepository>(serviceProvider =>
 		{
-			var tableClient = serviceProvider.GetRequiredService<TableClient>();
+			var tableClient = serviceProvider.GetKeyedService<TableClient>(Constants.TableNames.Users);
 			return new UserRepository(tableClient);
+		});
+
+		services.AddSingleton<ISiteRepository>(serviceProvider =>
+		{
+			var tableClient = serviceProvider.GetKeyedService<TableClient>(Constants.TableNames.Sites);
+			return new SiteRepository(tableClient);
 		});
 
 		return services;

@@ -19,7 +19,6 @@ internal sealed class UserIdRepository : IUserIdRepository
 	{
 		AsyncPageable<UserIdTableEntity> entities = this.tableClient.QueryAsync<UserIdTableEntity>(
 			entity => entity.PartitionKey == identityProviderUser.Id.Value
-				&& entity.RowKey == "IdentityProviderUser"
 				&& entity.IdentityProvider == identityProviderUser.IdentityProvider.ToString(),
 			cancellationToken: cancellationToken);
 
@@ -57,9 +56,9 @@ internal sealed class UserIdRepository : IUserIdRepository
 
 	private sealed class UserIdTableEntity : ITableEntity
 	{
-		public string PartitionKey { get; set; }
+		public string PartitionKey { get; set; } = default!;
 
-		public string RowKey { get; set; } = "IdentityProviderUser";
+		public string RowKey { get; set; } = string.Empty;
 
 		public DateTimeOffset? Timestamp { get; set; }
 

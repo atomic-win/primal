@@ -19,8 +19,7 @@ internal sealed class UserRepository : IUserRepository
 	public async Task<ErrorOr<User>> GetUser(UserId userId, CancellationToken cancellationToken)
 	{
 		AsyncPageable<UserTableEntity> entities = this.tableClient.QueryAsync<UserTableEntity>(
-			entity => entity.PartitionKey == userId.Value.ToString("N")
-				&& entity.RowKey == "User",
+			entity => entity.PartitionKey == userId.Value.ToString("N"),
 			cancellationToken: cancellationToken);
 
 		await foreach (UserTableEntity entity in entities.WithCancellation(cancellationToken))
@@ -58,7 +57,7 @@ internal sealed class UserRepository : IUserRepository
 	{
 		public string PartitionKey { get; set; } = default!;
 
-		public string RowKey { get; set; } = "User";
+		public string RowKey { get; set; } = string.Empty;
 
 		public DateTimeOffset? Timestamp { get; set; }
 
