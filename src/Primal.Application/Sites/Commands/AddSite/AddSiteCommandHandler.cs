@@ -4,7 +4,7 @@ using Primal.Application.Common.Interfaces.Persistence;
 
 namespace Primal.Application.Sites;
 
-internal sealed class AddSiteCommandHandler : IRequestHandler<AddSiteCommand, ErrorOr<AddSiteResult>>
+internal sealed class AddSiteCommandHandler : IRequestHandler<AddSiteCommand, ErrorOr<SiteResult>>
 {
 	private readonly ISiteRepository siteRepository;
 
@@ -13,12 +13,12 @@ internal sealed class AddSiteCommandHandler : IRequestHandler<AddSiteCommand, Er
 		this.siteRepository = sitesRepository;
 	}
 
-	public async Task<ErrorOr<AddSiteResult>> Handle(AddSiteCommand request, CancellationToken cancellationToken)
+	public async Task<ErrorOr<SiteResult>> Handle(AddSiteCommand request, CancellationToken cancellationToken)
 	{
 		var errorOrSite = await this.siteRepository.AddSite(request.UserId, request.Host, request.DailyLimitInMinutes, cancellationToken);
 
 		return errorOrSite.Match(
-			site => new AddSiteResult(site.Id, site.Host, site.DailyLimitInMinutes),
-			errors => (ErrorOr<AddSiteResult>)errors);
+			site => new SiteResult(site.Id, site.Host, site.DailyLimitInMinutes),
+			errors => (ErrorOr<SiteResult>)errors);
 	}
 }

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Primal.Api.Common;
 using Primal.Application.Sites;
 using Primal.Contracts.Sites;
+using Primal.Domain.Sites;
 using Primal.Domain.Users;
 
 namespace Primal.Api.Controllers;
@@ -46,10 +47,17 @@ public sealed class SitesController : ApiController
 
 	[HttpGet]
 	[Route("{id}")]
-	public IActionResult GetSite(Guid id)
+	public async Task<IActionResult> GetSiteAsync(Guid id)
 	{
 		UserId userId = this.httpContextAccessor.HttpContext.GetUserId();
-		return this.Ok(id);
+
+		var getSiteQuery = new GetSiteQuery(userId, new SiteId(id));
+
+		var errorOrSiteResult = await this.mediator.Send(getSiteQuery);
+
+		return errorOrSiteResult.Match(
+			siteResult => this.Ok(new SiteResponse(siteResult.Id.Value, siteResult.Host, siteResult.DailyLimitInMinutes)),
+			errors => this.Problem(errors));
 	}
 
 	[HttpPatch]
