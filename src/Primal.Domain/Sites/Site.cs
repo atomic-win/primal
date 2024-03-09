@@ -4,14 +4,14 @@ namespace Primal.Domain.Sites;
 
 public sealed class Site : Entity<SiteId>
 {
-	public Site(SiteId id, string host, int dailyLimitInMinutes)
+	public Site(SiteId id, string url, int dailyLimitInMinutes)
 		: base(id)
 	{
-		this.Host = host;
+		this.Url = url;
 		this.DailyLimitInMinutes = dailyLimitInMinutes;
 	}
 
-	public string Host { get; private set; }
+	public string Url { get; private set; }
 
 	public int DailyLimitInMinutes { get; private set; }
 }

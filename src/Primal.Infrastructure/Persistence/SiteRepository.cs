@@ -16,11 +16,11 @@ internal sealed class SiteRepository : ISiteRepository
 		this.tableClient = tableClient;
 	}
 
-	public async Task<ErrorOr<Site>> AddSite(UserId userId, string host, int dailyLimitInMinutes, CancellationToken cancellationToken)
+	public async Task<ErrorOr<Site>> AddSite(UserId userId, Uri url, int dailyLimitInMinutes, CancellationToken cancellationToken)
 	{
 		AsyncPageable<SiteTableEntity> entities = this.tableClient.QueryAsync<SiteTableEntity>(
 			entity => entity.PartitionKey == userId.Value.ToString("N")
-				&& entity.Host == host,
+				&& entity.Url == url.Host,
 			cancellationToken: cancellationToken);
 
 		await foreach (SiteTableEntity entity in entities.WithCancellation(cancellationToken))
@@ -34,14 +34,14 @@ internal sealed class SiteRepository : ISiteRepository
 		{
 			PartitionKey = userId.Value.ToString("N"),
 			RowKey = siteId.Value.ToString("N"),
-			Host = host,
+			Url = url.Host,
 			DailyLimitInMinutes = dailyLimitInMinutes,
 		};
 
 		try
 		{
 			await this.tableClient.AddEntityAsync(site, cancellationToken: cancellationToken);
-			return new Site(siteId, host, dailyLimitInMinutes);
+			return new Site(siteId, url.Host, dailyLimitInMinutes);
 		}
 		catch (RequestFailedException ex) when (ex.Status == 409)
 		{
@@ -63,13 +63,13 @@ internal sealed class SiteRepository : ISiteRepository
 
 		await foreach (SiteTableEntity entity in entities.WithCancellation(cancellationToken))
 		{
-			sites.Add(new Site(new SiteId(Guid.ParseExact(entity.RowKey, "N")), entity.Host, entity.DailyLimitInMinutes));
+			sites.Add(new Site(new SiteId(Guid.ParseExact(entity.RowKey, "N")), entity.Url, entity.DailyLimitInMinutes));
 		}
 
 		return sites;
 	}
 
-	public async Task<ErrorOr<Site>> GetSite(UserId userId, SiteId siteId, CancellationToken cancellationToken)
+	public async Task<ErrorOr<Site>> GetSiteById(UserId userId, SiteId siteId, CancellationToken cancellationToken)
 	{
 		AsyncPageable<SiteTableEntity> entities = this.tableClient.QueryAsync<SiteTableEntity>(
 			entity => entity.PartitionKey == userId.Value.ToString("N")
@@ -78,7 +78,22 @@ internal sealed class SiteRepository : ISiteRepository
 
 		await foreach (SiteTableEntity entity in entities.WithCancellation(cancellationToken))
 		{
-			return new Site(new SiteId(Guid.ParseExact(entity.RowKey, "N")), entity.Host, entity.DailyLimitInMinutes);
+			return new Site(new SiteId(Guid.ParseExact(entity.RowKey, "N")), entity.Url, entity.DailyLimitInMinutes);
+		}
+
+		return Error.NotFound();
+	}
+
+	public async Task<ErrorOr<Site>> GetSiteByUrl(UserId userId, Uri url, CancellationToken cancellationToken)
+	{
+		AsyncPageable<SiteTableEntity> entities = this.tableClient.QueryAsync<SiteTableEntity>(
+			entity => entity.PartitionKey == userId.Value.ToString("N")
+				&& entity.Url == url.Host,
+			cancellationToken: cancellationToken);
+
+		await foreach (SiteTableEntity entity in entities.WithCancellation(cancellationToken))
+		{
+			return new Site(new SiteId(Guid.ParseExact(entity.RowKey, "N")), entity.Url, entity.DailyLimitInMinutes);
 		}
 
 		return Error.NotFound();
@@ -150,7 +165,7 @@ internal sealed class SiteRepository : ISiteRepository
 
 		public ETag ETag { get; set; }
 
-		public string Host { get; set; } = default!;
+		public string Url { get; set; } = default!;
 
 		public int DailyLimitInMinutes { get; set; } = default!;
 	}

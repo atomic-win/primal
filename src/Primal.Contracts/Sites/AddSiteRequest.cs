@@ -1,3 +1,3 @@
 namespace Primal.Contracts.Sites;
 
-public sealed record AddSiteRequest(Uri Host, int DailyLimitInMinutes);
+public sealed record AddSiteRequest(Uri Url, int DailyLimitInMinutes);

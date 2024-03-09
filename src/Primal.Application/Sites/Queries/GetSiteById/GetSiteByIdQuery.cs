@@ -5,4 +5,4 @@ using Primal.Domain.Users;
 
 namespace Primal.Application.Sites;
 
-public sealed record GetSiteQuery(UserId UserId, SiteId SiteId) : IRequest<ErrorOr<SiteResult>>;
+public sealed record GetSiteByIdQuery(UserId UserId, SiteId SiteId) : IRequest<ErrorOr<SiteResult>>;

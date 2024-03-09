@@ -15,10 +15,10 @@ internal sealed class AddSiteCommandHandler : IRequestHandler<AddSiteCommand, Er
 
 	public async Task<ErrorOr<SiteResult>> Handle(AddSiteCommand request, CancellationToken cancellationToken)
 	{
-		var errorOrSite = await this.siteRepository.AddSite(request.UserId, request.Host, request.DailyLimitInMinutes, cancellationToken);
+		var errorOrSite = await this.siteRepository.AddSite(request.UserId, request.Url, request.DailyLimitInMinutes, cancellationToken);
 
 		return errorOrSite.Match(
-			site => new SiteResult(site.Id, site.Host, site.DailyLimitInMinutes),
+			site => new SiteResult(site.Id, site.Url, site.DailyLimitInMinutes),
 			errors => (ErrorOr<SiteResult>)errors);
 	}
 }

@@ -33,7 +33,7 @@ public sealed class SitesController : ApiController
 
 		var addSiteCommand = new AddSiteCommand(
 			httpContext.GetUserId(),
-			request.Host.Host,
+			request.Url,
 			request.DailyLimitInMinutes);
 
 		var errorOrSiteResult = await this.mediator.Send(addSiteCommand, cancellationToken);
@@ -41,38 +41,37 @@ public sealed class SitesController : ApiController
 		return errorOrSiteResult.Match(
 			siteResult => this.Created(
 				$"{httpContext.Request.Scheme}://{httpContext.Request.Host}{httpContext.Request.Path}/{siteResult.Id.Value}",
-				new SiteResponse(siteResult.Id.Value, siteResult.Host, siteResult.DailyLimitInMinutes)),
+				new SiteResponse(siteResult.Id.Value, siteResult.Url, siteResult.DailyLimitInMinutes)),
 			errors => this.Problem(errors));
 	}
 
 	[HttpGet]
-	[Route("{id}")]
-	public async Task<IActionResult> GetSiteAsync(Guid id)
+	[Route("{id:guid}")]
+	public async Task<IActionResult> GetSiteByIdAsync([FromRoute] Guid id)
 	{
 		UserId userId = this.httpContextAccessor.HttpContext.GetUserId();
 
-		var getSiteQuery = new GetSiteQuery(userId, new SiteId(id));
+		var getSiteQuery = new GetSiteByIdQuery(userId, new SiteId(id));
 
 		var errorOrSiteResult = await this.mediator.Send(getSiteQuery);
 
 		return errorOrSiteResult.Match(
-			siteResult => this.Ok(new SiteResponse(siteResult.Id.Value, siteResult.Host, siteResult.DailyLimitInMinutes)),
+			siteResult => this.Ok(new SiteResponse(siteResult.Id.Value, siteResult.Url, siteResult.DailyLimitInMinutes)),
 			errors => this.Problem(errors));
 	}
 
-	[HttpPatch]
-	[Route("{id}")]
-	public IActionResult UpdateSite(Guid id, [FromBody] PatchSiteRequest request)
+	[HttpGet]
+	[Route("byurl")]
+	public async Task<IActionResult> GetSiteByUrlAsync([FromQuery] Uri url)
 	{
 		UserId userId = this.httpContextAccessor.HttpContext.GetUserId();
-		return this.Ok(id);
-	}
 
-	[HttpDelete]
-	[Route("{id}")]
-	public IActionResult DeleteSite(Guid id)
-	{
-		UserId userId = this.httpContextAccessor.HttpContext.GetUserId();
-		return this.Ok(id);
+		var getSiteByUrlQuery = new GetSiteByUrlQuery(userId, url);
+
+		var errorOrSiteResult = await this.mediator.Send(getSiteByUrlQuery);
+
+		return errorOrSiteResult.Match(
+			siteResult => this.Ok(new SiteResponse(siteResult.Id.Value, siteResult.Url, siteResult.DailyLimitInMinutes)),
+			errors => this.Problem(errors));
 	}
 }

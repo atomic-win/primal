@@ -6,11 +6,13 @@ namespace Primal.Application.Common.Interfaces.Persistence;
 
 public interface ISiteRepository
 {
-	Task<ErrorOr<Site>> AddSite(UserId userId, string host, int dailyLimitInMinutes, CancellationToken cancellationToken);
+	Task<ErrorOr<Site>> AddSite(UserId userId, Uri url, int dailyLimitInMinutes, CancellationToken cancellationToken);
 
 	Task<ErrorOr<IEnumerable<Site>>> GetSites(UserId userId, CancellationToken cancellationToken);
 
-	Task<ErrorOr<Site>> GetSite(UserId userId, SiteId siteId, CancellationToken cancellationToken);
+	Task<ErrorOr<Site>> GetSiteById(UserId userId, SiteId siteId, CancellationToken cancellationToken);
+
+	Task<ErrorOr<Site>> GetSiteByUrl(UserId userId, Uri url, CancellationToken cancellationToken);
 
 	Task<ErrorOr<Success>> UpdateSite(UserId userId, SiteId siteId, int dailyLimitInMinutes, CancellationToken cancellationToken);
 

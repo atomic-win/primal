@@ -2,9 +2,9 @@ using FluentValidation;
 
 namespace Primal.Application.Sites;
 
-internal sealed class GetSiteQueryValidator : AbstractValidator<GetSiteQuery>
+internal sealed class GetSiteByIdQueryValidator : AbstractValidator<GetSiteByIdQuery>
 {
-	public GetSiteQueryValidator()
+	public GetSiteByIdQueryValidator()
 	{
 		this.RuleFor(x => x.UserId.Value).NotEmpty();
 		this.RuleFor(x => x.SiteId.Value).NotEmpty();
