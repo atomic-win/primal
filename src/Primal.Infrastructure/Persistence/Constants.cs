@@ -4,10 +4,11 @@ internal static class Constants
 {
 	internal static class TableNames
 	{
+		internal const string UserIds = "UserIds";
 		internal const string Users = "Users";
 		internal const string Sites = "Sites";
-		internal const string UserIds = "UserIds";
+		internal const string SiteTimes = "SiteTimes";
 
-		internal static readonly IEnumerable<string> All = new[] { Users, Sites, UserIds };
+		internal static readonly IEnumerable<string> All = new[] { UserIds, Users, Sites, SiteTimes };
 	}
 }

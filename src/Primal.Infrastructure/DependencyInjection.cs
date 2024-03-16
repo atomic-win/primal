@@ -97,6 +97,12 @@ public static class DependencyInjection
 			return new SiteRepository(tableClient);
 		});
 
+		services.AddSingleton<ISiteTimeRepository>(serviceProvider =>
+		{
+			var tableClient = serviceProvider.GetKeyedService<TableClient>(Constants.TableNames.SiteTimes);
+			return new SiteTimeRepository(tableClient);
+		});
+
 		return services;
 	}
 }

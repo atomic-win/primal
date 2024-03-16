@@ -81,4 +81,22 @@ public sealed class SitesController : ApiController
 			siteResult => this.Ok(new SiteResponse(siteResult.Id.Value, siteResult.Url, siteResult.DailyLimitInMinutes)),
 			errors => this.Problem(errors));
 	}
+
+	[HttpPut]
+	[Route("{id:guid}")]
+	public async Task<IActionResult> AddSiteTimeAsync([FromRoute] Guid id, [FromBody] AddSiteTimeRequest request, CancellationToken cancellationToken)
+	{
+		HttpContext httpContext = this.httpContextAccessor.HttpContext;
+
+		var addSiteTimeCommand = new AddSiteTimeCommand(
+			httpContext.GetUserId(),
+			new SiteId(id),
+			request.Time);
+
+		var errorOrSuccessResult = await this.mediator.Send(addSiteTimeCommand, cancellationToken);
+
+		return errorOrSuccessResult.Match(
+			_ => this.Ok(),
+			errors => this.Problem(errors));
+	}
 }
