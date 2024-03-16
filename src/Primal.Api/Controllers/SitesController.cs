@@ -83,7 +83,7 @@ public sealed class SitesController : ApiController
 	}
 
 	[HttpPut]
-	[Route("{id:guid}")]
+	[Route("{id:guid}/time")]
 	public async Task<IActionResult> AddSiteTimeAsync([FromRoute] Guid id, [FromBody] AddSiteTimeRequest request, CancellationToken cancellationToken)
 	{
 		HttpContext httpContext = this.httpContextAccessor.HttpContext;
