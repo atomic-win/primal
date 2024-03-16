@@ -20,10 +20,17 @@ public sealed class SitesController : ApiController
 	}
 
 	[HttpGet]
-	public IActionResult All()
+	public async Task<IActionResult> AllAsync()
 	{
 		UserId userId = this.httpContextAccessor.HttpContext.GetUserId();
-		return this.Ok(userId);
+
+		var getSitesQuery = new GetSitesQuery(userId);
+
+		var errorOrSitesResult = await this.mediator.Send(getSitesQuery);
+
+		return errorOrSitesResult.Match(
+			sitesResult => this.Ok(sitesResult.Select(siteResult => new SiteResponse(siteResult.Id.Value, siteResult.Url, siteResult.DailyLimitInMinutes))),
+			errors => this.Problem(errors));
 	}
 
 	[HttpPost]
