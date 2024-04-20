@@ -18,12 +18,11 @@ spec:
                 app: primal
         spec:
             containers:
-                - image: primal:latest
+                - image: primal.azurecr.io/primal
                   name: primal
                   ports:
                       - containerPort: 8080
                   resources: {}
-                  imagePullPolicy: Never
                   envFrom:
                       - secretRef:
                             name: primal-secret
