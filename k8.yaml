@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    creationTimestamp: null
+    labels:
+        app: primal
+    name: primal
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            app: primal
+    strategy: {}
+    template:
+        metadata:
+            creationTimestamp: null
+            labels:
+                app: primal
+        spec:
+            containers:
+                - image: primal:latest
+                  name: primal
+                  ports:
+                      - containerPort: 8080
+                  resources: {}
+                  imagePullPolicy: Never
+                  envFrom:
+                      - secretRef:
+                            name: primal-secret
+status: {}
