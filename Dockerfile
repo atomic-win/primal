@@ -4,8 +4,8 @@ WORKDIR /src
 
 # copy everything else and build app
 COPY . .
-RUN dotnet restore
-RUN dotnet publish -c release -o /app --no-restore
+RUN dotnet restore ./src/Primal.Api/Primal.Api.csproj
+RUN dotnet publish ./src/Primal.Api/Primal.Api.csproj -c release -o /app --no-restore
 
 # final stage/image
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
