@@ -12,8 +12,4 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
 COPY --from=build /app ./
 
-# Setup your variables before running.
-ARG ENVIRONMENT
-ENV ASPNETCORE_ENVIRONMENT $ENVIRONMENT
-
 ENTRYPOINT ["dotnet", "Primal.Api.dll"]
