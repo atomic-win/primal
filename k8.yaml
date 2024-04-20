@@ -26,4 +26,14 @@ spec:
                   envFrom:
                       - secretRef:
                             name: primal-secret
-status: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+    name: primal
+spec:
+    type: LoadBalancer
+    ports:
+        - port: 8080
+    selector:
+        app: primal
