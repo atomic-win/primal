@@ -7,12 +7,6 @@ namespace Primal.Application.Sites;
 
 internal sealed class AddSiteCommandHandler : IRequestHandler<AddSiteCommand, ErrorOr<SiteResult>>
 {
-	private readonly HashSet<string> allowedUriSchemes = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-	{
-		"http",
-		"https",
-	};
-
 	private readonly ISiteRepository siteRepository;
 
 	public AddSiteCommandHandler(ISiteRepository sitesRepository)
@@ -22,9 +16,9 @@ internal sealed class AddSiteCommandHandler : IRequestHandler<AddSiteCommand, Er
 
 	public async Task<ErrorOr<SiteResult>> Handle(AddSiteCommand request, CancellationToken cancellationToken)
 	{
-		if (!this.allowedUriSchemes.Contains(request.Url.Scheme))
+		if (!request.Url.IsAllowedUriScheme())
 		{
-			return new SiteResult(new SiteId(Guid.Empty), request.Url.Host, 0);
+			return request.Url.ToUnallowedSiteResult();
 		}
 
 		var errorOrSite = await this.siteRepository.AddSite(request.UserId, request.Url, request.DailyLimitInMinutes, cancellationToken);
