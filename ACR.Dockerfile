@@ -4,8 +4,8 @@ WORKDIR /src
 
 # copy everything else and build app
 COPY . .
-RUN dotnet restore ./src/Primal.Api/Primal.Api.csproj -r linux-arm64
-RUN dotnet publish ./src/Primal.Api/Primal.Api.csproj -c release -o /app --no-restore -r linux-arm64
+RUN dotnet restore ./src/Primal.Api/Primal.Api.csproj --arch arm64
+RUN dotnet publish ./src/Primal.Api/Primal.Api.csproj -c release -o /app --no-restore --arch arm64
 
 # final stage/image
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-jammy-arm64v8
