@@ -64,7 +64,9 @@ jobs:
               run: az acr login --name ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io
             - name: Build image and push to registry
               run: |
+                  docker buildx ls
                   docker buildx create --name mybuilder --driver docker-container --platform linux/amd64,linux/arm64 --bootstrap --use
+                  docker buildx ls
                   docker buildx build --platform linux/amd64,linux/arm64 --tag ${{ env.AZURE_CONTAINER_REGISTRY }}.azurecr.io/${{ env.CONTAINER_NAME }}:${{ github.sha }} --push .
 
     deploy:
