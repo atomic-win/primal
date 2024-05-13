@@ -8,7 +8,8 @@ internal static class Constants
 		internal const string Users = "Users";
 		internal const string Sites = "Sites";
 		internal const string SiteTimes = "SiteTimes";
+		internal const string Instruments = "Instruments";
 
-		internal static readonly IEnumerable<string> All = new[] { UserIds, Users, Sites, SiteTimes };
+		internal static readonly IEnumerable<string> All = new[] { UserIds, Users, Sites, SiteTimes, Instruments };
 	}
 }

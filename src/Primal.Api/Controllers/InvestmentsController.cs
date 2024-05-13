@@ -41,6 +41,7 @@ public sealed class InvestmentsController : ApiController
 		UserId userId = this.httpContextAccessor.HttpContext.GetUserId();
 
 		var addInstrumentCommand = new AddInstrumentCommand(
+			userId,
 			addInstrumentRequest.Name,
 			Enum.Parse<InvestmentCategory>(addInstrumentRequest.Category),
 			Enum.Parse<InvestmentType>(addInstrumentRequest.Type),
@@ -52,6 +53,21 @@ public sealed class InvestmentsController : ApiController
 			instrumentResult => this.Created(
 				$"{this.httpContextAccessor.HttpContext.Request.Scheme}://{this.httpContextAccessor.HttpContext.Request.Host}{this.httpContextAccessor.HttpContext.Request.Path}/{instrumentResult.Id.Value}",
 				new InstrumentResponse(instrumentResult.Id.Value, instrumentResult.Name, instrumentResult.Category.ToString(), instrumentResult.Type.ToString(), instrumentResult.AccountId.Value)),
+			errors => this.Problem(errors));
+	}
+
+	[HttpGet]
+	[Route("instruments/{id:guid}")]
+	public async Task<IActionResult> GetInstrumentByIdAsync(Guid id)
+	{
+		UserId userId = this.httpContextAccessor.HttpContext.GetUserId();
+
+		var getInstrumentByIdQuery = new GetInstrumentByIdQuery(userId, new InstrumentId(id));
+
+		var errorOrInstrumentResult = await this.mediator.Send(getInstrumentByIdQuery);
+
+		return errorOrInstrumentResult.Match(
+			instrumentResult => this.Ok(new InstrumentResponse(instrumentResult.Id.Value, instrumentResult.Name, instrumentResult.Category.ToString(), instrumentResult.Type.ToString(), instrumentResult.AccountId.Value)),
 			errors => this.Problem(errors));
 	}
 }
