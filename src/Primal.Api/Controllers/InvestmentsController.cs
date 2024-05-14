@@ -30,7 +30,7 @@ public sealed class InvestmentsController : ApiController
 		var errorOrInstrumentsResult = await this.mediator.Send(getInstrumentsQuery);
 
 		return errorOrInstrumentsResult.Match(
-			instrumentsResult => this.Ok(instrumentsResult.Select(instrumentResult => new InstrumentResponse(instrumentResult.Id.Value, instrumentResult.Name, instrumentResult.Category.ToString(), instrumentResult.Type.ToString(), instrumentResult.AccountId.Value))),
+			instrumentsResult => this.Ok(instrumentsResult.Select(instrumentResult => new InstrumentResponse(instrumentResult.Id.Value, instrumentResult.Name, instrumentResult.Category.ToString(), instrumentResult.Type.ToString()))),
 			errors => this.Problem(errors));
 	}
 
@@ -44,15 +44,14 @@ public sealed class InvestmentsController : ApiController
 			userId,
 			addInstrumentRequest.Name,
 			Enum.Parse<InvestmentCategory>(addInstrumentRequest.Category),
-			Enum.Parse<InvestmentType>(addInstrumentRequest.Type),
-			new AccountId(addInstrumentRequest.AccountId));
+			Enum.Parse<InvestmentType>(addInstrumentRequest.Type));
 
 		var errorOrInstrumentResult = await this.mediator.Send(addInstrumentCommand);
 
 		return errorOrInstrumentResult.Match(
 			instrumentResult => this.Created(
 				$"{this.httpContextAccessor.HttpContext.Request.Scheme}://{this.httpContextAccessor.HttpContext.Request.Host}{this.httpContextAccessor.HttpContext.Request.Path}/{instrumentResult.Id.Value}",
-				new InstrumentResponse(instrumentResult.Id.Value, instrumentResult.Name, instrumentResult.Category.ToString(), instrumentResult.Type.ToString(), instrumentResult.AccountId.Value)),
+				new InstrumentResponse(instrumentResult.Id.Value, instrumentResult.Name, instrumentResult.Category.ToString(), instrumentResult.Type.ToString())),
 			errors => this.Problem(errors));
 	}
 
@@ -67,7 +66,7 @@ public sealed class InvestmentsController : ApiController
 		var errorOrInstrumentResult = await this.mediator.Send(getInstrumentByIdQuery);
 
 		return errorOrInstrumentResult.Match(
-			instrumentResult => this.Ok(new InstrumentResponse(instrumentResult.Id.Value, instrumentResult.Name, instrumentResult.Category.ToString(), instrumentResult.Type.ToString(), instrumentResult.AccountId.Value)),
+			instrumentResult => this.Ok(new InstrumentResponse(instrumentResult.Id.Value, instrumentResult.Name, instrumentResult.Category.ToString(), instrumentResult.Type.ToString())),
 			errors => this.Problem(errors));
 	}
 }

@@ -9,6 +9,4 @@ public sealed class Instrument
 	public InvestmentCategory Category { get; set; }
 
 	public InvestmentType Type { get; set; }
-
-	public AccountId AccountId { get; set; }
 }

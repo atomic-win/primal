@@ -18,7 +18,7 @@ internal sealed class GetInstrumentByIdQueryHandler : IRequestHandler<GetInstrum
 		var errorOrInstrument = await this.instrumentRepository.GetByIdAsync(request.UserId, request.InstrumentId, cancellationToken);
 
 		return errorOrInstrument.Match(
-			instrument => new InstrumentResult(instrument.Id, instrument.Name, instrument.Category, instrument.Type, instrument.AccountId),
+			instrument => new InstrumentResult(instrument.Id, instrument.Name, instrument.Category, instrument.Type),
 			errors => (ErrorOr<InstrumentResult>)errors);
 	}
 }

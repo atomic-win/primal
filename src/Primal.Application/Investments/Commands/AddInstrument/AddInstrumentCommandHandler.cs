@@ -15,10 +15,10 @@ internal sealed class AddInstrumentCommandHandler : IRequestHandler<AddInstrumen
 
 	public async Task<ErrorOr<InstrumentResult>> Handle(AddInstrumentCommand request, CancellationToken cancellationToken)
 	{
-		var errorOrInstrument = await this.instrumentRepository.AddAsync(request.UserId, request.Name, request.Category, request.Type, request.AccountId, cancellationToken);
+		var errorOrInstrument = await this.instrumentRepository.AddAsync(request.UserId, request.Name, request.Category, request.Type, cancellationToken);
 
 		return errorOrInstrument.Match(
-			instrument => new InstrumentResult(instrument.Id, instrument.Name, instrument.Category, instrument.Type, instrument.AccountId),
+			instrument => new InstrumentResult(instrument.Id, instrument.Name, instrument.Category, instrument.Type),
 			errors => (ErrorOr<InstrumentResult>)errors);
 	}
 }

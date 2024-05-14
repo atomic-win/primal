@@ -28,7 +28,5 @@ internal sealed class AddInstrumentCommandValidator : AbstractValidator<AddInstr
 					return false;
 			}
 		}).WithMessage(x => $"The investment type '{x.Type}' is not valid for the investment category '{x.Category}'.");
-
-		this.RuleFor(x => x.AccountId.Value).NotNull();
 	}
 }

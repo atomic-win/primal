@@ -18,7 +18,7 @@ internal sealed class GetAllInstrumentsQueryHandler : IRequestHandler<GetAllInst
 		var errorOrInstruments = await this.instrumentRepository.GetAllAsync(request.UserId, cancellationToken);
 
 		return errorOrInstruments.Match(
-			instruments => instruments.Select(instrument => new InstrumentResult(instrument.Id, instrument.Name, instrument.Category, instrument.Type, instrument.AccountId)).ToArray(),
+			instruments => instruments.Select(instrument => new InstrumentResult(instrument.Id, instrument.Name, instrument.Category, instrument.Type)).ToArray(),
 			errors => (ErrorOr<IEnumerable<InstrumentResult>>)errors);
 	}
 }

@@ -31,7 +31,6 @@ internal sealed class InstrumentRepository : IInstrumentRepository
 				Name = entity.Name,
 				Category = entity.Category,
 				Type = entity.Type,
-				AccountId = new AccountId(entity.AccountId),
 			});
 		}
 
@@ -55,11 +54,10 @@ internal sealed class InstrumentRepository : IInstrumentRepository
 			Name = entity.Name,
 			Category = entity.Category,
 			Type = entity.Type,
-			AccountId = new AccountId(entity.AccountId),
 		};
 	}
 
-	public async Task<ErrorOr<Instrument>> AddAsync(UserId userId, string name, InvestmentCategory category, InvestmentType type, AccountId accountId, CancellationToken cancellationToken)
+	public async Task<ErrorOr<Instrument>> AddAsync(UserId userId, string name, InvestmentCategory category, InvestmentType type, CancellationToken cancellationToken)
 	{
 		var instrumentId = InstrumentId.New();
 
@@ -70,7 +68,6 @@ internal sealed class InstrumentRepository : IInstrumentRepository
 			Name = name,
 			Category = category,
 			Type = type,
-			AccountId = accountId.Value,
 		};
 
 		try
@@ -82,7 +79,6 @@ internal sealed class InstrumentRepository : IInstrumentRepository
 				Name = name,
 				Category = category,
 				Type = type,
-				AccountId = accountId,
 			};
 		}
 		catch (RequestFailedException ex) when (ex.Status == 409)
@@ -110,7 +106,5 @@ internal sealed class InstrumentRepository : IInstrumentRepository
 		public InvestmentCategory Category { get; set; }
 
 		public InvestmentType Type { get; set; }
-
-		public string AccountId { get; set; }
 	}
 }
