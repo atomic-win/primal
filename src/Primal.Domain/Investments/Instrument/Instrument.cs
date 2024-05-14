@@ -1,12 +1,20 @@
+using Primal.Domain.Common.Models;
+
 namespace Primal.Domain.Investments;
 
-public sealed class Instrument
+public sealed class Instrument : Entity<InstrumentId>
 {
-	public InstrumentId Id { get; set; }
+	public Instrument(InstrumentId id, string name, InvestmentCategory category, InvestmentType type)
+		: base(id)
+	{
+		this.Name = name;
+		this.Category = category;
+		this.Type = type;
+	}
 
-	public string Name { get; set; }
+	public string Name { get; init; }
 
-	public InvestmentCategory Category { get; set; }
+	public InvestmentCategory Category { get; init; }
 
-	public InvestmentType Type { get; set; }
+	public InvestmentType Type { get; init; }
 }

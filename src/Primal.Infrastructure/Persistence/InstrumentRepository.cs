@@ -25,13 +25,12 @@ internal sealed class InstrumentRepository : IInstrumentRepository
 
 		await foreach (InstrumentTableEntity entity in entities)
 		{
-			instruments.Add(new Instrument
-			{
-				Id = new InstrumentId(Guid.Parse(entity.RowKey)),
-				Name = entity.Name,
-				Category = entity.Category,
-				Type = entity.Type,
-			});
+			instruments.Add(
+				new Instrument(
+					new InstrumentId(Guid.Parse(entity.RowKey)),
+					entity.Name,
+					entity.Category,
+					entity.Type));
 		}
 
 		return instruments;
@@ -48,13 +47,11 @@ internal sealed class InstrumentRepository : IInstrumentRepository
 			return Error.NotFound();
 		}
 
-		return new Instrument
-		{
-			Id = new InstrumentId(Guid.Parse(entity.RowKey)),
-			Name = entity.Name,
-			Category = entity.Category,
-			Type = entity.Type,
-		};
+		return new Instrument(
+			new InstrumentId(Guid.Parse(entity.RowKey)),
+			entity.Name,
+			entity.Category,
+			entity.Type);
 	}
 
 	public async Task<ErrorOr<Instrument>> AddAsync(UserId userId, string name, InvestmentCategory category, InvestmentType type, CancellationToken cancellationToken)
@@ -73,13 +70,7 @@ internal sealed class InstrumentRepository : IInstrumentRepository
 		try
 		{
 			await this.tableClient.AddEntityAsync(instrument);
-			return new Instrument
-			{
-				Id = instrumentId,
-				Name = name,
-				Category = category,
-				Type = type,
-			};
+			return new Instrument(instrumentId, name, category, type);
 		}
 		catch (RequestFailedException ex) when (ex.Status == 409)
 		{
