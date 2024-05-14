@@ -69,4 +69,48 @@ public sealed class InvestmentsController : ApiController
 			instrumentResult => this.Ok(new InstrumentResponse(instrumentResult.Id.Value, instrumentResult.Name, instrumentResult.Category.ToString(), instrumentResult.Type.ToString())),
 			errors => this.Problem(errors));
 	}
+
+	[HttpGet]
+	[Route("metadata/mutualfunds")]
+	public async Task<IActionResult> GetMutualFundBySchemaCodeAsync([FromQuery] int schemeCode)
+	{
+		UserId userId = this.httpContextAccessor.HttpContext.GetUserId();
+
+		var getMutualFundBySchemeCodeQuery = new GetMutualFundBySchemeCodeQuery(schemeCode);
+
+		var errorOrMutualFundResult = await this.mediator.Send(getMutualFundBySchemeCodeQuery);
+
+		return errorOrMutualFundResult.Match(
+			mutualFundResult => this.Ok(new MutualFundResponse(
+			  mutualFundResult.Id.Value,
+			  mutualFundResult.SchemeName,
+			  mutualFundResult.FundHouse,
+			  mutualFundResult.SchemeType,
+			  mutualFundResult.SchemeCategory,
+			  mutualFundResult.SchemeCode,
+			  mutualFundResult.Currency.ToString())),
+			errors => this.Problem(errors));
+	}
+
+	[HttpGet]
+	[Route("metadata/mutualfunds/{id:guid}")]
+	public async Task<IActionResult> GetMutualFundByIdAsync(Guid id)
+	{
+		UserId userId = this.httpContextAccessor.HttpContext.GetUserId();
+
+		var getMutualFundByIdQuery = new GetMutualFundByIdQuery(new MutualFundId(id));
+
+		var errorOrMutualFundResult = await this.mediator.Send(getMutualFundByIdQuery);
+
+		return errorOrMutualFundResult.Match(
+			mutualFundResult => this.Ok(new MutualFundResponse(
+			  mutualFundResult.Id.Value,
+			  mutualFundResult.SchemeName,
+			  mutualFundResult.FundHouse,
+			  mutualFundResult.SchemeType,
+			  mutualFundResult.SchemeCategory,
+			  mutualFundResult.SchemeCode,
+			  mutualFundResult.Currency.ToString())),
+			errors => this.Problem(errors));
+	}
 }

@@ -9,7 +9,9 @@ internal static class Constants
 		internal const string Sites = "Sites";
 		internal const string SiteTimes = "SiteTimes";
 		internal const string Instruments = "Instruments";
+		internal const string MutualFundSchemeCodes = "MutualFundSchemeCodes";
+		internal const string MutualFunds = "MutualFunds";
 
-		internal static readonly IEnumerable<string> All = new[] { UserIds, Users, Sites, SiteTimes, Instruments };
+		internal static readonly IEnumerable<string> All = new[] { UserIds, Users, Sites, SiteTimes, Instruments, MutualFundSchemeCodes, MutualFunds };
 	}
 }

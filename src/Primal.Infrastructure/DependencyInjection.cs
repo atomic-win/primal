@@ -6,8 +6,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Primal.Application.Common.Interfaces.Authentication;
+using Primal.Application.Common.Interfaces.Investments;
 using Primal.Application.Common.Interfaces.Persistence;
 using Primal.Infrastructure.Authentication;
+using Primal.Infrastructure.Investments;
 using Primal.Infrastructure.Persistence;
 
 namespace Primal.Infrastructure;
@@ -19,6 +21,7 @@ public static class DependencyInjection
 		return services
 			.AddSingleton<TimeProvider>(TimeProvider.System)
 			.AddAuthentication(configuration)
+			.AddInvestments()
 			.AddPersistence(configuration);
 	}
 
@@ -55,6 +58,24 @@ public static class DependencyInjection
 					IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(tokenIssuerSettings.SecretKey)),
 				};
 			});
+
+		return services;
+	}
+
+	private static IServiceCollection AddInvestments(this IServiceCollection services)
+	{
+		services.AddHttpClient<IMutualFundApiClient, MutualFundApiClient>(client =>
+		{
+			client.BaseAddress = new Uri("https://api.mfapi.in");
+		})
+		.ConfigurePrimaryHttpMessageHandler(() =>
+		{
+			return new SocketsHttpHandler()
+			{
+				PooledConnectionLifetime = TimeSpan.FromMinutes(15),
+			};
+		})
+		.SetHandlerLifetime(Timeout.InfiniteTimeSpan);
 
 		return services;
 	}
@@ -107,6 +128,13 @@ public static class DependencyInjection
 		{
 			var tableClient = serviceProvider.GetKeyedService<TableClient>(Constants.TableNames.Instruments);
 			return new InstrumentRepository(tableClient);
+		});
+
+		services.AddSingleton<IMutualFundRepository>(serviceProvider =>
+		{
+			var schemeCodeTableClient = serviceProvider.GetKeyedService<TableClient>(Constants.TableNames.MutualFundSchemeCodes);
+			var mutualFundTableClient = serviceProvider.GetKeyedService<TableClient>(Constants.TableNames.MutualFunds);
+			return new MutualFundRepository(schemeCodeTableClient, mutualFundTableClient);
 		});
 
 		return services;
