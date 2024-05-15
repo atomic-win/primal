@@ -42,24 +42,30 @@ internal sealed class MutualFundRepository : IMutualFundRepository
 
 	public async Task<ErrorOr<MutualFund>> GetByIdAsync(MutualFundId mutualFundId, CancellationToken cancellationToken)
 	{
-		MutualFundTableEntity entity = await this.mutualFundTableClient.GetEntityAsync<MutualFundTableEntity>(
-			mutualFundId.Value.ToString("N"),
-			"MutualFund",
-			cancellationToken: cancellationToken);
+		try
+		{
+			MutualFundTableEntity entity = await this.mutualFundTableClient.GetEntityAsync<MutualFundTableEntity>(
+				mutualFundId.Value.ToString("N"),
+				"MutualFund",
+				cancellationToken: cancellationToken);
 
-		if (entity == null)
+			return new MutualFund(
+				mutualFundId,
+				entity.SchemeName,
+				entity.FundHouse,
+				entity.SchemeType,
+				entity.SchemeCategory,
+				entity.SchemeCode,
+				entity.Currency);
+		}
+		catch (RequestFailedException ex) when (ex.Status == 404)
 		{
 			return Error.NotFound();
 		}
-
-		return new MutualFund(
-			mutualFundId,
-			entity.SchemeName,
-			entity.FundHouse,
-			entity.SchemeType,
-			entity.SchemeCategory,
-			entity.SchemeCode,
-			entity.Currency);
+		catch (Exception ex)
+		{
+			return Error.Failure(ex.Message);
+		}
 	}
 
 	public async Task<ErrorOr<MutualFund>> AddAsync(string schemeName, string fundHouse, string schemeType, string schemeCategory, int schemeCode, Currency currency, CancellationToken cancellationToken)

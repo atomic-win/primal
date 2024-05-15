@@ -1,3 +1,4 @@
+using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json.Serialization;
 using ErrorOr;
@@ -18,18 +19,28 @@ internal sealed class MutualFundApiClient : IMutualFundApiClient
 
 	public async Task<ErrorOr<MutualFund>> GetBySchemeCodeAsync(int schemeCode, CancellationToken cancellationToken)
 	{
-		var apiResponse = await this.httpClient.GetFromJsonAsync<MutualFundApiResponse>(
-			$"/mf/{schemeCode}/latest",
-			cancellationToken: cancellationToken);
+		var response = await this.httpClient.GetAsync($"/mf/{schemeCode}/latest", cancellationToken);
 
-		if (apiResponse == null)
+		if (response.StatusCode == HttpStatusCode.NotFound)
 		{
 			return Error.NotFound();
 		}
 
+		if (response.StatusCode != HttpStatusCode.OK)
+		{
+			return Error.Failure();
+		}
+
+		var apiResponse = await response.Content.ReadFromJsonAsync<MutualFundApiResponse>(cancellationToken);
+
 		if (!string.Equals(apiResponse.Status, "SUCCESS", StringComparison.OrdinalIgnoreCase))
 		{
 			return Error.Unexpected();
+		}
+
+		if (apiResponse.Data.Count == 0)
+		{
+			return Error.NotFound();
 		}
 
 		return new MutualFund(

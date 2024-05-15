@@ -38,20 +38,26 @@ internal sealed class InstrumentRepository : IInstrumentRepository
 
 	public async Task<ErrorOr<Instrument>> GetByIdAsync(UserId userId, InstrumentId instrumentId, CancellationToken cancellationToken)
 	{
-		InstrumentTableEntity entity = await this.tableClient.GetEntityAsync<InstrumentTableEntity>(
-			userId.Value.ToString("N"),
-			instrumentId.Value.ToString("N"));
+		try
+		{
+			InstrumentTableEntity entity = await this.tableClient.GetEntityAsync<InstrumentTableEntity>(
+				userId.Value.ToString("N"),
+				instrumentId.Value.ToString("N"));
 
-		if (entity == null)
+			return new Instrument(
+				new InstrumentId(Guid.Parse(entity.RowKey)),
+				entity.Name,
+				entity.Category,
+				entity.Type);
+		}
+		catch (RequestFailedException ex) when (ex.Status == 404)
 		{
 			return Error.NotFound();
 		}
-
-		return new Instrument(
-			new InstrumentId(Guid.Parse(entity.RowKey)),
-			entity.Name,
-			entity.Category,
-			entity.Type);
+		catch (Exception ex)
+		{
+			return Error.Failure(ex.Message);
+		}
 	}
 
 	public async Task<ErrorOr<Instrument>> AddAsync(UserId userId, string name, InvestmentCategory category, InvestmentType type, CancellationToken cancellationToken)
