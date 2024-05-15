@@ -10,12 +10,12 @@ namespace Primal.Infrastructure.Persistence;
 
 internal sealed class MutualFundRepository : IMutualFundRepository
 {
-	private readonly TableClient schemeCodeTableClient;
+	private readonly TableClient idMapTableClient;
 	private readonly TableClient mutualFundTableClient;
 
-	internal MutualFundRepository(TableClient schemeCodeTableClient, TableClient mutualFundTableClient)
+	internal MutualFundRepository(TableClient idMapTableClient, TableClient mutualFundTableClient)
 	{
-		this.schemeCodeTableClient = schemeCodeTableClient;
+		this.idMapTableClient = idMapTableClient;
 		this.mutualFundTableClient = mutualFundTableClient;
 	}
 
@@ -23,9 +23,9 @@ internal sealed class MutualFundRepository : IMutualFundRepository
 	{
 		try
 		{
-			MutualFundSchemeCodeTableEntity entity = await this.schemeCodeTableClient.GetEntityAsync<MutualFundSchemeCodeTableEntity>(
+			MutualFundSchemeCodeTableEntity entity = await this.idMapTableClient.GetEntityAsync<MutualFundSchemeCodeTableEntity>(
+				"MutualFundSchemeCode",
 				schemeCode.ToString(CultureInfo.InvariantCulture),
-				"SchemeCode",
 				cancellationToken: cancellationToken);
 
 			return await this.GetByIdAsync(new MutualFundId(Guid.Parse(entity.MutualFundId)), cancellationToken);
@@ -74,26 +74,25 @@ internal sealed class MutualFundRepository : IMutualFundRepository
 		{
 			var mutualFundId = MutualFundId.New();
 
-			await this.schemeCodeTableClient.AddEntityAsync(
-				new MutualFundSchemeCodeTableEntity
-				{
-					PartitionKey = schemeCode.ToString(CultureInfo.InvariantCulture),
-					MutualFundId = mutualFundId.Value.ToString("N"),
-				},
-				cancellationToken: cancellationToken);
+			var mutualFundSchemeCodeEntity = new MutualFundSchemeCodeTableEntity
+			{
+				RowKey = schemeCode.ToString(CultureInfo.InvariantCulture),
+				MutualFundId = mutualFundId.Value.ToString("N"),
+			};
 
-			await this.mutualFundTableClient.AddEntityAsync(
-				new MutualFundTableEntity
-				{
-					PartitionKey = mutualFundId.Value.ToString("N"),
-					SchemeName = schemeName,
-					FundHouse = fundHouse,
-					SchemeType = schemeType,
-					SchemeCategory = schemeCategory,
-					SchemeCode = schemeCode,
-					Currency = currency,
-				},
-				cancellationToken: cancellationToken);
+			var mutualFundEntity = new MutualFundTableEntity
+			{
+				PartitionKey = mutualFundId.Value.ToString("N"),
+				SchemeName = schemeName,
+				FundHouse = fundHouse,
+				SchemeType = schemeType,
+				SchemeCategory = schemeCategory,
+				SchemeCode = schemeCode,
+				Currency = currency,
+			};
+
+			await this.idMapTableClient.AddEntityAsync(mutualFundSchemeCodeEntity, cancellationToken: cancellationToken);
+			await this.mutualFundTableClient.AddEntityAsync(mutualFundEntity, cancellationToken: cancellationToken);
 
 			return new MutualFund(
 				mutualFundId,
@@ -116,9 +115,9 @@ internal sealed class MutualFundRepository : IMutualFundRepository
 
 	private sealed class MutualFundSchemeCodeTableEntity : ITableEntity
 	{
-		public string PartitionKey { get; set; } = string.Empty;
+		public string PartitionKey { get; set; } = "MutualFundSchemeCode";
 
-		public string RowKey { get; set; } = "SchemeCode";
+		public string RowKey { get; set; } = string.Empty;
 
 		public DateTimeOffset? Timestamp { get; set; }
 

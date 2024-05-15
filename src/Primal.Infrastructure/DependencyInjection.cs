@@ -100,6 +100,12 @@ public static class DependencyInjection
 			});
 		}
 
+		return services
+			.AddRepositories();
+	}
+
+	private static IServiceCollection AddRepositories(this IServiceCollection services)
+	{
 		services.AddSingleton<IUserIdRepository>(serviceProvider =>
 		{
 			var tableClient = serviceProvider.GetKeyedService<TableClient>(Constants.TableNames.UserIds);
@@ -132,9 +138,16 @@ public static class DependencyInjection
 
 		services.AddSingleton<IMutualFundRepository>(serviceProvider =>
 		{
-			var schemeCodeTableClient = serviceProvider.GetKeyedService<TableClient>(Constants.TableNames.MutualFundSchemeCodes);
+			var idMapTableClient = serviceProvider.GetKeyedService<TableClient>(Constants.TableNames.IdMap);
 			var mutualFundTableClient = serviceProvider.GetKeyedService<TableClient>(Constants.TableNames.MutualFunds);
-			return new MutualFundRepository(schemeCodeTableClient, mutualFundTableClient);
+			return new MutualFundRepository(idMapTableClient, mutualFundTableClient);
+		});
+
+		services.AddSingleton<IStockRepository>(serviceProvider =>
+		{
+			var idMapTableClient = serviceProvider.GetKeyedService<TableClient>(Constants.TableNames.IdMap);
+			var stockTableClient = serviceProvider.GetKeyedService<TableClient>(Constants.TableNames.Stocks);
+			return new StockRepository(idMapTableClient, stockTableClient);
 		});
 
 		return services;
