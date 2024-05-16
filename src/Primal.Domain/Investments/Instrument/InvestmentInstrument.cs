@@ -2,9 +2,9 @@ using Primal.Domain.Common.Models;
 
 namespace Primal.Domain.Investments;
 
-public abstract class Instrument : Entity<InstrumentId>
+public abstract class InvestmentInstrument : Entity<InstrumentId>
 {
-	protected Instrument(InstrumentId id, string name, InvestmentCategory category, InvestmentType type)
+	protected InvestmentInstrument(InstrumentId id, string name, InvestmentCategory category, InvestmentType type)
 		: base(id)
 	{
 		this.Name = name;

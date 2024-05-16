@@ -5,4 +5,4 @@ using Primal.Domain.Users;
 
 namespace Primal.Application.Investments;
 
-public sealed record GetAllInstrumentsQuery(UserId UserId) : IRequest<ErrorOr<IEnumerable<Instrument>>>;
+public sealed record GetAllInstrumentsQuery(UserId UserId) : IRequest<ErrorOr<IEnumerable<InvestmentInstrument>>>;

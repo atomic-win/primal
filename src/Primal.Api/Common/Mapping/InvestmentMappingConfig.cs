@@ -18,7 +18,7 @@ internal sealed class InvestmentMappingConfig : IRegister
 			.Map(dest => dest.Id, src => src.Id.Value)
 			.Map(dest => dest.MutualFundId, src => src.MutualFundId.Value);
 
-		config.NewConfig<Instrument, InstrumentResponse>()
+		config.NewConfig<InvestmentInstrument, InstrumentResponse>()
 			.Map(dest => dest.Id, src => src.Id.Value)
 			.Include<MutualFundInstrument, MutualFundInstrumentResponse>();
 

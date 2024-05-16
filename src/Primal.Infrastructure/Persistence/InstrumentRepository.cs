@@ -16,12 +16,12 @@ internal sealed class InstrumentRepository : IInstrumentRepository
 		this.tableClient = tableClient;
 	}
 
-	public async Task<ErrorOr<IEnumerable<Instrument>>> GetAllAsync(UserId userId, CancellationToken cancellationToken)
+	public async Task<ErrorOr<IEnumerable<InvestmentInstrument>>> GetAllAsync(UserId userId, CancellationToken cancellationToken)
 	{
 		AsyncPageable<TableEntity> entities = this.tableClient.QueryAsync<TableEntity>(
 			entity => entity.PartitionKey == userId.Value.ToString("N"));
 
-		List<Instrument> instruments = new List<Instrument>();
+		List<InvestmentInstrument> instruments = new List<InvestmentInstrument>();
 
 		await foreach (TableEntity entity in entities)
 		{
@@ -31,7 +31,7 @@ internal sealed class InstrumentRepository : IInstrumentRepository
 		return instruments;
 	}
 
-	public async Task<ErrorOr<Instrument>> GetByIdAsync(UserId userId, InstrumentId instrumentId, CancellationToken cancellationToken)
+	public async Task<ErrorOr<InvestmentInstrument>> GetByIdAsync(UserId userId, InstrumentId instrumentId, CancellationToken cancellationToken)
 	{
 		try
 		{
@@ -85,7 +85,7 @@ internal sealed class InstrumentRepository : IInstrumentRepository
 		}
 	}
 
-	private Instrument MapToInstrument(TableEntity entity)
+	private InvestmentInstrument MapToInstrument(TableEntity entity)
 	{
 		var type = Enum.Parse<InvestmentType>(entity["Type"].ToString());
 

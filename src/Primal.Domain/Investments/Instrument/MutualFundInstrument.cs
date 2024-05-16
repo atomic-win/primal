@@ -1,6 +1,6 @@
 namespace Primal.Domain.Investments;
 
-public sealed class MutualFundInstrument : Instrument
+public sealed class MutualFundInstrument : InvestmentInstrument
 {
 	public MutualFundInstrument(InstrumentId id, string name, InvestmentCategory category, MutualFundId mutualFundId)
 		: base(id, name, category, InvestmentType.MutualFunds)

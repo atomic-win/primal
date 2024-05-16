@@ -5,7 +5,7 @@ using Primal.Domain.Investments;
 
 namespace Primal.Application.Investments;
 
-internal sealed class GetAllInstrumentsQueryHandler : IRequestHandler<GetAllInstrumentsQuery, ErrorOr<IEnumerable<Instrument>>>
+internal sealed class GetAllInstrumentsQueryHandler : IRequestHandler<GetAllInstrumentsQuery, ErrorOr<IEnumerable<InvestmentInstrument>>>
 {
 	private readonly IInstrumentRepository instrumentRepository;
 
@@ -14,7 +14,7 @@ internal sealed class GetAllInstrumentsQueryHandler : IRequestHandler<GetAllInst
 		this.instrumentRepository = instrumentRepository;
 	}
 
-	public async Task<ErrorOr<IEnumerable<Instrument>>> Handle(GetAllInstrumentsQuery request, CancellationToken cancellationToken)
+	public async Task<ErrorOr<IEnumerable<InvestmentInstrument>>> Handle(GetAllInstrumentsQuery request, CancellationToken cancellationToken)
 	{
 		return await this.instrumentRepository.GetAllAsync(request.UserId, cancellationToken);
 	}

@@ -33,7 +33,7 @@ public sealed class InvestmentsController : ApiController
 		var errorOrInstruments = await this.mediator.Send(getInstrumentsQuery);
 
 		return errorOrInstruments.Match(
-			instruments => this.Ok(this.mapper.Map<IEnumerable<Instrument>, IEnumerable<InstrumentResponse>>(instruments)),
+			instruments => this.Ok(this.mapper.Map<IEnumerable<InvestmentInstrument>, IEnumerable<InstrumentResponse>>(instruments)),
 			errors => this.Problem(errors));
 	}
 
@@ -65,7 +65,7 @@ public sealed class InvestmentsController : ApiController
 		var errorOrInstrument = await this.mediator.Send(getInstrumentByIdQuery);
 
 		return errorOrInstrument.Match(
-			instrument => this.Ok(this.mapper.Map<Instrument, InstrumentResponse>(instrument)),
+			instrument => this.Ok(this.mapper.Map<InvestmentInstrument, InstrumentResponse>(instrument)),
 			errors => this.Problem(errors));
 	}
 
