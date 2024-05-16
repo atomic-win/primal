@@ -18,19 +18,14 @@ internal sealed class InstrumentRepository : IInstrumentRepository
 
 	public async Task<ErrorOr<IEnumerable<Instrument>>> GetAllAsync(UserId userId, CancellationToken cancellationToken)
 	{
-		AsyncPageable<InstrumentTableEntity> entities = this.tableClient.QueryAsync<InstrumentTableEntity>(
+		AsyncPageable<TableEntity> entities = this.tableClient.QueryAsync<TableEntity>(
 			entity => entity.PartitionKey == userId.Value.ToString("N"));
 
 		List<Instrument> instruments = new List<Instrument>();
 
-		await foreach (InstrumentTableEntity entity in entities)
+		await foreach (TableEntity entity in entities)
 		{
-			instruments.Add(
-				new Instrument(
-					new InstrumentId(Guid.Parse(entity.RowKey)),
-					entity.Name,
-					entity.Category,
-					entity.Type));
+			instruments.Add(this.MapToInstrument(entity));
 		}
 
 		return instruments;
@@ -40,15 +35,11 @@ internal sealed class InstrumentRepository : IInstrumentRepository
 	{
 		try
 		{
-			InstrumentTableEntity entity = await this.tableClient.GetEntityAsync<InstrumentTableEntity>(
+			TableEntity entity = await this.tableClient.GetEntityAsync<TableEntity>(
 				userId.Value.ToString("N"),
 				instrumentId.Value.ToString("N"));
 
-			return new Instrument(
-				new InstrumentId(Guid.Parse(entity.RowKey)),
-				entity.Name,
-				entity.Category,
-				entity.Type);
+			return this.MapToInstrument(entity);
 		}
 		catch (RequestFailedException ex) when (ex.Status == 404)
 		{
@@ -60,23 +51,29 @@ internal sealed class InstrumentRepository : IInstrumentRepository
 		}
 	}
 
-	public async Task<ErrorOr<Instrument>> AddAsync(UserId userId, string name, InvestmentCategory category, InvestmentType type, CancellationToken cancellationToken)
+	public async Task<ErrorOr<MutualFundInstrument>> AddMutualFundAsync(UserId userId, string name, InvestmentCategory category, MutualFundId mutualFundId, CancellationToken cancellationToken)
 	{
-		var instrumentId = InstrumentId.New();
+		var mutualFundInstrument = new MutualFundInstrument(
+			InstrumentId.New(),
+			name,
+			category,
+			mutualFundId);
 
-		var instrument = new InstrumentTableEntity
+		MutualFundInstrumentTableEntity entity = new MutualFundInstrumentTableEntity
 		{
 			PartitionKey = userId.Value.ToString("N"),
-			RowKey = instrumentId.Value.ToString("N"),
+			RowKey = mutualFundInstrument.Id.Value.ToString("N"),
 			Name = name,
 			Category = category,
-			Type = type,
+			Type = mutualFundInstrument.Type,
+			MutualFundId = mutualFundId.Value.ToString("N"),
 		};
 
 		try
 		{
-			await this.tableClient.AddEntityAsync(instrument);
-			return new Instrument(instrumentId, name, category, type);
+			await this.tableClient.AddEntityAsync(entity, cancellationToken);
+
+			return mutualFundInstrument;
 		}
 		catch (RequestFailedException ex) when (ex.Status == 409)
 		{
@@ -88,7 +85,27 @@ internal sealed class InstrumentRepository : IInstrumentRepository
 		}
 	}
 
-	private sealed class InstrumentTableEntity : ITableEntity
+	private Instrument MapToInstrument(TableEntity entity)
+	{
+		var type = Enum.Parse<InvestmentType>(entity["Type"].ToString());
+
+		return type switch
+		{
+			InvestmentType.MutualFunds => new MutualFundInstrument(
+				new InstrumentId(Guid.Parse(entity.RowKey)),
+				entity["Name"].ToString(),
+				Enum.Parse<InvestmentCategory>(entity["Category"].ToString()),
+				new MutualFundId(Guid.Parse(entity["MutualFundId"].ToString()))),
+			_ => throw new NotSupportedException($"Investment type '{type}' is not supported."),
+		};
+	}
+
+	private sealed class MutualFundInstrumentTableEntity : InstrumentTableEntity
+	{
+		public string MutualFundId { get; set; }
+	}
+
+	private abstract class InstrumentTableEntity : ITableEntity
 	{
 		public string PartitionKey { get; set; }
 

@@ -1,17 +1,18 @@
 using Mapster;
+using Primal.Api.Common.Mapping;
 using Primal.Api.Middlewares;
 
 namespace Primal.Application;
 
-public static class DependencyInjection
+internal static class DependencyInjection
 {
-	public static IServiceCollection AddPresentation(this IServiceCollection services)
+	internal static IServiceCollection AddPresentation(this IServiceCollection services)
 	{
 		services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-
 		services.AddMiddlewares();
-		services.AddControllers();
+		services.AddControllers().AddNewtonsoftJson();
 		services.AddMapster();
+		services.AddMappings();
 
 		return services;
 	}

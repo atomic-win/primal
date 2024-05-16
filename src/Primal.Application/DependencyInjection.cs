@@ -1,5 +1,6 @@
 using System.Reflection;
 using FluentValidation;
+using Mapster;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Primal.Application.Common.Behaviors;
@@ -18,6 +19,9 @@ public static class DependencyInjection
 		services.AddScoped(typeof(IValidator<>), typeof(EmptyValidator<>));
 
 		services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly(), includeInternalTypes: true);
+
+		var config = TypeAdapterConfig.GlobalSettings;
+		config.Scan(Assembly.GetExecutingAssembly());
 
 		return services;
 	}

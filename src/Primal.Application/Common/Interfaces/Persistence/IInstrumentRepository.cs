@@ -10,5 +10,5 @@ public interface IInstrumentRepository
 
 	Task<ErrorOr<Instrument>> GetByIdAsync(UserId userId, InstrumentId instrumentId, CancellationToken cancellationToken);
 
-	Task<ErrorOr<Instrument>> AddAsync(UserId userId, string name, InvestmentCategory category, InvestmentType type, CancellationToken cancellationToken);
+	Task<ErrorOr<MutualFundInstrument>> AddMutualFundAsync(UserId userId, string name, InvestmentCategory category, MutualFundId mutualFundId, CancellationToken cancellationToken);
 }

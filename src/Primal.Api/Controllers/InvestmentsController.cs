@@ -1,3 +1,4 @@
+using MapsterMapper;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Primal.Api.Common;
@@ -10,11 +11,13 @@ namespace Primal.Api.Controllers;
 
 public sealed class InvestmentsController : ApiController
 {
+	private readonly IMapper mapper;
 	private readonly ISender mediator;
 	private readonly IHttpContextAccessor httpContextAccessor;
 
-	public InvestmentsController(IMediator mediator, IHttpContextAccessor httpContextAccessor)
+	public InvestmentsController(IMapper mapper, ISender mediator, IHttpContextAccessor httpContextAccessor)
 	{
+		this.mapper = mapper;
 		this.mediator = mediator;
 		this.httpContextAccessor = httpContextAccessor;
 	}
@@ -30,28 +33,24 @@ public sealed class InvestmentsController : ApiController
 		var errorOrInstrumentsResult = await this.mediator.Send(getInstrumentsQuery);
 
 		return errorOrInstrumentsResult.Match(
-			instrumentsResult => this.Ok(instrumentsResult.Select(instrumentResult => new InstrumentResponse(instrumentResult.Id.Value, instrumentResult.Name, instrumentResult.Category.ToString(), instrumentResult.Type.ToString()))),
+			instrumentsResult => this.Ok(this.mapper.Map<IEnumerable<InstrumentResult>, IEnumerable<InstrumentResponse>>(instrumentsResult)),
 			errors => this.Problem(errors));
 	}
 
 	[HttpPost]
-	[Route("instruments")]
-	public async Task<IActionResult> AddInstrumentAsync([FromBody] AddInstrumentRequest addInstrumentRequest)
+	[Route("instruments/mutualfunds")]
+	public async Task<IActionResult> AddMutualFundInstrumentAsync([FromBody] AddMutualFundInstrumentRequest addMutualFundInstrumentRequest)
 	{
 		UserId userId = this.httpContextAccessor.HttpContext.GetUserId();
 
-		var addInstrumentCommand = new AddInstrumentCommand(
-			userId,
-			addInstrumentRequest.Name,
-			Enum.Parse<InvestmentCategory>(addInstrumentRequest.Category),
-			Enum.Parse<InvestmentType>(addInstrumentRequest.Type));
+		var addMutualFundInstrumentCommand = this.mapper.Map<AddMutualFundInstrumentCommand>((userId, addMutualFundInstrumentRequest));
 
-		var errorOrInstrumentResult = await this.mediator.Send(addInstrumentCommand);
+		var errorOrMutualFundInstrumentResult = await this.mediator.Send(addMutualFundInstrumentCommand);
 
-		return errorOrInstrumentResult.Match(
-			instrumentResult => this.Created(
-				$"{this.httpContextAccessor.HttpContext.Request.Scheme}://{this.httpContextAccessor.HttpContext.Request.Host}{this.httpContextAccessor.HttpContext.Request.Path}/{instrumentResult.Id.Value}",
-				new InstrumentResponse(instrumentResult.Id.Value, instrumentResult.Name, instrumentResult.Category.ToString(), instrumentResult.Type.ToString())),
+		return errorOrMutualFundInstrumentResult.Match(
+			mutualFundInstrumentResult => this.Created(
+				$"{this.httpContextAccessor.HttpContext.Request.Scheme}://{this.httpContextAccessor.HttpContext.Request.Host}{this.httpContextAccessor.HttpContext.Request.Path}/{mutualFundInstrumentResult.Id.Value}",
+				this.mapper.Map<MutualFundInstrumentResponse>(mutualFundInstrumentResult)),
 			errors => this.Problem(errors));
 	}
 
@@ -66,7 +65,7 @@ public sealed class InvestmentsController : ApiController
 		var errorOrInstrumentResult = await this.mediator.Send(getInstrumentByIdQuery);
 
 		return errorOrInstrumentResult.Match(
-			instrumentResult => this.Ok(new InstrumentResponse(instrumentResult.Id.Value, instrumentResult.Name, instrumentResult.Category.ToString(), instrumentResult.Type.ToString())),
+			instrumentResult => this.Ok(this.mapper.Map<InstrumentResult, InstrumentResponse>(instrumentResult)),
 			errors => this.Problem(errors));
 	}
 
