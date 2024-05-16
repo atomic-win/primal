@@ -1,10 +1,11 @@
 using ErrorOr;
 using MediatR;
 using Primal.Application.Common.Interfaces.Persistence;
+using Primal.Domain.Investments;
 
 namespace Primal.Application.Investments;
 
-internal sealed class GetMutualFundByIdQueryHandler : IRequestHandler<GetMutualFundByIdQuery, ErrorOr<MutualFundResult>>
+internal sealed class GetMutualFundByIdQueryHandler : IRequestHandler<GetMutualFundByIdQuery, ErrorOr<MutualFund>>
 {
 	private readonly IMutualFundRepository mutualFundRepository;
 
@@ -13,19 +14,8 @@ internal sealed class GetMutualFundByIdQueryHandler : IRequestHandler<GetMutualF
 		this.mutualFundRepository = mutualFundRepository;
 	}
 
-	public async Task<ErrorOr<MutualFundResult>> Handle(GetMutualFundByIdQuery request, CancellationToken cancellationToken)
+	public async Task<ErrorOr<MutualFund>> Handle(GetMutualFundByIdQuery request, CancellationToken cancellationToken)
 	{
-		var errorOrMutualFund = await this.mutualFundRepository.GetByIdAsync(request.Id, cancellationToken);
-
-		return errorOrMutualFund.Match(
-			mutualFund => new MutualFundResult(
-			  mutualFund.Id,
-			  mutualFund.SchemeName,
-			  mutualFund.FundHouse,
-			  mutualFund.SchemeType,
-			  mutualFund.SchemeCategory,
-			  mutualFund.SchemeCode,
-			  mutualFund.Currency),
-			errors => (ErrorOr<MutualFundResult>)errors);
+		return await this.mutualFundRepository.GetByIdAsync(request.Id, cancellationToken);
 	}
 }

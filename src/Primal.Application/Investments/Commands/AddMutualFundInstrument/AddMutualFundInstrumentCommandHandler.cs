@@ -1,5 +1,4 @@
 using ErrorOr;
-using MapsterMapper;
 using MediatR;
 using Primal.Application.Common.Interfaces.Investments;
 using Primal.Application.Common.Interfaces.Persistence;
@@ -7,26 +6,23 @@ using Primal.Domain.Investments;
 
 namespace Primal.Application.Investments;
 
-internal sealed class AddMutualFundInstrumentCommandHandler : IRequestHandler<AddMutualFundInstrumentCommand, ErrorOr<MutualFundInstrumentResult>>
+internal sealed class AddMutualFundInstrumentCommandHandler : IRequestHandler<AddMutualFundInstrumentCommand, ErrorOr<MutualFundInstrument>>
 {
-	private readonly IMapper mapper;
 	private readonly IMutualFundApiClient mutualFundApiClient;
 	private readonly IMutualFundRepository mutualFundRepository;
 	private readonly IInstrumentRepository instrumentRepository;
 
 	public AddMutualFundInstrumentCommandHandler(
-		IMapper mapper,
 		IMutualFundApiClient mutualFundApiClient,
 		IMutualFundRepository mutualFundRepository,
 		IInstrumentRepository instrumentRepository)
 	{
-		this.mapper = mapper;
 		this.mutualFundApiClient = mutualFundApiClient;
 		this.mutualFundRepository = mutualFundRepository;
 		this.instrumentRepository = instrumentRepository;
 	}
 
-	public async Task<ErrorOr<MutualFundInstrumentResult>> Handle(AddMutualFundInstrumentCommand request, CancellationToken cancellationToken)
+	public async Task<ErrorOr<MutualFundInstrument>> Handle(AddMutualFundInstrumentCommand request, CancellationToken cancellationToken)
 	{
 		var errorOrMutualFund = await this.GetMutualFundAsync(request.SchemeCode, cancellationToken);
 
@@ -37,11 +33,7 @@ internal sealed class AddMutualFundInstrumentCommandHandler : IRequestHandler<Ad
 
 		var mutualFund = errorOrMutualFund.Value;
 
-		var errorOrMutualFundInstrument = await this.instrumentRepository.AddMutualFundAsync(request.UserId, request.Name, request.Category, mutualFund.Id, cancellationToken);
-
-		return errorOrMutualFundInstrument.Match(
-			mutualFundInstrument => this.mapper.Map<MutualFundInstrumentResult>(mutualFundInstrument),
-			errors => (ErrorOr<MutualFundInstrumentResult>)errors);
+		return await this.instrumentRepository.AddMutualFundAsync(request.UserId, request.Name, request.Category, mutualFund.Id, cancellationToken);
 	}
 
 	private async Task<ErrorOr<MutualFund>> GetMutualFundAsync(int schemeCode, CancellationToken cancellationToken)

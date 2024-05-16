@@ -14,15 +14,15 @@ internal sealed class InvestmentMappingConfig : IRegister
 			.Map(dest => dest.UserId, src => src.UserId)
 			.Map(dest => dest, src => src.AddMutualFundInstrumentRequest);
 
-		config.NewConfig<MutualFundInstrumentResult, MutualFundInstrumentResponse>()
+		config.NewConfig<MutualFundInstrument, MutualFundInstrumentResponse>()
 			.Map(dest => dest.Id, src => src.Id.Value)
 			.Map(dest => dest.MutualFundId, src => src.MutualFundId.Value);
 
-		config.NewConfig<InstrumentResult, InstrumentResponse>()
+		config.NewConfig<Instrument, InstrumentResponse>()
 			.Map(dest => dest.Id, src => src.Id.Value)
-			.Include<MutualFundInstrumentResult, MutualFundInstrumentResponse>();
+			.Include<MutualFundInstrument, MutualFundInstrumentResponse>();
 
-		config.NewConfig<MutualFundResult, MutualFundResponse>()
+		config.NewConfig<MutualFund, MutualFundResponse>()
 			.Map(dest => dest.Id, src => src.Id.Value);
 	}
 }

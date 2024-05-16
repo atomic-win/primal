@@ -30,10 +30,10 @@ public sealed class InvestmentsController : ApiController
 
 		var getInstrumentsQuery = new GetAllInstrumentsQuery(userId);
 
-		var errorOrInstrumentsResult = await this.mediator.Send(getInstrumentsQuery);
+		var errorOrInstruments = await this.mediator.Send(getInstrumentsQuery);
 
-		return errorOrInstrumentsResult.Match(
-			instrumentsResult => this.Ok(this.mapper.Map<IEnumerable<InstrumentResult>, IEnumerable<InstrumentResponse>>(instrumentsResult)),
+		return errorOrInstruments.Match(
+			instruments => this.Ok(this.mapper.Map<IEnumerable<Instrument>, IEnumerable<InstrumentResponse>>(instruments)),
 			errors => this.Problem(errors));
 	}
 
@@ -45,12 +45,12 @@ public sealed class InvestmentsController : ApiController
 
 		var addMutualFundInstrumentCommand = this.mapper.Map<AddMutualFundInstrumentCommand>((userId, addMutualFundInstrumentRequest));
 
-		var errorOrMutualFundInstrumentResult = await this.mediator.Send(addMutualFundInstrumentCommand);
+		var errorOrMutualFundInstrument = await this.mediator.Send(addMutualFundInstrumentCommand);
 
-		return errorOrMutualFundInstrumentResult.Match(
-			mutualFundInstrumentResult => this.Created(
-				$"{this.httpContextAccessor.HttpContext.Request.Scheme}://{this.httpContextAccessor.HttpContext.Request.Host}{this.httpContextAccessor.HttpContext.Request.Path}/{mutualFundInstrumentResult.Id.Value}",
-				this.mapper.Map<MutualFundInstrumentResponse>(mutualFundInstrumentResult)),
+		return errorOrMutualFundInstrument.Match(
+			mutualFundInstrument => this.Created(
+				$"{this.httpContextAccessor.HttpContext.Request.Scheme}://{this.httpContextAccessor.HttpContext.Request.Host}{this.httpContextAccessor.HttpContext.Request.Path}/{mutualFundInstrument.Id.Value}",
+				this.mapper.Map<MutualFundInstrumentResponse>(mutualFundInstrument)),
 			errors => this.Problem(errors));
 	}
 
@@ -62,10 +62,10 @@ public sealed class InvestmentsController : ApiController
 
 		var getInstrumentByIdQuery = new GetInstrumentByIdQuery(userId, new InstrumentId(id));
 
-		var errorOrInstrumentResult = await this.mediator.Send(getInstrumentByIdQuery);
+		var errorOrInstrument = await this.mediator.Send(getInstrumentByIdQuery);
 
-		return errorOrInstrumentResult.Match(
-			instrumentResult => this.Ok(this.mapper.Map<InstrumentResult, InstrumentResponse>(instrumentResult)),
+		return errorOrInstrument.Match(
+			instrument => this.Ok(this.mapper.Map<Instrument, InstrumentResponse>(instrument)),
 			errors => this.Problem(errors));
 	}
 
@@ -77,10 +77,10 @@ public sealed class InvestmentsController : ApiController
 
 		var getMutualFundByIdQuery = new GetMutualFundByIdQuery(new MutualFundId(id));
 
-		var errorOrMutualFundResult = await this.mediator.Send(getMutualFundByIdQuery);
+		var errorOrMutualFund = await this.mediator.Send(getMutualFundByIdQuery);
 
-		return errorOrMutualFundResult.Match(
-			mutualFundResult => this.Ok(this.mapper.Map<MutualFundResult, MutualFundResponse>(mutualFundResult)),
+		return errorOrMutualFund.Match(
+			mutualFund => this.Ok(this.mapper.Map<MutualFund, MutualFundResponse>(mutualFund)),
 			errors => this.Problem(errors));
 	}
 }
