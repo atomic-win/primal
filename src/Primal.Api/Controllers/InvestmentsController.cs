@@ -70,28 +70,6 @@ public sealed class InvestmentsController : ApiController
 	}
 
 	[HttpGet]
-	[Route("metadata/mutualfunds")]
-	public async Task<IActionResult> GetMutualFundBySchemaCodeAsync([FromQuery] int schemeCode)
-	{
-		UserId userId = this.httpContextAccessor.HttpContext.GetUserId();
-
-		var getMutualFundBySchemeCodeQuery = new GetMutualFundBySchemeCodeQuery(schemeCode);
-
-		var errorOrMutualFundResult = await this.mediator.Send(getMutualFundBySchemeCodeQuery);
-
-		return errorOrMutualFundResult.Match(
-			mutualFundResult => this.Ok(new MutualFundResponse(
-			  mutualFundResult.Id.Value,
-			  mutualFundResult.SchemeName,
-			  mutualFundResult.FundHouse,
-			  mutualFundResult.SchemeType,
-			  mutualFundResult.SchemeCategory,
-			  mutualFundResult.SchemeCode,
-			  mutualFundResult.Currency.ToString())),
-			errors => this.Problem(errors));
-	}
-
-	[HttpGet]
 	[Route("metadata/mutualfunds/{id:guid}")]
 	public async Task<IActionResult> GetMutualFundByIdAsync(Guid id)
 	{

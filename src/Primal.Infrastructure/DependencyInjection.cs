@@ -77,11 +77,6 @@ public static class DependencyInjection
 		})
 		.SetHandlerLifetime(Timeout.InfiniteTimeSpan);
 
-		services.AddHttpClient<IStockApiClient, StockApiClient>(client =>
-		{
-			client.BaseAddress = new Uri("https://api.mfapi.in");
-		});
-
 		return services;
 	}
 
