@@ -1,7 +1,6 @@
 using ErrorOr;
 using MediatR;
 using Primal.Application.Common.Interfaces.Persistence;
-using Primal.Domain.Sites;
 
 namespace Primal.Application.Sites;
 

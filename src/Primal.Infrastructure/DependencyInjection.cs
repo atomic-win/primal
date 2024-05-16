@@ -6,8 +6,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Primal.Application.Common.Interfaces.Authentication;
+using Primal.Application.Common.Interfaces.Investments;
 using Primal.Application.Common.Interfaces.Persistence;
 using Primal.Infrastructure.Authentication;
+using Primal.Infrastructure.Investments;
 using Primal.Infrastructure.Persistence;
 
 namespace Primal.Infrastructure;
@@ -19,6 +21,7 @@ public static class DependencyInjection
 		return services
 			.AddSingleton<TimeProvider>(TimeProvider.System)
 			.AddAuthentication(configuration)
+			.AddInvestments()
 			.AddPersistence(configuration);
 	}
 
@@ -59,6 +62,24 @@ public static class DependencyInjection
 		return services;
 	}
 
+	private static IServiceCollection AddInvestments(this IServiceCollection services)
+	{
+		services.AddHttpClient<IMutualFundApiClient, MutualFundApiClient>(client =>
+		{
+			client.BaseAddress = new Uri("https://api.mfapi.in");
+		})
+		.ConfigurePrimaryHttpMessageHandler(() =>
+		{
+			return new SocketsHttpHandler()
+			{
+				PooledConnectionLifetime = TimeSpan.FromMinutes(15),
+			};
+		})
+		.SetHandlerLifetime(Timeout.InfiniteTimeSpan);
+
+		return services;
+	}
+
 	private static IServiceCollection AddPersistence(this IServiceCollection services, ConfigurationManager configuration)
 	{
 		services.Configure<AzureStorageSettings>(configuration.GetSection(AzureStorageSettings.SectionName));
@@ -79,6 +100,12 @@ public static class DependencyInjection
 			});
 		}
 
+		return services
+			.AddRepositories();
+	}
+
+	private static IServiceCollection AddRepositories(this IServiceCollection services)
+	{
 		services.AddSingleton<IUserIdRepository>(serviceProvider =>
 		{
 			var tableClient = serviceProvider.GetKeyedService<TableClient>(Constants.TableNames.UserIds);
@@ -101,6 +128,26 @@ public static class DependencyInjection
 		{
 			var tableClient = serviceProvider.GetKeyedService<TableClient>(Constants.TableNames.SiteTimes);
 			return new SiteTimeRepository(tableClient);
+		});
+
+		services.AddSingleton<IInstrumentRepository>(serviceProvider =>
+		{
+			var tableClient = serviceProvider.GetKeyedService<TableClient>(Constants.TableNames.Instruments);
+			return new InstrumentRepository(tableClient);
+		});
+
+		services.AddSingleton<IMutualFundRepository>(serviceProvider =>
+		{
+			var idMapTableClient = serviceProvider.GetKeyedService<TableClient>(Constants.TableNames.IdMap);
+			var mutualFundTableClient = serviceProvider.GetKeyedService<TableClient>(Constants.TableNames.MutualFunds);
+			return new MutualFundRepository(idMapTableClient, mutualFundTableClient);
+		});
+
+		services.AddSingleton<IStockRepository>(serviceProvider =>
+		{
+			var idMapTableClient = serviceProvider.GetKeyedService<TableClient>(Constants.TableNames.IdMap);
+			var stockTableClient = serviceProvider.GetKeyedService<TableClient>(Constants.TableNames.Stocks);
+			return new StockRepository(idMapTableClient, stockTableClient);
 		});
 
 		return services;
