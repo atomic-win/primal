@@ -80,14 +80,7 @@ public sealed class InvestmentsController : ApiController
 		var errorOrMutualFundResult = await this.mediator.Send(getMutualFundByIdQuery);
 
 		return errorOrMutualFundResult.Match(
-			mutualFundResult => this.Ok(new MutualFundResponse(
-			  mutualFundResult.Id.Value,
-			  mutualFundResult.SchemeName,
-			  mutualFundResult.FundHouse,
-			  mutualFundResult.SchemeType,
-			  mutualFundResult.SchemeCategory,
-			  mutualFundResult.SchemeCode,
-			  mutualFundResult.Currency.ToString())),
+			mutualFundResult => this.Ok(this.mapper.Map<MutualFundResult, MutualFundResponse>(mutualFundResult)),
 			errors => this.Problem(errors));
 	}
 }

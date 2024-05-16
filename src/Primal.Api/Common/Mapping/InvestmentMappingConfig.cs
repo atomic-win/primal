@@ -1,6 +1,7 @@
 using Mapster;
 using Primal.Application.Investments;
 using Primal.Contracts.Investments;
+using Primal.Domain.Investments;
 using Primal.Domain.Users;
 
 namespace Primal.Api.Common.Mapping;
@@ -20,5 +21,8 @@ internal sealed class InvestmentMappingConfig : IRegister
 		config.NewConfig<InstrumentResult, InstrumentResponse>()
 			.Map(dest => dest.Id, src => src.Id.Value)
 			.Include<MutualFundInstrumentResult, MutualFundInstrumentResponse>();
+
+		config.NewConfig<MutualFundResult, MutualFundResponse>()
+			.Map(dest => dest.Id, src => src.Id.Value);
 	}
 }
