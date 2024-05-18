@@ -10,19 +10,27 @@ internal sealed class InvestmentMappingConfig : IRegister
 {
 	public void Register(TypeAdapterConfig config)
 	{
-		config.NewConfig<(UserId UserId, AddMutualFundInstrumentRequest AddMutualFundInstrumentRequest), AddMutualFundInstrumentCommand>()
+		config.NewConfig<(UserId UserId, AddMutualFundAssetRequest AddMutualFundAssetRequest), AddMutualFundAssetCommand>()
 			.Map(dest => dest.UserId, src => src.UserId)
-			.Map(dest => dest, src => src.AddMutualFundInstrumentRequest);
+			.Map(dest => dest, src => src.AddMutualFundAssetRequest);
 
-		config.NewConfig<MutualFundInstrument, MutualFundInstrumentResponse>()
-			.Map(dest => dest.Id, src => src.Id.Value)
-			.Map(dest => dest.MutualFundId, src => src.MutualFundId.Value);
+		config.NewConfig<(UserId UserId, AddStockAssetRequest AddStockAssetRequest), AddStockAssetCommand>()
+			.Map(dest => dest.UserId, src => src.UserId)
+			.Map(dest => dest, src => src.AddStockAssetRequest);
 
-		config.NewConfig<InvestmentInstrument, InstrumentResponse>()
+		config.NewConfig<Asset, AssetResponse>()
 			.Map(dest => dest.Id, src => src.Id.Value)
-			.Include<MutualFundInstrument, MutualFundInstrumentResponse>();
+			.Map(dest => dest.InstrumentId, src => src.InstrumentId.Value);
 
 		config.NewConfig<MutualFund, MutualFundResponse>()
 			.Map(dest => dest.Id, src => src.Id.Value);
+
+		config.NewConfig<Stock, StockResponse>()
+			.Map(dest => dest.Id, src => src.Id.Value);
+
+		config.NewConfig<InvestmentInstrument, InstrumentResponse>()
+			.Map(dest => dest.Id, src => src.Id.Value)
+			.Include<MutualFund, MutualFundResponse>()
+			.Include<Stock, StockResponse>();
 	}
 }

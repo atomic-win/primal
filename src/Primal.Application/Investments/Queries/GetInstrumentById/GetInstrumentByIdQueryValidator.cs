@@ -6,7 +6,6 @@ internal sealed class GetInstrumentByIdQueryValidator : AbstractValidator<GetIns
 {
 	public GetInstrumentByIdQueryValidator()
 	{
-		this.RuleFor(x => x.UserId.Value).NotEmpty();
 		this.RuleFor(x => x.InstrumentId.Value).NotEmpty();
 	}
 }

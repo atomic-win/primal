@@ -44,7 +44,7 @@ internal sealed class MutualFundApiClient : IMutualFundApiClient
 		}
 
 		return new MutualFund(
-			new MutualFundId(Guid.Empty),
+			new InstrumentId(Guid.Empty),
 			apiResponse.Meta.SchemeName,
 			apiResponse.Meta.FundHouse,
 			apiResponse.Meta.SchemeType,

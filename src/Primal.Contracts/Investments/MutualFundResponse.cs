@@ -2,9 +2,10 @@ namespace Primal.Contracts.Investments;
 
 public sealed record MutualFundResponse(
 	Guid Id,
-	string SchemeName,
+	string Name,
+	string Type,
 	string FundHouse,
 	string SchemeType,
 	string SchemeCategory,
 	int SchemeCode,
-	string Currency);
+	string Currency) : InstrumentResponse(Id, Name, Type, Currency);

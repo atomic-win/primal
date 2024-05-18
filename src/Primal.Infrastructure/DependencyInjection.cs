@@ -21,7 +21,7 @@ public static class DependencyInjection
 		return services
 			.AddSingleton<TimeProvider>(TimeProvider.System)
 			.AddAuthentication(configuration)
-			.AddInvestments()
+			.AddInvestments(configuration)
 			.AddPersistence(configuration);
 	}
 
@@ -62,11 +62,29 @@ public static class DependencyInjection
 		return services;
 	}
 
-	private static IServiceCollection AddInvestments(this IServiceCollection services)
+	private static IServiceCollection AddInvestments(this IServiceCollection services, ConfigurationManager configuration)
 	{
+		var investmentSettings = new InvestmentSettings();
+		configuration.GetSection(InvestmentSettings.SectionName).Bind(investmentSettings);
+
+		services.AddSingleton(Options.Create(investmentSettings));
+
 		services.AddHttpClient<IMutualFundApiClient, MutualFundApiClient>(client =>
 		{
 			client.BaseAddress = new Uri("https://api.mfapi.in");
+		})
+		.ConfigurePrimaryHttpMessageHandler(() =>
+		{
+			return new SocketsHttpHandler()
+			{
+				PooledConnectionLifetime = TimeSpan.FromMinutes(15),
+			};
+		})
+		.SetHandlerLifetime(Timeout.InfiniteTimeSpan);
+
+		services.AddHttpClient<IStockApiClient, StockApiClient>(client =>
+		{
+			client.BaseAddress = new Uri($"https://www.alphavantage.co/");
 		})
 		.ConfigurePrimaryHttpMessageHandler(() =>
 		{
@@ -132,22 +150,15 @@ public static class DependencyInjection
 
 		services.AddSingleton<IInstrumentRepository>(serviceProvider =>
 		{
-			var tableClient = serviceProvider.GetKeyedService<TableClient>(Constants.TableNames.Instruments);
-			return new InstrumentRepository(tableClient);
+			var instrumentIdMappingTableClient = serviceProvider.GetKeyedService<TableClient>(Constants.TableNames.InstrumentIdMapping);
+			var instrumentTableClient = serviceProvider.GetKeyedService<TableClient>(Constants.TableNames.Instruments);
+			return new InstrumentRepository(instrumentIdMappingTableClient, instrumentTableClient);
 		});
 
-		services.AddSingleton<IMutualFundRepository>(serviceProvider =>
+		services.AddSingleton<IAssetRepository>(serviceProvider =>
 		{
-			var idMapTableClient = serviceProvider.GetKeyedService<TableClient>(Constants.TableNames.IdMap);
-			var mutualFundTableClient = serviceProvider.GetKeyedService<TableClient>(Constants.TableNames.MutualFunds);
-			return new MutualFundRepository(idMapTableClient, mutualFundTableClient);
-		});
-
-		services.AddSingleton<IStockRepository>(serviceProvider =>
-		{
-			var idMapTableClient = serviceProvider.GetKeyedService<TableClient>(Constants.TableNames.IdMap);
-			var stockTableClient = serviceProvider.GetKeyedService<TableClient>(Constants.TableNames.Stocks);
-			return new StockRepository(idMapTableClient, stockTableClient);
+			var tableClient = serviceProvider.GetKeyedService<TableClient>(Constants.TableNames.Assets);
+			return new AssetRepository(tableClient);
 		});
 
 		return services;

@@ -16,6 +16,6 @@ internal sealed class GetInstrumentByIdQueryHandler : IRequestHandler<GetInstrum
 
 	public async Task<ErrorOr<InvestmentInstrument>> Handle(GetInstrumentByIdQuery request, CancellationToken cancellationToken)
 	{
-		return await this.instrumentRepository.GetByIdAsync(request.UserId, request.InstrumentId, cancellationToken);
+		return await this.instrumentRepository.GetByIdAsync(request.InstrumentId, cancellationToken);
 	}
 }
