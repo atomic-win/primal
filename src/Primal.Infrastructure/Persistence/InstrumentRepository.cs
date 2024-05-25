@@ -39,6 +39,29 @@ internal sealed class InstrumentRepository : IInstrumentRepository
 		}
 	}
 
+	public async Task<ErrorOr<InvestmentInstrument>> GetCashDepositAsync(CancellationToken cancellationToken)
+	{
+		try
+		{
+			InstrumentIdMappingTableEntity instrumentIdMappingEntity = await this.instrumentIdMappingTableClient.GetEntityAsync<InstrumentIdMappingTableEntity>(
+				partitionKey: "CashDeposit",
+				rowKey: string.Empty,
+				cancellationToken: cancellationToken);
+
+			return await this.GetByIdAsync(
+				new InstrumentId(Guid.Parse(instrumentIdMappingEntity.InstrumentId)),
+				cancellationToken);
+		}
+		catch (RequestFailedException ex) when (ex.Status == 404)
+		{
+			return Error.NotFound();
+		}
+		catch (Exception ex)
+		{
+			return Error.Failure(ex.Message);
+		}
+	}
+
 	public async Task<ErrorOr<InvestmentInstrument>> GetMutualFundBySchemeCodeAsync(int schemeCode, CancellationToken cancellationToken)
 	{
 		try
@@ -78,6 +101,41 @@ internal sealed class InstrumentRepository : IInstrumentRepository
 		catch (RequestFailedException ex) when (ex.Status == 404)
 		{
 			return Error.NotFound();
+		}
+		catch (Exception ex)
+		{
+			return Error.Failure(ex.Message);
+		}
+	}
+
+	public async Task<ErrorOr<InvestmentInstrument>> AddCashDepositAsync(CancellationToken cancellationToken)
+	{
+		var cashDeposit = new CashDeposit(InstrumentId.New());
+
+		InstrumentIdMappingTableEntity mappingEntity = new InstrumentIdMappingTableEntity
+		{
+			PartitionKey = "CashDeposit",
+			RowKey = string.Empty,
+			InstrumentId = cashDeposit.Id.Value.ToString("N"),
+		};
+
+		var entity = new CashDepositInstrumentTableEntity
+		{
+			PartitionKey = cashDeposit.Id.Value.ToString("N"),
+			Name = cashDeposit.Name,
+			Type = cashDeposit.Type.ToString(),
+			Currency = cashDeposit.Currency,
+		};
+
+		try
+		{
+			await this.instrumentIdMappingTableClient.AddEntityAsync(mappingEntity, cancellationToken);
+			await this.instrumentTableClient.AddEntityAsync(entity, cancellationToken);
+			return cashDeposit;
+		}
+		catch (RequestFailedException ex) when (ex.Status == 409)
+		{
+			return Error.Conflict();
 		}
 		catch (Exception ex)
 		{
@@ -203,6 +261,9 @@ internal sealed class InstrumentRepository : IInstrumentRepository
 
 		return type switch
 		{
+			InstrumentType.CashDeposits => new CashDeposit(
+				new InstrumentId(Guid.Parse(entity.PartitionKey))),
+
 			InstrumentType.MutualFunds => new MutualFund(
 				new InstrumentId(Guid.Parse(entity.PartitionKey)),
 				entity.GetString("Name"),
@@ -225,6 +286,10 @@ internal sealed class InstrumentRepository : IInstrumentRepository
 
 			_ => throw new NotSupportedException($"Investment type '{type}' is not supported."),
 		};
+	}
+
+	private sealed class CashDepositInstrumentTableEntity : InstrumentTableEntity
+	{
 	}
 
 	private sealed class MutualFundInstrumentTableEntity : InstrumentTableEntity
