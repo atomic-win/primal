@@ -54,21 +54,6 @@ public sealed class AssetsController : ApiController
 	}
 
 	[HttpPost]
-	[Route("mutualfunds")]
-	public async Task<IActionResult> AddMutualFundAssetAsync([FromBody] AddMutualFundAssetRequest addMutualFundAssetRequest)
-	{
-		UserId userId = this.httpContextAccessor.HttpContext.GetUserId();
-
-		var addMutualFundAssetCommand = this.mapper.Map<AddMutualFundAssetCommand>((userId, addMutualFundAssetRequest));
-
-		var errorOrMutualFundAsset = await this.mediator.Send(addMutualFundAssetCommand);
-
-		return errorOrMutualFundAsset.Match(
-			mutualFundAsset => this.Ok(this.mapper.Map<AssetResponse>(mutualFundAsset)),
-			errors => this.Problem(errors));
-	}
-
-	[HttpPost]
 	[Route("stocks")]
 	public async Task<IActionResult> AddStockAssetAsync([FromBody] AddStockAssetRequest addStockAssetRequest)
 	{
@@ -80,6 +65,21 @@ public sealed class AssetsController : ApiController
 
 		return errorOrStockAsset.Match(
 			stockAsset => this.Ok(this.mapper.Map<AssetResponse>(stockAsset)),
+			errors => this.Problem(errors));
+	}
+
+	[HttpPost]
+	[Route("mutualfunds")]
+	public async Task<IActionResult> AddMutualFundAssetAsync([FromBody] AddMutualFundAssetRequest addMutualFundAssetRequest)
+	{
+		UserId userId = this.httpContextAccessor.HttpContext.GetUserId();
+
+		var addMutualFundAssetCommand = this.mapper.Map<AddMutualFundAssetCommand>((userId, addMutualFundAssetRequest));
+
+		var errorOrMutualFundAsset = await this.mediator.Send(addMutualFundAssetCommand);
+
+		return errorOrMutualFundAsset.Match(
+			mutualFundAsset => this.Ok(this.mapper.Map<AssetResponse>(mutualFundAsset)),
 			errors => this.Problem(errors));
 	}
 }
