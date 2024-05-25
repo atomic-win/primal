@@ -161,6 +161,12 @@ public static class DependencyInjection
 			return new AssetRepository(tableClient);
 		});
 
+		services.AddSingleton<ITransactionRepository>(serviceProvider =>
+		{
+			var tableClient = serviceProvider.GetKeyedService<TableClient>(Constants.TableNames.Transactions);
+			return new TransactionRepository(tableClient);
+		});
+
 		return services;
 	}
 }

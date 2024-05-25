@@ -11,7 +11,8 @@ internal static class Constants
 		internal const string InstrumentIdMapping = "InstrumentIdMapping";
 		internal const string Instruments = "Instruments";
 		internal const string Assets = "Assets";
+		internal const string Transactions = "Transactions";
 
-		internal static readonly IEnumerable<string> All = new[] { UserIds, Users, Sites, SiteTimes, InstrumentIdMapping, Instruments, Assets };
+		internal static readonly IEnumerable<string> All = new[] { UserIds, Users, Sites, SiteTimes, InstrumentIdMapping, Instruments, Assets, Transactions };
 	}
 }
