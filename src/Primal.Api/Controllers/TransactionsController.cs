@@ -55,13 +55,28 @@ public sealed class TransactionsController : ApiController
 
 	[HttpPost]
 	[Route("buysell")]
-	public async Task<IActionResult> BuySellAsync([FromBody] BuySellRequest buyRequest)
+	public async Task<IActionResult> BuySellAsync([FromBody] BuySellTransactionRequest buySellTransactionRequest)
 	{
 		UserId userId = this.httpContextAccessor.HttpContext.GetUserId();
 
-		var addBuySellTransactionCommand = this.mapper.Map<AddBuySellTransactionCommand>((userId, buyRequest));
+		var addBuySellTransactionCommand = this.mapper.Map<AddBuySellTransactionCommand>((userId, buySellTransactionRequest));
 
 		var errorOrTransaction = await this.mediator.Send(addBuySellTransactionCommand);
+
+		return errorOrTransaction.Match(
+			transaction => this.Ok(this.mapper.Map<Transaction, TransactionResponse>(transaction)),
+			errors => this.Problem(errors));
+	}
+
+	[HttpPost]
+	[Route("cash")]
+	public async Task<IActionResult> CashAsync([FromBody] CashTransactionRequest cashTransactionRequest)
+	{
+		UserId userId = this.httpContextAccessor.HttpContext.GetUserId();
+
+		var addCashTransactionCommand = this.mapper.Map<AddCashTransactionCommand>((userId, cashTransactionRequest));
+
+		var errorOrTransaction = await this.mediator.Send(addCashTransactionCommand);
 
 		return errorOrTransaction.Match(
 			transaction => this.Ok(this.mapper.Map<Transaction, TransactionResponse>(transaction)),

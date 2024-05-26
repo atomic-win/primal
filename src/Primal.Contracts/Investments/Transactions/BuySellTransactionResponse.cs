@@ -1,6 +1,6 @@
 namespace Primal.Contracts.Investments;
 
-public sealed record BuySellResponse(
+public sealed record BuySellTransactionResponse(
 	Guid Id,
 	DateOnly Date,
 	string Name,

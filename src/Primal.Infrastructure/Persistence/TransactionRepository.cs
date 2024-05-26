@@ -4,6 +4,7 @@ using Azure.Data.Tables;
 using ErrorOr;
 using Primal.Application.Common.Interfaces.Persistence;
 using Primal.Domain.Investments;
+using Primal.Domain.Money;
 using Primal.Domain.Users;
 
 namespace Primal.Infrastructure.Persistence;
@@ -59,7 +60,7 @@ internal sealed class TransactionRepository : ITransactionRepository
 		}
 	}
 
-	public async Task<ErrorOr<Transaction>> AddBuySellAsync(
+	public async Task<ErrorOr<Transaction>> AddBuySellTransactionAsync(
 		UserId userId,
 		DateOnly date,
 		string name,
@@ -99,6 +100,49 @@ internal sealed class TransactionRepository : ITransactionRepository
 		}
 	}
 
+	public async Task<ErrorOr<Transaction>> AddCashTransactionAsync(
+		UserId userId,
+		DateOnly date,
+		string name,
+		TransactionType type,
+		AssetId assetId,
+		decimal amount,
+		Currency currency,
+		CancellationToken cancellationToken)
+	{
+		var transaction = new CashTransaction(
+			new TransactionId(Guid.NewGuid()),
+			date,
+			name,
+			type,
+			assetId,
+			amount,
+			currency);
+
+		try
+		{
+			TransactionTableEntity entity = new CashTransactionTableEntity
+			{
+				PartitionKey = userId.Value.ToString("N"),
+				RowKey = transaction.Id.Value.ToString("N"),
+				Date = date.ToString(CultureInfo.InvariantCulture),
+				Name = name,
+				Type = type.ToString(),
+				AssetId = assetId.Value.ToString("N"),
+				Amount = amount.ToString(CultureInfo.InvariantCulture),
+				Currency = currency.ToString(),
+			};
+
+			await this.transactionTableClient.AddEntityAsync(entity, cancellationToken: cancellationToken);
+
+			return transaction;
+		}
+		catch (Exception ex)
+		{
+			return Error.Failure(ex.Message);
+		}
+	}
+
 	private Transaction MapToTransaction(TableEntity entity)
 	{
 		TransactionType type = Enum.Parse<TransactionType>(entity.GetString("Type"));
@@ -112,6 +156,16 @@ internal sealed class TransactionRepository : ITransactionRepository
 				type,
 				new AssetId(Guid.Parse(entity.GetString("AssetId"))),
 				decimal.Parse(entity.GetString("Units"), CultureInfo.InvariantCulture)),
+
+			TransactionType.Deposit or TransactionType.Withdrawal or TransactionType.Dividend or TransactionType.Interest or TransactionType.Penalty => new CashTransaction(
+				new TransactionId(Guid.Parse(entity.RowKey)),
+				DateOnly.Parse(entity.GetString("Date"), CultureInfo.InvariantCulture),
+				entity.GetString("Name"),
+				type,
+				new AssetId(Guid.Parse(entity.GetString("AssetId"))),
+				decimal.Parse(entity.GetString("Amount"), CultureInfo.InvariantCulture),
+				Enum.Parse<Currency>(entity.GetString("Currency"))),
+
 			_ => throw new NotSupportedException($"Transaction type {type} is not supported"),
 		};
 	}
@@ -119,6 +173,13 @@ internal sealed class TransactionRepository : ITransactionRepository
 	private sealed class BuySellTransactionTableEntity : TransactionTableEntity
 	{
 		public string Units { get; set; }
+	}
+
+	private sealed class CashTransactionTableEntity : TransactionTableEntity
+	{
+		public string Amount { get; set; }
+
+		public string Currency { get; set; }
 	}
 
 	private abstract class TransactionTableEntity : ITableEntity

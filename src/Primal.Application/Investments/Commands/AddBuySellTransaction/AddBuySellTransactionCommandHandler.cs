@@ -11,7 +11,10 @@ internal sealed class AddBuySellTransactionCommandHandler : IRequestHandler<AddB
 	private readonly IInstrumentRepository instrumentRepository;
 	private readonly ITransactionRepository transactionRepository;
 
-	public AddBuySellTransactionCommandHandler(IAssetRepository assetRepository, IInstrumentRepository instrumentRepository, ITransactionRepository transactionRepository)
+	public AddBuySellTransactionCommandHandler(
+		IAssetRepository assetRepository,
+		IInstrumentRepository instrumentRepository,
+		ITransactionRepository transactionRepository)
 	{
 		this.assetRepository = assetRepository;
 		this.instrumentRepository = instrumentRepository;
@@ -37,10 +40,10 @@ internal sealed class AddBuySellTransactionCommandHandler : IRequestHandler<AddB
 		if (errorOrInstrument.Value.Type != InstrumentType.MutualFunds
 			&& errorOrInstrument.Value.Type != InstrumentType.Stocks)
 		{
-			return Error.Validation("Only mutual funds and stocks are supported for buy/sell transactions");
+			return Error.Validation(description: "Only mutual funds and stocks are supported for buy/sell transactions");
 		}
 
-		return await this.transactionRepository.AddBuySellAsync(
+		return await this.transactionRepository.AddBuySellTransactionAsync(
 			request.UserId,
 			request.Date,
 			request.Name,

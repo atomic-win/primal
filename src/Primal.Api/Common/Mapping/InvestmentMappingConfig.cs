@@ -64,13 +64,19 @@ internal sealed class InvestmentMappingConfig : IRegister
 		config.NewConfig<TransactionId, Guid>()
 			.ConstructUsing(src => src.Value);
 
-		config.NewConfig<(UserId UserId, BuySellRequest BuySellRequest), AddBuySellTransactionCommand>()
+		config.NewConfig<(UserId UserId, BuySellTransactionRequest BuySellTransactionRequest), AddBuySellTransactionCommand>()
 			.Map(dest => dest.UserId, src => src.UserId)
-			.Map(dest => dest, src => src.BuySellRequest);
+			.Map(dest => dest, src => src.BuySellTransactionRequest);
 
-		config.NewConfig<BuySellTransaction, BuySellResponse>();
+		config.NewConfig<(UserId UserId, CashTransactionRequest CashTransactionRequest), AddCashTransactionCommand>()
+			.Map(dest => dest.UserId, src => src.UserId)
+			.Map(dest => dest, src => src.CashTransactionRequest);
+
+		config.NewConfig<BuySellTransaction, BuySellTransactionResponse>();
+		config.NewConfig<CashTransaction, CashTransactionResponse>();
 
 		config.NewConfig<Transaction, TransactionResponse>()
-			.Include<BuySellTransaction, BuySellResponse>();
+			.Include<BuySellTransaction, BuySellTransactionResponse>()
+			.Include<CashTransaction, CashTransactionResponse>();
 	}
 }
