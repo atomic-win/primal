@@ -46,6 +46,10 @@ internal sealed class InvestmentMappingConfig : IRegister
 		config.NewConfig<InstrumentId, Guid>()
 			.ConstructUsing(src => src.Value);
 
+		config.NewConfig<(Guid InstrumentId, InstrumentHistoricalRequest InstrumentHistoricalRequest), GetInstrumentValueQuery>()
+			.Map(dest => dest.InstrumentId, src => src.InstrumentId)
+			.Map(dest => dest, src => src.InstrumentHistoricalRequest);
+
 		config.NewConfig<CashDeposit, CashDepositResponse>();
 		config.NewConfig<MutualFund, MutualFundResponse>();
 		config.NewConfig<Stock, StockResponse>();
@@ -54,6 +58,10 @@ internal sealed class InvestmentMappingConfig : IRegister
 			.Include<CashDeposit, CashDepositResponse>()
 			.Include<MutualFund, MutualFundResponse>()
 			.Include<Stock, StockResponse>();
+
+		config.NewConfig<(Guid InstrumentId, IEnumerable<InstrumentValue> InstrumentValues), InstrumentHistoricalResponse>()
+			.Map(dest => dest.InstrumentId, src => src.InstrumentId)
+			.Map(dest => dest.Values, src => src.InstrumentValues.ToDictionary(instrumentValue => instrumentValue.Date, instrumentValue => instrumentValue.Value));
 	}
 
 	private static void RegisterTransactionMappings(TypeAdapterConfig config)

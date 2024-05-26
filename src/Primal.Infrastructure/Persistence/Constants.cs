@@ -10,9 +10,21 @@ internal static class Constants
 		internal const string SiteTimes = "SiteTimes";
 		internal const string InstrumentIdMapping = "InstrumentIdMapping";
 		internal const string Instruments = "Instruments";
+		internal const string InstrumentHistorical = "InstrumentHistorical";
 		internal const string Assets = "Assets";
 		internal const string Transactions = "Transactions";
 
-		internal static readonly IEnumerable<string> All = new[] { UserIds, Users, Sites, SiteTimes, InstrumentIdMapping, Instruments, Assets, Transactions };
+		internal static readonly IEnumerable<string> All =
+		[
+			UserIds,
+			Users,
+			Sites,
+			SiteTimes,
+			InstrumentIdMapping,
+			Instruments,
+			InstrumentHistorical,
+			Assets,
+			Transactions,
+		];
 	}
 }

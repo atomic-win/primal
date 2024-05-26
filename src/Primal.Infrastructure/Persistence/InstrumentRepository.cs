@@ -12,11 +12,16 @@ internal sealed class InstrumentRepository : IInstrumentRepository
 {
 	private readonly TableClient instrumentIdMappingTableClient;
 	private readonly TableClient instrumentTableClient;
+	private readonly TableClient instrumentHistoricalValueTableClient;
 
-	internal InstrumentRepository(TableClient instrumentIdMappingTableClient, TableClient instrumentTableClient)
+	internal InstrumentRepository(
+		TableClient instrumentIdMappingTableClient,
+		TableClient instrumentTableClient,
+		TableClient instrumentHistoricalValueTableClient)
 	{
 		this.instrumentIdMappingTableClient = instrumentIdMappingTableClient;
 		this.instrumentTableClient = instrumentTableClient;
+		this.instrumentHistoricalValueTableClient = instrumentHistoricalValueTableClient;
 	}
 
 	public async Task<ErrorOr<InvestmentInstrument>> GetByIdAsync(InstrumentId instrumentId, CancellationToken cancellationToken)
@@ -105,6 +110,48 @@ internal sealed class InstrumentRepository : IInstrumentRepository
 		catch (Exception ex)
 		{
 			return Error.Failure(ex.Message);
+		}
+	}
+
+	public async Task<ErrorOr<DateOnly>> GetLatestInstrumentValueDateAsync(InstrumentId instrumentId, CancellationToken cancellationToken)
+	{
+		try
+		{
+			InstrumentHistoricalValueTableEntity entity = await this.instrumentHistoricalValueTableClient.GetEntityAsync<InstrumentHistoricalValueTableEntity>(
+				partitionKey: instrumentId.Value.ToString("N"),
+				rowKey: "LatestDate",
+				cancellationToken: cancellationToken);
+
+			return DateOnly.Parse(entity.Value, CultureInfo.InvariantCulture);
+		}
+		catch (RequestFailedException ex) when (ex.Status == 404)
+		{
+			return DateOnly.MinValue;
+		}
+		catch (Exception ex)
+		{
+			return Error.Failure(description: ex.Message);
+		}
+	}
+
+	public async Task<ErrorOr<decimal>> GetInstrumentValueAsync(InstrumentId instrumentId, DateOnly date, CancellationToken cancellationToken)
+	{
+		try
+		{
+			InstrumentHistoricalValueTableEntity instrumentHistoricalValueEntity = await this.instrumentHistoricalValueTableClient.GetEntityAsync<InstrumentHistoricalValueTableEntity>(
+				partitionKey: instrumentId.Value.ToString("N"),
+				rowKey: date.ToString("yyyyMMdd", CultureInfo.InvariantCulture),
+				cancellationToken: cancellationToken);
+
+			return decimal.Parse(instrumentHistoricalValueEntity.Value, CultureInfo.InvariantCulture);
+		}
+		catch (RequestFailedException ex) when (ex.Status == 404)
+		{
+			return Error.NotFound();
+		}
+		catch (Exception ex)
+		{
+			return Error.Failure(description: ex.Message);
 		}
 	}
 
@@ -255,6 +302,54 @@ internal sealed class InstrumentRepository : IInstrumentRepository
 		}
 	}
 
+	public async Task<ErrorOr<Success>> UpdateInstrumentValueAsync(
+		InstrumentId instrumentId,
+		DateOnly date,
+		decimal value,
+		CancellationToken cancellationToken)
+	{
+		var errorOrLatestDate = await this.GetLatestInstrumentValueDateAsync(instrumentId, cancellationToken);
+
+		if (errorOrLatestDate.IsError)
+		{
+			return errorOrLatestDate.Errors;
+		}
+
+		try
+		{
+			await this.instrumentHistoricalValueTableClient.UpsertEntityAsync(
+				new InstrumentHistoricalValueTableEntity
+				{
+					PartitionKey = instrumentId.Value.ToString("N"),
+					RowKey = date.ToString("yyyyMMdd", CultureInfo.InvariantCulture),
+					Value = value.ToString(CultureInfo.InvariantCulture),
+				},
+				cancellationToken: cancellationToken);
+
+			if (date > errorOrLatestDate.Value)
+			{
+				await this.instrumentHistoricalValueTableClient.UpsertEntityAsync(
+					new InstrumentHistoricalValueTableEntity
+					{
+						PartitionKey = instrumentId.Value.ToString("N"),
+						RowKey = "LatestDate",
+						Value = date.ToString(CultureInfo.InvariantCulture),
+					},
+					cancellationToken: cancellationToken);
+			}
+
+			return Result.Success;
+		}
+		catch (RequestFailedException ex) when (ex.Status == 409)
+		{
+			return Error.Conflict();
+		}
+		catch (Exception ex)
+		{
+			return Error.Failure(ex.Message);
+		}
+	}
+
 	private InvestmentInstrument MapToInstrument(TableEntity entity)
 	{
 		var type = Enum.Parse<InstrumentType>(entity.GetString("Type"));
@@ -286,6 +381,19 @@ internal sealed class InstrumentRepository : IInstrumentRepository
 
 			_ => throw new NotSupportedException($"Investment type '{type}' is not supported."),
 		};
+	}
+
+	private sealed class InstrumentHistoricalValueTableEntity : ITableEntity
+	{
+		public string PartitionKey { get; set; }
+
+		public string RowKey { get; set; }
+
+		public DateTimeOffset? Timestamp { get; set; }
+
+		public ETag ETag { get; set; }
+
+		public string Value { get; set; }
 	}
 
 	private sealed class CashDepositInstrumentTableEntity : InstrumentTableEntity

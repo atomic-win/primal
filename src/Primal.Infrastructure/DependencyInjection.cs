@@ -152,7 +152,8 @@ public static class DependencyInjection
 		{
 			var instrumentIdMappingTableClient = serviceProvider.GetKeyedService<TableClient>(Constants.TableNames.InstrumentIdMapping);
 			var instrumentTableClient = serviceProvider.GetKeyedService<TableClient>(Constants.TableNames.Instruments);
-			return new InstrumentRepository(instrumentIdMappingTableClient, instrumentTableClient);
+			var instrumentHistoricalTableClient = serviceProvider.GetKeyedService<TableClient>(Constants.TableNames.InstrumentHistorical);
+			return new InstrumentRepository(instrumentIdMappingTableClient, instrumentTableClient, instrumentHistoricalTableClient);
 		});
 
 		services.AddSingleton<IAssetRepository>(serviceProvider =>

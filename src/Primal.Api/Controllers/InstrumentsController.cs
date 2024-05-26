@@ -33,4 +33,17 @@ public sealed class InstrumentsController : ApiController
 			instrument => this.Ok(this.mapper.Map<InvestmentInstrument, InstrumentResponse>(instrument)),
 			errors => this.Problem(errors));
 	}
+
+	[HttpGet]
+	[Route("{id:guid}/historical")]
+	public async Task<IActionResult> GetInstrumentHistoricalAsync(Guid id, [FromBody] InstrumentHistoricalRequest request)
+	{
+		var getInstrumentHistoricalQuery = this.mapper.Map<(Guid, InstrumentHistoricalRequest), GetInstrumentValueQuery>((id, request));
+
+		var errorOrInstrumentValues = await this.mediator.Send(getInstrumentHistoricalQuery);
+
+		return errorOrInstrumentValues.Match(
+			instrumentValues => this.Ok(this.mapper.Map<(Guid, IEnumerable<InstrumentValue>), InstrumentHistoricalResponse>((id, instrumentValues))),
+			errors => this.Problem(errors));
+	}
 }
