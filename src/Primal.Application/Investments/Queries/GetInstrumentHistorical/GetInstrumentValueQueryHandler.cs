@@ -38,7 +38,12 @@ internal sealed class GetInstrumentValueQueryHandler : IRequestHandler<GetInstru
 
 		for (DateOnly date = startDate; date <= endDate; date = date.AddDays(1))
 		{
-			var errorOrValue = await this.GetInstrumentValueAsync(instrument, date, cancellationToken);
+			var errorOrValue = await this.instrumentRepository.GetInstrumentValueAsync(instrument.Id, date, cancellationToken);
+
+			if (errorOrValue.IsError && errorOrValue.FirstError is { Type: ErrorType.NotFound })
+			{
+				continue;
+			}
 
 			if (errorOrValue.IsError)
 			{
@@ -49,15 +54,5 @@ internal sealed class GetInstrumentValueQueryHandler : IRequestHandler<GetInstru
 		}
 
 		return result;
-	}
-
-	private async Task<ErrorOr<decimal>> GetInstrumentValueAsync(InvestmentInstrument investmentInstrument, DateOnly date, CancellationToken cancellationToken)
-	{
-		while (date.DayOfWeek == DayOfWeek.Saturday || date.DayOfWeek == DayOfWeek.Sunday)
-		{
-			date = date.AddDays(-1);
-		}
-
-		return await this.instrumentRepository.GetInstrumentValueAsync(investmentInstrument.Id, date, cancellationToken);
 	}
 }
