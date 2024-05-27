@@ -103,7 +103,7 @@ internal sealed class UpdateInstrumentValuesCommandHandler : IRequestHandler<Upd
 
 	private DateOnly GetLatestValueDate()
 	{
-		var date = DateOnly.FromDateTime(this.timeProvider.GetUtcNow().Date).AddDays(-1);
+		var date = DateOnly.FromDateTime(this.timeProvider.GetUtcNow().Date);
 
 		while (date.DayOfWeek == DayOfWeek.Saturday || date.DayOfWeek == DayOfWeek.Sunday)
 		{
