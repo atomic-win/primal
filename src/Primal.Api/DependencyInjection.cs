@@ -23,7 +23,7 @@ internal static class DependencyInjection
 			.UseInMemoryStorage());
 
 		// Add the processing server as IHostedService
-		services.AddHangfireServer(x => x.SchedulePollingInterval = TimeSpan.FromSeconds(1));
+		services.AddHangfireServer();
 
 		return services;
 	}

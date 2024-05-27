@@ -101,12 +101,6 @@ internal sealed class StockApiClient : IStockApiClient
 		public double MatchScore { get; init; }
 	}
 
-	// timestamp,open,high,low,close,volume
-	// 2024-05-16,421.8000,425.4200,420.3500,420.9900,17530050
-	// 2024-05-15,417.9000,423.8100,417.2700,423.0800,22239533
-	// 2024-05-14,412.0200,417.4900,411.5500,416.5600,15109306
-	// 2024-05-13,418.0100,418.3480,410.8200,413.7200,15440226
-	// 2024-05-10,412.9350,415.3800,411.8000,414.7400,13402281
 	private sealed class HistoricalValue
 	{
 		[Name("timestamp")]
