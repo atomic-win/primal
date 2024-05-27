@@ -6,6 +6,8 @@ namespace Primal.Application.Common.Interfaces.Persistence;
 
 public interface IInstrumentRepository
 {
+	Task<ErrorOr<IEnumerable<InvestmentInstrument>>> GetAllAsync(CancellationToken cancellationToken);
+
 	Task<ErrorOr<InvestmentInstrument>> GetByIdAsync(InstrumentId instrumentId, CancellationToken cancellationToken);
 
 	Task<ErrorOr<InvestmentInstrument>> GetCashDepositAsync(CancellationToken cancellationToken);

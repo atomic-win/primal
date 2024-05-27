@@ -24,6 +24,25 @@ internal sealed class InstrumentRepository : IInstrumentRepository
 		this.instrumentHistoricalValueTableClient = instrumentHistoricalValueTableClient;
 	}
 
+	public async Task<ErrorOr<IEnumerable<InvestmentInstrument>>> GetAllAsync(CancellationToken cancellationToken)
+	{
+		try
+		{
+			List<InvestmentInstrument> instruments = new List<InvestmentInstrument>();
+
+			await foreach (TableEntity entity in this.instrumentTableClient.QueryAsync<TableEntity>(cancellationToken: cancellationToken))
+			{
+				instruments.Add(this.MapToInstrument(entity));
+			}
+
+			return instruments;
+		}
+		catch (Exception ex)
+		{
+			return Error.Failure(description: ex.Message);
+		}
+	}
+
 	public async Task<ErrorOr<InvestmentInstrument>> GetByIdAsync(InstrumentId instrumentId, CancellationToken cancellationToken)
 	{
 		try
