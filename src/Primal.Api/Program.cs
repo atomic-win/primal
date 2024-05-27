@@ -16,8 +16,8 @@ var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
 {
 	app.Services
-		.GetService<IBackgroundJobClientV2>()
-		.Schedule<IMediator>(mediator => mediator.Send(new UpdateInstrumentValuesCommand(), app.Lifetime.ApplicationStopping), delay: TimeSpan.FromSeconds(30));
+		.GetService<IRecurringJobManagerV2>()
+		.AddOrUpdate<IMediator>("UpdateInstrumentValues", mediator => mediator.Send(new UpdateInstrumentValuesCommand(), app.Lifetime.ApplicationStopping), Cron.Minutely);
 
 	app.UseHttpsRedirection();
 	app.UseAuthentication();
