@@ -23,6 +23,7 @@ internal sealed class StockApiClient : IStockApiClient
 	public async Task<ErrorOr<Stock>> GetBySymbolAsync(string symbol, CancellationToken cancellationToken)
 	{
 		var requestUri = $"query?&apikey={this.investmentSettings.AlphaVantageApiKey}&datatype=csv&function=SYMBOL_SEARCH&keywords={symbol}";
+
 		using (var reader = new StreamReader(await this.httpClient.GetStreamAsync(requestUri, cancellationToken)))
 		{
 			var csvReader = new CsvReader(reader, CultureInfo.InvariantCulture);
@@ -53,10 +54,23 @@ internal sealed class StockApiClient : IStockApiClient
 		}
 	}
 
-	// symbol,name,type,region,marketOpen,marketClose,timezone,currency,matchScore
-	// MSFT,Microsoft Corporation,Equity,United States,09:30,16:00,UTC-04,USD,1.0000
-	// MSFT.AMS,1X MSFT,ETF,Amsterdam,09:00,17:40,UTC+01,EUR,0.7273
-	// MSFT34.SAO,Microsoft Corporation,Equity,Brazil/Sao Paolo,10:00,17:30,UTC-03,BRL,0.6154
+	public async Task<ErrorOr<IEnumerable<InstrumentValue>>> GetHistoricalValuesAsync(string symbol, CancellationToken cancellationToken)
+	{
+		var requestUri = $"query?&apikey={this.investmentSettings.AlphaVantageApiKey}&datatype=csv&function=TIME_SERIES_DAILY&symbol={symbol}&outputsize=full";
+
+		using (var reader = new StreamReader(await this.httpClient.GetStreamAsync(requestUri, cancellationToken)))
+		{
+			var csvReader = new CsvReader(reader, CultureInfo.InvariantCulture);
+			var records = csvReader.GetRecords<HistoricalValue>().ToList();
+
+			return records
+				.Select(x => new InstrumentValue(
+					DateOnly.Parse(x.Date, CultureInfo.InvariantCulture),
+					x.Close))
+				.ToArray();
+		}
+	}
+
 	private sealed class SymbolSearch
 	{
 		[Name("symbol")]
@@ -85,5 +99,26 @@ internal sealed class StockApiClient : IStockApiClient
 
 		[Name("matchScore")]
 		public double MatchScore { get; init; }
+	}
+
+	private sealed class HistoricalValue
+	{
+		[Name("timestamp")]
+		public string Date { get; init; }
+
+		[Name("open")]
+		public decimal Open { get; init; }
+
+		[Name("high")]
+		public decimal High { get; init; }
+
+		[Name("low")]
+		public decimal Low { get; init; }
+
+		[Name("close")]
+		public decimal Close { get; init; }
+
+		[Name("volume")]
+		public long Volume { get; init; }
 	}
 }

@@ -6,6 +6,8 @@ namespace Primal.Application.Common.Interfaces.Persistence;
 
 public interface IInstrumentRepository
 {
+	Task<ErrorOr<IEnumerable<InvestmentInstrument>>> GetAllAsync(CancellationToken cancellationToken);
+
 	Task<ErrorOr<InvestmentInstrument>> GetByIdAsync(InstrumentId instrumentId, CancellationToken cancellationToken);
 
 	Task<ErrorOr<InvestmentInstrument>> GetCashDepositAsync(CancellationToken cancellationToken);
@@ -13,6 +15,10 @@ public interface IInstrumentRepository
 	Task<ErrorOr<InvestmentInstrument>> GetMutualFundBySchemeCodeAsync(int schemeCode, CancellationToken cancellationToken);
 
 	Task<ErrorOr<InvestmentInstrument>> GetStockBySymbolAsync(string symbol, CancellationToken cancellationToken);
+
+	Task<ErrorOr<IReadOnlyDictionary<DateOnly, decimal>>> GetInstrumentValuesAsync(InstrumentId instrumentId, CancellationToken cancellationToken);
+
+	Task<ErrorOr<DateOnly>> GetInstrumentValuesRefreshedDateAsync(InstrumentId instrumentId, CancellationToken cancellationToken);
 
 	Task<ErrorOr<InvestmentInstrument>> AddCashDepositAsync(CancellationToken cancellationToken);
 
@@ -34,5 +40,10 @@ public interface IInstrumentRepository
 		string marketClose,
 		string timezone,
 		Currency currency,
+		CancellationToken cancellationToken);
+
+	Task<ErrorOr<Success>> UpdateInstrumentValuesAsync(
+		InstrumentId instrumentId,
+		IReadOnlyDictionary<DateOnly, decimal> values,
 		CancellationToken cancellationToken);
 }

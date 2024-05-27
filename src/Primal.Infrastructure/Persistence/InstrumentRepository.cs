@@ -1,6 +1,8 @@
 using System.Globalization;
+using System.Text.Json;
 using Azure;
 using Azure.Data.Tables;
+using Azure.Storage.Blobs;
 using ErrorOr;
 using Primal.Application.Common.Interfaces.Persistence;
 using Primal.Domain.Investments;
@@ -12,11 +14,35 @@ internal sealed class InstrumentRepository : IInstrumentRepository
 {
 	private readonly TableClient instrumentIdMappingTableClient;
 	private readonly TableClient instrumentTableClient;
+	private readonly BlobContainerClient instrumentBlobContainerClient;
 
-	internal InstrumentRepository(TableClient instrumentIdMappingTableClient, TableClient instrumentTableClient)
+	internal InstrumentRepository(
+		TableClient instrumentIdMappingTableClient,
+		TableClient instrumentTableClient,
+		BlobContainerClient instrumentBlobContainerClient)
 	{
 		this.instrumentIdMappingTableClient = instrumentIdMappingTableClient;
 		this.instrumentTableClient = instrumentTableClient;
+		this.instrumentBlobContainerClient = instrumentBlobContainerClient;
+	}
+
+	public async Task<ErrorOr<IEnumerable<InvestmentInstrument>>> GetAllAsync(CancellationToken cancellationToken)
+	{
+		try
+		{
+			List<InvestmentInstrument> instruments = new List<InvestmentInstrument>();
+
+			await foreach (TableEntity entity in this.instrumentTableClient.QueryAsync<TableEntity>(cancellationToken: cancellationToken))
+			{
+				instruments.Add(this.MapToInstrument(entity));
+			}
+
+			return instruments;
+		}
+		catch (Exception ex)
+		{
+			return Error.Failure(description: ex.Message);
+		}
 	}
 
 	public async Task<ErrorOr<InvestmentInstrument>> GetByIdAsync(InstrumentId instrumentId, CancellationToken cancellationToken)
@@ -105,6 +131,59 @@ internal sealed class InstrumentRepository : IInstrumentRepository
 		catch (Exception ex)
 		{
 			return Error.Failure(ex.Message);
+		}
+	}
+
+	public async Task<ErrorOr<IReadOnlyDictionary<DateOnly, decimal>>> GetInstrumentValuesAsync(InstrumentId instrumentId, CancellationToken cancellationToken)
+	{
+		try
+		{
+			BlobClient blobClient = this.instrumentBlobContainerClient.GetBlobClient(instrumentId.Value.ToString("N") + "/historical.json");
+
+			var blobDownloadInfo = await blobClient.DownloadContentAsync(cancellationToken: cancellationToken);
+
+			var serializedString = blobDownloadInfo.Value.Content.ToString();
+
+			if (serializedString.Length == 0)
+			{
+				return Error.NotFound();
+			}
+
+			return JsonSerializer.Deserialize<Dictionary<DateOnly, decimal>>(serializedString);
+		}
+		catch (RequestFailedException ex) when (ex.Status == 404)
+		{
+			return Error.NotFound();
+		}
+		catch (Exception ex)
+		{
+			return Error.Failure(ex.Message);
+		}
+	}
+
+	public async Task<ErrorOr<DateOnly>> GetInstrumentValuesRefreshedDateAsync(InstrumentId instrumentId, CancellationToken cancellationToken)
+	{
+		try
+		{
+			InstrumentValuesRefreshedDateTableEntity entity = await this.instrumentTableClient.GetEntityAsync<InstrumentValuesRefreshedDateTableEntity>(
+				partitionKey: instrumentId.Value.ToString("N"),
+				rowKey: string.Empty,
+				cancellationToken: cancellationToken);
+
+			if (string.IsNullOrWhiteSpace(entity.ValuesRefreshedDate))
+			{
+				return DateOnly.MinValue;
+			}
+
+			return DateOnly.Parse(entity.ValuesRefreshedDate, CultureInfo.InvariantCulture);
+		}
+		catch (RequestFailedException ex) when (ex.Status == 404)
+		{
+			return Error.NotFound();
+		}
+		catch (Exception ex)
+		{
+			return Error.Failure(description: ex.Message);
 		}
 	}
 
@@ -255,6 +334,40 @@ internal sealed class InstrumentRepository : IInstrumentRepository
 		}
 	}
 
+	public async Task<ErrorOr<Success>> UpdateInstrumentValuesAsync(
+		InstrumentId instrumentId,
+		IReadOnlyDictionary<DateOnly, decimal> values,
+		CancellationToken cancellationToken)
+	{
+		try
+		{
+			BlobClient blobClient = this.instrumentBlobContainerClient.GetBlobClient(instrumentId.Value.ToString("N") + "/historical.json");
+
+			await blobClient.UploadAsync(
+				BinaryData.FromObjectAsJson(values),
+				cancellationToken: cancellationToken);
+
+			var entity = new InstrumentValuesRefreshedDateTableEntity
+			{
+				PartitionKey = instrumentId.Value.ToString("N"),
+				RowKey = string.Empty,
+				ValuesRefreshedDate = DateOnly.FromDateTime(DateTime.UtcNow).ToString(CultureInfo.InvariantCulture),
+			};
+
+			await this.instrumentTableClient.UpsertEntityAsync(entity, cancellationToken: cancellationToken);
+
+			return Result.Success;
+		}
+		catch (RequestFailedException ex) when (ex.Status == 409)
+		{
+			return Error.Conflict();
+		}
+		catch (Exception ex)
+		{
+			return Error.Failure(ex.Message);
+		}
+	}
+
 	private InvestmentInstrument MapToInstrument(TableEntity entity)
 	{
 		var type = Enum.Parse<InstrumentType>(entity.GetString("Type"));
@@ -286,6 +399,19 @@ internal sealed class InstrumentRepository : IInstrumentRepository
 
 			_ => throw new NotSupportedException($"Investment type '{type}' is not supported."),
 		};
+	}
+
+	private sealed class InstrumentValuesRefreshedDateTableEntity : ITableEntity
+	{
+		public string PartitionKey { get; set; }
+
+		public string RowKey { get; set; }
+
+		public DateTimeOffset? Timestamp { get; set; }
+
+		public ETag ETag { get; set; }
+
+		public string ValuesRefreshedDate { get; set; }
 	}
 
 	private sealed class CashDepositInstrumentTableEntity : InstrumentTableEntity

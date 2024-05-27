@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json.Serialization;
@@ -51,6 +52,39 @@ internal sealed class MutualFundApiClient : IMutualFundApiClient
 			apiResponse.Meta.SchemeCategory,
 			apiResponse.Meta.SchemeCode,
 			Currency.INR);
+	}
+
+	public async Task<ErrorOr<IEnumerable<InstrumentValue>>> GetHistoricalValuesAsync(int schemeCode, CancellationToken cancellationToken)
+	{
+		var response = await this.httpClient.GetAsync($"/mf/{schemeCode}", cancellationToken);
+
+		if (response.StatusCode == HttpStatusCode.NotFound)
+		{
+			return Error.NotFound();
+		}
+
+		if (response.StatusCode != HttpStatusCode.OK)
+		{
+			return Error.Failure();
+		}
+
+		var apiResponse = await response.Content.ReadFromJsonAsync<MutualFundApiResponse>(cancellationToken);
+
+		if (!string.Equals(apiResponse.Status, "SUCCESS", StringComparison.OrdinalIgnoreCase))
+		{
+			return Error.Unexpected();
+		}
+
+		if (apiResponse.Data.Count == 0)
+		{
+			return Error.NotFound();
+		}
+
+		return apiResponse.Data
+			.Select(data => new InstrumentValue(
+				DateOnly.ParseExact(data.Date, "dd-MM-yyyy", CultureInfo.InvariantCulture),
+				decimal.Parse(data.Nav, CultureInfo.InvariantCulture)))
+			.ToArray();
 	}
 
 	private sealed class MutualFundApiResponse

@@ -2,6 +2,16 @@ namespace Primal.Infrastructure.Persistence;
 
 internal static class Constants
 {
+	internal static class BlobContainerNames
+	{
+		internal const string Instruments = "instruments";
+
+		internal static readonly IEnumerable<string> All =
+		[
+			Instruments,
+		];
+	}
+
 	internal static class TableNames
 	{
 		internal const string UserIds = "UserIds";
@@ -13,6 +23,16 @@ internal static class Constants
 		internal const string Assets = "Assets";
 		internal const string Transactions = "Transactions";
 
-		internal static readonly IEnumerable<string> All = new[] { UserIds, Users, Sites, SiteTimes, InstrumentIdMapping, Instruments, Assets, Transactions };
+		internal static readonly IEnumerable<string> All =
+		[
+			UserIds,
+			Users,
+			Sites,
+			SiteTimes,
+			InstrumentIdMapping,
+			Instruments,
+			Assets,
+			Transactions,
+		];
 	}
 }
