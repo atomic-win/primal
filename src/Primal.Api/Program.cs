@@ -17,7 +17,7 @@ var app = builder.Build();
 {
 	app.Services
 		.GetService<IBackgroundJobClientV2>()
-		.Enqueue<IMediator>(mediator => mediator.Send(new UpdateInstrumentValuesCommand(), app.Lifetime.ApplicationStopping));
+		.Schedule<IMediator>(mediator => mediator.Send(new UpdateInstrumentValuesCommand(), app.Lifetime.ApplicationStopping), delay: TimeSpan.FromSeconds(30));
 
 	app.UseHttpsRedirection();
 	app.UseAuthentication();

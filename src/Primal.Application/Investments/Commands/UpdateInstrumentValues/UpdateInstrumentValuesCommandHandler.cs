@@ -27,7 +27,7 @@ internal sealed class UpdateInstrumentValuesCommandHandler : IRequestHandler<Upd
 
 	public async Task<ErrorOr<Success>> Handle(UpdateInstrumentValuesCommand request, CancellationToken cancellationToken)
 	{
-		var errorOrInstruments = await this.GetSortedInstrumentsAsync(cancellationToken);
+		var errorOrInstruments = await this.GetInstrumentsAsync(cancellationToken);
 
 		if (errorOrInstruments.IsError)
 		{
@@ -35,9 +35,9 @@ internal sealed class UpdateInstrumentValuesCommandHandler : IRequestHandler<Upd
 		}
 
 		List<Error> errors = new();
-		foreach (var (date, instrument) in errorOrInstruments.Value)
+		foreach (var instrument in errorOrInstruments.Value)
 		{
-			var errorOrSuccess = await this.UpdateInstrumentValueAsync(instrument, date, cancellationToken);
+			var errorOrSuccess = await this.UpdateInstrumentValueAsync(instrument, cancellationToken);
 
 			if (errorOrSuccess.IsError)
 			{
@@ -48,7 +48,7 @@ internal sealed class UpdateInstrumentValuesCommandHandler : IRequestHandler<Upd
 		return errors.Count > 0 ? errors : Result.Success;
 	}
 
-	private async Task<ErrorOr<SortedList<DateOnly, InvestmentInstrument>>> GetSortedInstrumentsAsync(CancellationToken cancellationToken)
+	private async Task<ErrorOr<IEnumerable<InvestmentInstrument>>> GetInstrumentsAsync(CancellationToken cancellationToken)
 	{
 		var errorOrInstruments = await this.instrumentRepository.GetAllAsync(cancellationToken);
 
@@ -57,8 +57,8 @@ internal sealed class UpdateInstrumentValuesCommandHandler : IRequestHandler<Upd
 			return errorOrInstruments.Errors;
 		}
 
-		var cutOffDate = this.GetCutOffDate();
-		var result = new SortedList<DateOnly, InvestmentInstrument>();
+		var latestValueDate = this.GetLatestValueDate();
+		var result = new List<(DateOnly RefreshedDate, InvestmentInstrument Instrument)>();
 
 		foreach (var instrument in errorOrInstruments.Value)
 		{
@@ -68,19 +68,22 @@ internal sealed class UpdateInstrumentValuesCommandHandler : IRequestHandler<Upd
 				continue;
 			}
 
-			var latestValueDate = await this.instrumentRepository.GetLatestInstrumentValueDateAsync(instrument.Id, cancellationToken);
-			if (latestValueDate.IsError || latestValueDate.Value >= cutOffDate)
+			var errorOrRefreshedDate = await this.instrumentRepository.GetInstrumentValuesRefreshedDateAsync(instrument.Id, cancellationToken);
+			if (errorOrRefreshedDate.IsError || errorOrRefreshedDate.Value >= latestValueDate)
 			{
 				continue;
 			}
 
-			result.Add(latestValueDate.Value, instrument);
+			result.Add((errorOrRefreshedDate.Value, instrument));
 		}
 
-		return result;
+		return result
+			.OrderBy(x => x.RefreshedDate)
+			.Select(x => x.Instrument)
+			.ToArray();
 	}
 
-	private async Task<ErrorOr<Success>> UpdateInstrumentValueAsync(InvestmentInstrument investmentInstrument, DateOnly startDate, CancellationToken cancellationToken)
+	private async Task<ErrorOr<Success>> UpdateInstrumentValueAsync(InvestmentInstrument investmentInstrument, CancellationToken cancellationToken)
 	{
 		var errorOrInstrumentValues = investmentInstrument switch
 		{
@@ -94,22 +97,13 @@ internal sealed class UpdateInstrumentValuesCommandHandler : IRequestHandler<Upd
 			return errorOrInstrumentValues.Errors;
 		}
 
-		var errors = new List<Error>();
-		foreach (var instrumentValue in errorOrInstrumentValues.Value.Where(x => x.Date >= startDate).OrderBy(x => x.Date))
-		{
-			var errorOrSuccess = await this.instrumentRepository.UpdateInstrumentValueAsync(investmentInstrument.Id, instrumentValue.Date, instrumentValue.Value, cancellationToken);
-			if (errorOrSuccess.IsError)
-			{
-				errors.AddRange(errorOrSuccess.Errors);
-			}
-		}
-
-		return errors.Count > 0 ? errors : Result.Success;
+		var instrumentValuesMap = errorOrInstrumentValues.Value.ToDictionary(x => x.Date, x => x.Value);
+		return await this.instrumentRepository.UpdateInstrumentValuesAsync(investmentInstrument.Id, instrumentValuesMap, cancellationToken);
 	}
 
-	private DateOnly GetCutOffDate()
+	private DateOnly GetLatestValueDate()
 	{
-		var date = DateOnly.FromDateTime(DateTime.Today).AddDays(-1);
+		var date = DateOnly.FromDateTime(this.timeProvider.GetUtcNow().Date).AddDays(-1);
 
 		while (date.DayOfWeek == DayOfWeek.Saturday || date.DayOfWeek == DayOfWeek.Sunday)
 		{

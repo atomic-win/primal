@@ -1,6 +1,8 @@
 using System.Globalization;
+using System.Text.Json;
 using Azure;
 using Azure.Data.Tables;
+using Azure.Storage.Blobs;
 using ErrorOr;
 using Primal.Application.Common.Interfaces.Persistence;
 using Primal.Domain.Investments;
@@ -12,16 +14,16 @@ internal sealed class InstrumentRepository : IInstrumentRepository
 {
 	private readonly TableClient instrumentIdMappingTableClient;
 	private readonly TableClient instrumentTableClient;
-	private readonly TableClient instrumentHistoricalValueTableClient;
+	private readonly BlobContainerClient instrumentBlobContainerClient;
 
 	internal InstrumentRepository(
 		TableClient instrumentIdMappingTableClient,
 		TableClient instrumentTableClient,
-		TableClient instrumentHistoricalValueTableClient)
+		BlobContainerClient instrumentBlobContainerClient)
 	{
 		this.instrumentIdMappingTableClient = instrumentIdMappingTableClient;
 		this.instrumentTableClient = instrumentTableClient;
-		this.instrumentHistoricalValueTableClient = instrumentHistoricalValueTableClient;
+		this.instrumentBlobContainerClient = instrumentBlobContainerClient;
 	}
 
 	public async Task<ErrorOr<IEnumerable<InvestmentInstrument>>> GetAllAsync(CancellationToken cancellationToken)
@@ -132,37 +134,48 @@ internal sealed class InstrumentRepository : IInstrumentRepository
 		}
 	}
 
-	public async Task<ErrorOr<DateOnly>> GetLatestInstrumentValueDateAsync(InstrumentId instrumentId, CancellationToken cancellationToken)
+	public async Task<ErrorOr<IReadOnlyDictionary<DateOnly, decimal>>> GetInstrumentValuesAsync(InstrumentId instrumentId, CancellationToken cancellationToken)
 	{
 		try
 		{
-			InstrumentHistoricalValueTableEntity entity = await this.instrumentHistoricalValueTableClient.GetEntityAsync<InstrumentHistoricalValueTableEntity>(
-				partitionKey: instrumentId.Value.ToString("N"),
-				rowKey: "LatestDate",
-				cancellationToken: cancellationToken);
+			BlobClient blobClient = this.instrumentBlobContainerClient.GetBlobClient(instrumentId.Value.ToString("N") + "/historical.json");
 
-			return DateOnly.Parse(entity.Value, CultureInfo.InvariantCulture);
+			var blobDownloadInfo = await blobClient.DownloadContentAsync(cancellationToken: cancellationToken);
+
+			var serializedString = blobDownloadInfo.Value.Content.ToString();
+
+			if (serializedString.Length == 0)
+			{
+				return Error.NotFound();
+			}
+
+			return JsonSerializer.Deserialize<Dictionary<DateOnly, decimal>>(serializedString);
 		}
 		catch (RequestFailedException ex) when (ex.Status == 404)
 		{
-			return DateOnly.MinValue;
+			return Error.NotFound();
 		}
 		catch (Exception ex)
 		{
-			return Error.Failure(description: ex.Message);
+			return Error.Failure(ex.Message);
 		}
 	}
 
-	public async Task<ErrorOr<decimal>> GetInstrumentValueAsync(InstrumentId instrumentId, DateOnly date, CancellationToken cancellationToken)
+	public async Task<ErrorOr<DateOnly>> GetInstrumentValuesRefreshedDateAsync(InstrumentId instrumentId, CancellationToken cancellationToken)
 	{
 		try
 		{
-			InstrumentHistoricalValueTableEntity instrumentHistoricalValueEntity = await this.instrumentHistoricalValueTableClient.GetEntityAsync<InstrumentHistoricalValueTableEntity>(
+			InstrumentValuesRefreshedDateTableEntity entity = await this.instrumentTableClient.GetEntityAsync<InstrumentValuesRefreshedDateTableEntity>(
 				partitionKey: instrumentId.Value.ToString("N"),
-				rowKey: date.ToString("yyyyMMdd", CultureInfo.InvariantCulture),
+				rowKey: string.Empty,
 				cancellationToken: cancellationToken);
 
-			return decimal.Parse(instrumentHistoricalValueEntity.Value, CultureInfo.InvariantCulture);
+			if (string.IsNullOrWhiteSpace(entity.ValuesRefreshedDate))
+			{
+				return DateOnly.MinValue;
+			}
+
+			return DateOnly.Parse(entity.ValuesRefreshedDate, CultureInfo.InvariantCulture);
 		}
 		catch (RequestFailedException ex) when (ex.Status == 404)
 		{
@@ -321,41 +334,27 @@ internal sealed class InstrumentRepository : IInstrumentRepository
 		}
 	}
 
-	public async Task<ErrorOr<Success>> UpdateInstrumentValueAsync(
+	public async Task<ErrorOr<Success>> UpdateInstrumentValuesAsync(
 		InstrumentId instrumentId,
-		DateOnly date,
-		decimal value,
+		IReadOnlyDictionary<DateOnly, decimal> values,
 		CancellationToken cancellationToken)
 	{
-		var errorOrLatestDate = await this.GetLatestInstrumentValueDateAsync(instrumentId, cancellationToken);
-
-		if (errorOrLatestDate.IsError)
-		{
-			return errorOrLatestDate.Errors;
-		}
-
 		try
 		{
-			await this.instrumentHistoricalValueTableClient.UpsertEntityAsync(
-				new InstrumentHistoricalValueTableEntity
-				{
-					PartitionKey = instrumentId.Value.ToString("N"),
-					RowKey = date.ToString("yyyyMMdd", CultureInfo.InvariantCulture),
-					Value = value.ToString(CultureInfo.InvariantCulture),
-				},
+			BlobClient blobClient = this.instrumentBlobContainerClient.GetBlobClient(instrumentId.Value.ToString("N") + "/historical.json");
+
+			await blobClient.UploadAsync(
+				BinaryData.FromObjectAsJson(values),
 				cancellationToken: cancellationToken);
 
-			if (date > errorOrLatestDate.Value)
+			var entity = new InstrumentValuesRefreshedDateTableEntity
 			{
-				await this.instrumentHistoricalValueTableClient.UpsertEntityAsync(
-					new InstrumentHistoricalValueTableEntity
-					{
-						PartitionKey = instrumentId.Value.ToString("N"),
-						RowKey = "LatestDate",
-						Value = date.ToString(CultureInfo.InvariantCulture),
-					},
-					cancellationToken: cancellationToken);
-			}
+				PartitionKey = instrumentId.Value.ToString("N"),
+				RowKey = string.Empty,
+				ValuesRefreshedDate = DateOnly.FromDateTime(DateTime.UtcNow).ToString(CultureInfo.InvariantCulture),
+			};
+
+			await this.instrumentTableClient.UpsertEntityAsync(entity, cancellationToken: cancellationToken);
 
 			return Result.Success;
 		}
@@ -402,7 +401,7 @@ internal sealed class InstrumentRepository : IInstrumentRepository
 		};
 	}
 
-	private sealed class InstrumentHistoricalValueTableEntity : ITableEntity
+	private sealed class InstrumentValuesRefreshedDateTableEntity : ITableEntity
 	{
 		public string PartitionKey { get; set; }
 
@@ -412,7 +411,7 @@ internal sealed class InstrumentRepository : IInstrumentRepository
 
 		public ETag ETag { get; set; }
 
-		public string Value { get; set; }
+		public string ValuesRefreshedDate { get; set; }
 	}
 
 	private sealed class CashDepositInstrumentTableEntity : InstrumentTableEntity

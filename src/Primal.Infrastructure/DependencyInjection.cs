@@ -1,5 +1,6 @@
 using System.Text;
 using Azure.Data.Tables;
+using Azure.Storage.Blobs;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -108,6 +109,12 @@ public static class DependencyInjection
 			return new TableServiceClient(azureStorageSettings.ConnectionString);
 		});
 
+		services.AddSingleton<BlobServiceClient>(serviceProvider =>
+		{
+			var azureStorageSettings = serviceProvider.GetRequiredService<IOptions<AzureStorageSettings>>().Value;
+			return new BlobServiceClient(azureStorageSettings.ConnectionString);
+		});
+
 		foreach (string tableName in Constants.TableNames.All)
 		{
 			services.AddKeyedSingleton<TableClient>(tableName, (serviceProvider, _) =>
@@ -115,6 +122,17 @@ public static class DependencyInjection
 				var tableServiceClient = serviceProvider.GetRequiredService<TableServiceClient>();
 				tableServiceClient.CreateTableIfNotExists(tableName);
 				return tableServiceClient.GetTableClient(tableName);
+			});
+		}
+
+		foreach (string blobContainerName in Constants.BlobContainerNames.All)
+		{
+			services.AddKeyedSingleton<BlobContainerClient>(blobContainerName, (serviceProvider, _) =>
+			{
+				var blobServiceClient = serviceProvider.GetRequiredService<BlobServiceClient>();
+				var blobContainerClient = blobServiceClient.GetBlobContainerClient(blobContainerName);
+				blobContainerClient.CreateIfNotExists();
+				return blobContainerClient;
 			});
 		}
 
@@ -152,8 +170,9 @@ public static class DependencyInjection
 		{
 			var instrumentIdMappingTableClient = serviceProvider.GetKeyedService<TableClient>(Constants.TableNames.InstrumentIdMapping);
 			var instrumentTableClient = serviceProvider.GetKeyedService<TableClient>(Constants.TableNames.Instruments);
-			var instrumentHistoricalTableClient = serviceProvider.GetKeyedService<TableClient>(Constants.TableNames.InstrumentHistorical);
-			return new InstrumentRepository(instrumentIdMappingTableClient, instrumentTableClient, instrumentHistoricalTableClient);
+			var instrumentBlobContainerClient = serviceProvider.GetKeyedService<BlobContainerClient>(Constants.BlobContainerNames.Instruments);
+
+			return new InstrumentRepository(instrumentIdMappingTableClient, instrumentTableClient, instrumentBlobContainerClient);
 		});
 
 		services.AddSingleton<IAssetRepository>(serviceProvider =>

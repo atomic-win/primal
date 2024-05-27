@@ -31,6 +31,14 @@ internal sealed class GetInstrumentValueQueryHandler : IRequestHandler<GetInstru
 			return Error.Validation(description: "Only mutual funds and stocks have historical values");
 		}
 
+		var errorOrInstrumentValues = await this.instrumentRepository.GetInstrumentValuesAsync(instrument.Id, cancellationToken);
+
+		if (errorOrInstrumentValues.IsError)
+		{
+			return errorOrInstrumentValues.Errors;
+		}
+
+		var instrumentValuesMap = errorOrInstrumentValues.Value;
 		DateOnly startDate = request.StartDate;
 		DateOnly endDate = request.EndDate;
 
@@ -38,19 +46,12 @@ internal sealed class GetInstrumentValueQueryHandler : IRequestHandler<GetInstru
 
 		for (DateOnly date = startDate; date <= endDate; date = date.AddDays(1))
 		{
-			var errorOrValue = await this.instrumentRepository.GetInstrumentValueAsync(instrument.Id, date, cancellationToken);
-
-			if (errorOrValue.IsError && errorOrValue.FirstError is { Type: ErrorType.NotFound })
+			if (!instrumentValuesMap.TryGetValue(date, out decimal value))
 			{
 				continue;
 			}
 
-			if (errorOrValue.IsError)
-			{
-				return errorOrValue.Errors;
-			}
-
-			result.Add(new InstrumentValue(date, errorOrValue.Value));
+			result.Add(new InstrumentValue(date, value));
 		}
 
 		return result;
