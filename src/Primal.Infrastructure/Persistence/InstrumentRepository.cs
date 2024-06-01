@@ -345,6 +345,7 @@ internal sealed class InstrumentRepository : IInstrumentRepository
 
 			await blobClient.UploadAsync(
 				BinaryData.FromObjectAsJson(values),
+				overwrite: true,
 				cancellationToken: cancellationToken);
 
 			var entity = new InstrumentValuesRefreshedDateTableEntity
