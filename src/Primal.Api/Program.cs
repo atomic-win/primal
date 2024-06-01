@@ -1,8 +1,6 @@
 using Hangfire;
-using MediatR;
 using Primal.Api.Middlewares;
 using Primal.Application;
-using Primal.Application.Investments;
 using Primal.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -16,8 +14,7 @@ var builder = WebApplication.CreateBuilder(args);
 var app = builder.Build();
 {
 	app.Services
-		.GetService<IRecurringJobManagerV2>()
-		.AddOrUpdate<IMediator>("UpdateInstrumentValues", mediator => mediator.Send(new UpdateInstrumentValuesCommand(), app.Lifetime.ApplicationStopping), Cron.Minutely);
+		.GetService<IRecurringJobManagerV2>();
 
 	app.UseHttpsRedirection();
 	app.UseAuthentication();
