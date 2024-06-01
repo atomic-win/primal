@@ -1,4 +1,3 @@
-using Hangfire;
 using Mapster;
 using Primal.Api.Common.Mapping;
 using Primal.Api.Middlewares;
@@ -14,16 +13,6 @@ internal static class DependencyInjection
 		services.AddControllers().AddNewtonsoftJson();
 		services.AddMapster();
 		services.AddMappings();
-
-		// Add Hangfire services
-		services.AddHangfire(configuration => configuration
-			.SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
-			.UseSimpleAssemblyNameTypeSerializer()
-			.UseRecommendedSerializerSettings()
-			.UseInMemoryStorage());
-
-		// Add the processing server as IHostedService
-		services.AddHangfireServer();
 
 		return services;
 	}
