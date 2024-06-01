@@ -97,8 +97,7 @@ internal sealed class UpdateInstrumentValuesCommandHandler : IRequestHandler<Upd
 			return errorOrInstrumentValues.Errors;
 		}
 
-		var instrumentValuesMap = errorOrInstrumentValues.Value.ToDictionary(x => x.Date, x => x.Value);
-		return await this.instrumentRepository.UpdateInstrumentValuesAsync(investmentInstrument.Id, instrumentValuesMap, cancellationToken);
+		return await this.instrumentRepository.UpdateInstrumentValuesAsync(investmentInstrument.Id, errorOrInstrumentValues.Value, cancellationToken);
 	}
 
 	private DateOnly GetLatestValueDate()

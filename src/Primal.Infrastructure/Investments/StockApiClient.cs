@@ -1,3 +1,4 @@
+using System.Collections.Frozen;
 using System.Globalization;
 using CsvHelper;
 using CsvHelper.Configuration.Attributes;
@@ -54,7 +55,7 @@ internal sealed class StockApiClient : IStockApiClient
 		}
 	}
 
-	public async Task<ErrorOr<IEnumerable<InstrumentValue>>> GetHistoricalValuesAsync(string symbol, CancellationToken cancellationToken)
+	public async Task<ErrorOr<IReadOnlyDictionary<DateOnly, decimal>>> GetHistoricalValuesAsync(string symbol, CancellationToken cancellationToken)
 	{
 		var requestUri = $"query?&apikey={this.investmentSettings.AlphaVantageApiKey}&datatype=csv&function=TIME_SERIES_DAILY&symbol={symbol}&outputsize=full";
 
@@ -64,10 +65,9 @@ internal sealed class StockApiClient : IStockApiClient
 			var records = csvReader.GetRecords<HistoricalValue>().ToList();
 
 			return records
-				.Select(x => new InstrumentValue(
-					DateOnly.Parse(x.Date, CultureInfo.InvariantCulture),
-					x.Close))
-				.ToArray();
+				.ToFrozenDictionary(
+					keySelector: x => DateOnly.Parse(x.Date, CultureInfo.InvariantCulture),
+					elementSelector: x => x.Close);
 		}
 	}
 
