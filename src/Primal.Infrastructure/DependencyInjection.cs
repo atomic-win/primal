@@ -82,7 +82,7 @@ public static class DependencyInjection
 
 		services.AddSingleton(Options.Create(investmentSettings));
 
-		services.AddHttpClient<IMutualFundApiClient, MutualFundApiClient>(client =>
+		services.AddHttpClient<MutualFundApiClient>(client =>
 		{
 			client.BaseAddress = new Uri("https://api.mfapi.in");
 		})
@@ -108,9 +108,18 @@ public static class DependencyInjection
 		})
 		.SetHandlerLifetime(Timeout.InfiniteTimeSpan);
 
+		services.AddSingleton<IMutualFundApiClient>(serviceProvider =>
+		{
+			return new CachedMutualFundApiClient(
+				serviceProvider.GetRequiredService<IDistributedCache>(),
+				serviceProvider.GetRequiredService<MutualFundApiClient>());
+		});
+
 		services.AddSingleton<IStockApiClient>(serviceProvider =>
 		{
-			return serviceProvider.GetRequiredService<StockApiClient>();
+			return new CachedStockApiClient(
+				serviceProvider.GetRequiredService<IDistributedCache>(),
+				serviceProvider.GetRequiredService<StockApiClient>());
 		});
 
 		services.AddSingleton<IExchangeRateProvider>(serviceProvider =>
