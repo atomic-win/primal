@@ -2,16 +2,6 @@ namespace Primal.Infrastructure.Persistence;
 
 internal static class Constants
 {
-	internal static class BlobContainerNames
-	{
-		internal const string Instruments = "instruments";
-
-		internal static readonly IEnumerable<string> All =
-		[
-			Instruments,
-		];
-	}
-
 	internal static class TableNames
 	{
 		internal const string UserIds = "UserIds";

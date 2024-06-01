@@ -16,10 +16,6 @@ public interface IInstrumentRepository
 
 	Task<ErrorOr<InvestmentInstrument>> GetStockBySymbolAsync(string symbol, CancellationToken cancellationToken);
 
-	Task<ErrorOr<IReadOnlyDictionary<DateOnly, decimal>>> GetInstrumentValuesAsync(InstrumentId instrumentId, CancellationToken cancellationToken);
-
-	Task<ErrorOr<DateOnly>> GetInstrumentValuesRefreshedDateAsync(InstrumentId instrumentId, CancellationToken cancellationToken);
-
 	Task<ErrorOr<InvestmentInstrument>> AddCashDepositAsync(CancellationToken cancellationToken);
 
 	Task<ErrorOr<InvestmentInstrument>> AddMutualFundAsync(
@@ -40,10 +36,5 @@ public interface IInstrumentRepository
 		string marketClose,
 		string timezone,
 		Currency currency,
-		CancellationToken cancellationToken);
-
-	Task<ErrorOr<Success>> UpdateInstrumentValuesAsync(
-		InstrumentId instrumentId,
-		IReadOnlyDictionary<DateOnly, decimal> values,
 		CancellationToken cancellationToken);
 }
