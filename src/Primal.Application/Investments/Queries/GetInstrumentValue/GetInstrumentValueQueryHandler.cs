@@ -6,7 +6,7 @@ using Primal.Domain.Investments;
 
 namespace Primal.Application.Investments;
 
-internal sealed class GetInstrumentValueQueryHandler : IRequestHandler<GetInstrumentValueQuery, ErrorOr<IEnumerable<InstrumentValue>>>
+internal sealed class GetInstrumentValueQueryHandler : IRequestHandler<GetInstrumentValueQuery, ErrorOr<IReadOnlyDictionary<DateOnly, decimal>>>
 {
 	private readonly IMutualFundApiClient mutualFundApiClient;
 	private readonly IStockApiClient stockApiClient;
@@ -22,7 +22,7 @@ internal sealed class GetInstrumentValueQueryHandler : IRequestHandler<GetInstru
 		this.instrumentRepository = instrumentRepository;
 	}
 
-	public async Task<ErrorOr<IEnumerable<InstrumentValue>>> Handle(GetInstrumentValueQuery request, CancellationToken cancellationToken)
+	public async Task<ErrorOr<IReadOnlyDictionary<DateOnly, decimal>>> Handle(GetInstrumentValueQuery request, CancellationToken cancellationToken)
 	{
 		var errorOrInstrument = await this.instrumentRepository.GetByIdAsync(request.InstrumentId, cancellationToken);
 
@@ -51,22 +51,8 @@ internal sealed class GetInstrumentValueQueryHandler : IRequestHandler<GetInstru
 			return errorOrInstrumentValues.Errors;
 		}
 
-		var instrumentValuesMap = errorOrInstrumentValues.Value;
-		DateOnly startDate = request.StartDate;
-		DateOnly endDate = request.EndDate;
-
-		var result = new List<InstrumentValue>(endDate.DayNumber - startDate.DayNumber + 1);
-
-		for (DateOnly date = startDate; date <= endDate; date = date.AddDays(1))
-		{
-			if (!instrumentValuesMap.TryGetValue(date, out decimal value))
-			{
-				continue;
-			}
-
-			result.Add(new InstrumentValue(date, value));
-		}
-
-		return result;
+		return errorOrInstrumentValues.Value
+			.Where(kvp => kvp.Key >= request.StartDate && kvp.Key <= request.EndDate)
+			.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 	}
 }

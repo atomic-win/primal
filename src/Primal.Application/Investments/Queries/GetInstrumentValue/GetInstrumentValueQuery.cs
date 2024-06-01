@@ -7,4 +7,4 @@ namespace Primal.Application.Investments;
 public sealed record GetInstrumentValueQuery(
 	InstrumentId InstrumentId,
 	DateOnly StartDate,
-	DateOnly EndDate) : IRequest<ErrorOr<IEnumerable<InstrumentValue>>>;
+	DateOnly EndDate) : IRequest<ErrorOr<IReadOnlyDictionary<DateOnly, decimal>>>;

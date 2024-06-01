@@ -13,13 +13,11 @@ public sealed class InstrumentsController : ApiController
 {
 	private readonly IMapper mapper;
 	private readonly ISender mediator;
-	private readonly IHttpContextAccessor httpContextAccessor;
 
-	public InstrumentsController(IMapper mapper, ISender mediator, IHttpContextAccessor httpContextAccessor)
+	public InstrumentsController(IMapper mapper, ISender mediator)
 	{
 		this.mapper = mapper;
 		this.mediator = mediator;
-		this.httpContextAccessor = httpContextAccessor;
 	}
 
 	[HttpGet]
@@ -37,14 +35,14 @@ public sealed class InstrumentsController : ApiController
 
 	[HttpGet]
 	[Route("{id:guid}/historical")]
-	public async Task<IActionResult> GetInstrumentHistoricalAsync(Guid id, [FromBody] InstrumentHistoricalRequest request)
+	public async Task<IActionResult> GetInstrumentHistoricalAsync(Guid id, DateOnly startDate, DateOnly endDate)
 	{
-		var getInstrumentHistoricalQuery = this.mapper.Map<(Guid, InstrumentHistoricalRequest), GetInstrumentValueQuery>((id, request));
+		var getInstrumentValueQuery = new GetInstrumentValueQuery(new InstrumentId(id), startDate, endDate);
 
-		var errorOrInstrumentValues = await this.mediator.Send(getInstrumentHistoricalQuery);
+		var errorOrInstrumentValues = await this.mediator.Send(getInstrumentValueQuery);
 
 		return errorOrInstrumentValues.Match(
-			instrumentValues => this.Ok(this.mapper.Map<(Guid, IEnumerable<InstrumentValue>), InstrumentHistoricalResponse>((id, instrumentValues))),
+			instrumentValues => this.Ok(instrumentValues),
 			errors => this.Problem(errors));
 	}
 
