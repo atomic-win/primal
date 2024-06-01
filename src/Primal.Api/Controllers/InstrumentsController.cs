@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Primal.Application.Investments;
 using Primal.Contracts.Investments;
 using Primal.Domain.Investments;
+using Primal.Domain.Money;
 
 namespace Primal.Api.Controllers;
 
@@ -44,6 +45,19 @@ public sealed class InstrumentsController : ApiController
 
 		return errorOrInstrumentValues.Match(
 			instrumentValues => this.Ok(this.mapper.Map<(Guid, IEnumerable<InstrumentValue>), InstrumentHistoricalResponse>((id, instrumentValues))),
+			errors => this.Problem(errors));
+	}
+
+	[HttpGet]
+	[Route("exchangerates")]
+	public async Task<IActionResult> GetExchangeRatesAsync(Currency from, Currency to, DateOnly startDate, DateOnly endDate)
+	{
+		var getExchangeRatesQuery = new GetExchangeRatesQuery(from, to, startDate, endDate);
+
+		var errorOrExchangeRates = await this.mediator.Send(getExchangeRatesQuery);
+
+		return errorOrExchangeRates.Match(
+			exchangeRates => this.Ok(exchangeRates),
 			errors => this.Problem(errors));
 	}
 }

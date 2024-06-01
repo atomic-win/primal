@@ -2,6 +2,7 @@ using System.Text;
 using Azure.Data.Tables;
 using Azure.Storage.Blobs;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -21,9 +22,20 @@ public static class DependencyInjection
 	{
 		return services
 			.AddSingleton<TimeProvider>(TimeProvider.System)
+			.AddRedis(configuration)
 			.AddAuthentication(configuration)
 			.AddInvestments(configuration)
 			.AddPersistence(configuration);
+	}
+
+	private static IServiceCollection AddRedis(this IServiceCollection services, ConfigurationManager configuration)
+	{
+		services.AddStackExchangeRedisCache(options =>
+		{
+			options.Configuration = configuration["Redis:ConnectionString"];
+		});
+
+		return services;
 	}
 
 	private static IServiceCollection AddAuthentication(this IServiceCollection services, ConfigurationManager configuration)
@@ -83,7 +95,7 @@ public static class DependencyInjection
 		})
 		.SetHandlerLifetime(Timeout.InfiniteTimeSpan);
 
-		services.AddHttpClient<IStockApiClient, StockApiClient>(client =>
+		services.AddHttpClient<StockApiClient>(client =>
 		{
 			client.BaseAddress = new Uri($"https://www.alphavantage.co/");
 		})
@@ -95,6 +107,18 @@ public static class DependencyInjection
 			};
 		})
 		.SetHandlerLifetime(Timeout.InfiniteTimeSpan);
+
+		services.AddSingleton<IStockApiClient>(serviceProvider =>
+		{
+			return serviceProvider.GetRequiredService<StockApiClient>();
+		});
+
+		services.AddSingleton<IExchangeRateProvider>(serviceProvider =>
+		{
+			return new CachedExchangeRateProvider(
+				serviceProvider.GetRequiredService<IDistributedCache>(),
+				serviceProvider.GetRequiredService<StockApiClient>());
+		});
 
 		return services;
 	}

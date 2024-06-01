@@ -10,7 +10,7 @@ using Primal.Domain.Money;
 
 namespace Primal.Infrastructure.Investments;
 
-internal sealed class StockApiClient : IStockApiClient
+internal sealed class StockApiClient : IStockApiClient, IExchangeRateProvider
 {
 	private readonly InvestmentSettings investmentSettings;
 	private readonly HttpClient httpClient;
@@ -62,7 +62,23 @@ internal sealed class StockApiClient : IStockApiClient
 		using (var reader = new StreamReader(await this.httpClient.GetStreamAsync(requestUri, cancellationToken)))
 		{
 			var csvReader = new CsvReader(reader, CultureInfo.InvariantCulture);
-			var records = csvReader.GetRecords<HistoricalValue>().ToList();
+			var records = csvReader.GetRecords<StockHistoricalValue>().ToList();
+
+			return records
+				.ToFrozenDictionary(
+					keySelector: x => DateOnly.Parse(x.Date, CultureInfo.InvariantCulture),
+					elementSelector: x => x.Close);
+		}
+	}
+
+	public async Task<ErrorOr<IReadOnlyDictionary<DateOnly, decimal>>> GetExchangeRatesAsync(Currency from, Currency to, CancellationToken cancellationToken)
+	{
+		var requestUri = $"query?&apikey={this.investmentSettings.AlphaVantageApiKey}&datatype=csv&function=FX_DAILY&from_symbol={from}&to_symbol={to}&outputsize=full";
+
+		using (var reader = new StreamReader(await this.httpClient.GetStreamAsync(requestUri, cancellationToken)))
+		{
+			var csvReader = new CsvReader(reader, CultureInfo.InvariantCulture);
+			var records = csvReader.GetRecords<ExchangeRate>().ToList();
 
 			return records
 				.ToFrozenDictionary(
@@ -101,7 +117,7 @@ internal sealed class StockApiClient : IStockApiClient
 		public double MatchScore { get; init; }
 	}
 
-	private sealed class HistoricalValue
+	private sealed class StockHistoricalValue
 	{
 		[Name("timestamp")]
 		public string Date { get; init; }
@@ -120,5 +136,23 @@ internal sealed class StockApiClient : IStockApiClient
 
 		[Name("volume")]
 		public long Volume { get; init; }
+	}
+
+	private sealed class ExchangeRate
+	{
+		[Name("timestamp")]
+		public string Date { get; init; }
+
+		[Name("open")]
+		public decimal Open { get; init; }
+
+		[Name("high")]
+		public decimal High { get; init; }
+
+		[Name("low")]
+		public decimal Low { get; init; }
+
+		[Name("close")]
+		public decimal Close { get; init; }
 	}
 }
