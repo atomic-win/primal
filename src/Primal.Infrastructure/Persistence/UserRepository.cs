@@ -18,16 +18,29 @@ internal sealed class UserRepository : IUserRepository
 
 	public async Task<ErrorOr<User>> GetUser(UserId userId, CancellationToken cancellationToken)
 	{
-		AsyncPageable<UserTableEntity> entities = this.tableClient.QueryAsync<UserTableEntity>(
-			entity => entity.PartitionKey == userId.Value.ToString("N"),
-			cancellationToken: cancellationToken);
-
-		await foreach (UserTableEntity entity in entities.WithCancellation(cancellationToken))
+		try
 		{
-			return new User(new UserId(Guid.ParseExact(entity.PartitionKey, "N")), new MailAddress(entity.Email));
-		}
+			UserTableEntity entity = await this.tableClient.GetEntityAsync<UserTableEntity>(
+				partitionKey: userId.Value.ToString("N"),
+				rowKey: string.Empty,
+				cancellationToken: cancellationToken);
 
-		return Error.NotFound();
+			return new User(
+				new UserId(Guid.ParseExact(entity.PartitionKey, "N")),
+				new MailAddress(entity.Email),
+				entity.FirstName,
+				entity.LastName,
+				entity.FullName,
+				new Uri(entity.ProfilePictureUrl));
+		}
+		catch (RequestFailedException ex) when (ex.Status == 404)
+		{
+			return Error.NotFound();
+		}
+		catch (Exception ex)
+		{
+			return Error.Failure(ex.Message);
+		}
 	}
 
 	public async Task<ErrorOr<Success>> AddUser(User user, CancellationToken cancellationToken)
@@ -36,6 +49,10 @@ internal sealed class UserRepository : IUserRepository
 		{
 			PartitionKey = user.Id.Value.ToString("N"),
 			Email = user.Email.Address,
+			FirstName = user.FirstName,
+			LastName = user.LastName,
+			FullName = user.FullName,
+			ProfilePictureUrl = user.ProfilePictureUrl.ToString(),
 		};
 
 		try
@@ -64,5 +81,13 @@ internal sealed class UserRepository : IUserRepository
 		public ETag ETag { get; set; }
 
 		public string Email { get; set; } = default!;
+
+		public string FirstName { get; set; } = string.Empty;
+
+		public string LastName { get; set; } = string.Empty;
+
+		public string FullName { get; set; } = string.Empty;
+
+		public string ProfilePictureUrl { get; set; } = string.Empty;
 	}
 }

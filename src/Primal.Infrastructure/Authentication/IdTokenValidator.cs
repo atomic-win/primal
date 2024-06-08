@@ -13,7 +13,14 @@ internal sealed class IdTokenValidator : IIdTokenValidator
 		try
 		{
 			GoogleJsonWebSignature.Payload payload = await GoogleJsonWebSignature.ValidateAsync(idToken);
-			return new IdentityProviderUser(new IdentityProviderUserId(payload.Subject), IdentityProvider.Google, payload.Email);
+			return new IdentityProviderUser(
+				new IdentityProviderUserId(payload.Subject),
+				IdentityProvider.Google,
+				payload.Email,
+				payload.GivenName,
+				payload.FamilyName,
+				payload.Name,
+				new Uri(payload.Picture));
 		}
 		catch (InvalidJwtException ex) when (string.Equals(ex.Message, "JWT has expired.", StringComparison.OrdinalIgnoreCase))
 		{

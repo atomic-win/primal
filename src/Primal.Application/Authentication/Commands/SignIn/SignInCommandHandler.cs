@@ -94,7 +94,13 @@ internal sealed class SignInCommandHandler : IRequestHandler<SignInCommand, Erro
 
 	private async Task<ErrorOr<SignInResult>> HandleUserNotFound(UserId userId, IdentityProviderUser identityProviderUser, CancellationToken cancellationToken)
 	{
-		var user = new User(userId, identityProviderUser.Email);
+		var user = new User(
+			userId,
+			identityProviderUser.Email,
+			identityProviderUser.FirstName,
+			identityProviderUser.LastName,
+			identityProviderUser.FullName,
+			identityProviderUser.ProfilePictureUrl);
 
 		var errorOrAddUser = await this.userRepository.AddUser(user, cancellationToken);
 
