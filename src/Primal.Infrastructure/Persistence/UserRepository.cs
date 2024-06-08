@@ -16,7 +16,7 @@ internal sealed class UserRepository : IUserRepository
 		this.tableClient = tableClient;
 	}
 
-	public async Task<ErrorOr<User>> GetUser(UserId userId, CancellationToken cancellationToken)
+	public async Task<ErrorOr<User>> GetUserAsync(UserId userId, CancellationToken cancellationToken)
 	{
 		try
 		{
@@ -43,7 +43,7 @@ internal sealed class UserRepository : IUserRepository
 		}
 	}
 
-	public async Task<ErrorOr<Success>> AddUser(User user, CancellationToken cancellationToken)
+	public async Task<ErrorOr<Success>> AddUserAsync(User user, CancellationToken cancellationToken)
 	{
 		var tableEntity = new UserTableEntity
 		{

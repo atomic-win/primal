@@ -49,7 +49,7 @@ internal sealed class SignInCommandHandler : IRequestHandler<SignInCommand, Erro
 
 	private async Task<ErrorOr<SignInResult>> HandleGetUserIdSuccess(UserId userId, IdentityProviderUser identityProviderUser, CancellationToken cancellationToken)
 	{
-		var errorOrUser = await this.userRepository.GetUser(userId, cancellationToken);
+		var errorOrUser = await this.userRepository.GetUserAsync(userId, cancellationToken);
 
 		if (!errorOrUser.IsError)
 		{
@@ -102,7 +102,7 @@ internal sealed class SignInCommandHandler : IRequestHandler<SignInCommand, Erro
 			identityProviderUser.FullName,
 			identityProviderUser.ProfilePictureUrl);
 
-		var errorOrAddUser = await this.userRepository.AddUser(user, cancellationToken);
+		var errorOrAddUser = await this.userRepository.AddUserAsync(user, cancellationToken);
 
 		if (!errorOrAddUser.IsError)
 		{

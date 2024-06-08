@@ -5,7 +5,7 @@ namespace Primal.Application.Common.Interfaces.Persistence;
 
 public interface IUserRepository
 {
-	Task<ErrorOr<User>> GetUser(UserId userId, CancellationToken cancellationToken);
+	Task<ErrorOr<User>> GetUserAsync(UserId userId, CancellationToken cancellationToken);
 
-	Task<ErrorOr<Success>> AddUser(User user, CancellationToken cancellationToken);
+	Task<ErrorOr<Success>> AddUserAsync(User user, CancellationToken cancellationToken);
 }
