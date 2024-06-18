@@ -34,4 +34,9 @@ public interface ITransactionRepository
 		decimal amount,
 		Currency currency,
 		CancellationToken cancellationToken);
+
+	Task<ErrorOr<Success>> DeleteAsync(
+		UserId userId,
+		TransactionId transactionId,
+		CancellationToken cancellationToken);
 }

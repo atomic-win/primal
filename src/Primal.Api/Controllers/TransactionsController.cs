@@ -82,4 +82,19 @@ public sealed class TransactionsController : ApiController
 			transaction => this.Ok(this.mapper.Map<Transaction, TransactionResponse>(transaction)),
 			errors => this.Problem(errors));
 	}
+
+	[HttpDelete]
+	[Route("{id:guid}")]
+	public async Task<IActionResult> DeleteTransactionByIdAsync(Guid id)
+	{
+		UserId userId = this.httpContextAccessor.HttpContext.GetUserId();
+
+		var deleteTransactionCommand = new DeleteTransactionCommand(userId, new TransactionId(id));
+
+		var errorOrSuccess = await this.mediator.Send(deleteTransactionCommand);
+
+		return errorOrSuccess.Match(
+			asset => this.Ok(),
+			errors => this.Problem(errors));
+	}
 }

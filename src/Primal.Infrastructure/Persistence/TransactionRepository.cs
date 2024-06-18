@@ -143,6 +143,27 @@ internal sealed class TransactionRepository : ITransactionRepository
 		}
 	}
 
+	public async Task<ErrorOr<Success>> DeleteAsync(UserId userId, TransactionId transactionId, CancellationToken cancellationToken)
+	{
+		try
+		{
+			await this.transactionTableClient.DeleteEntityAsync(
+				partitionKey: userId.Value.ToString("N"),
+				rowKey: transactionId.Value.ToString("N"),
+				cancellationToken: cancellationToken);
+
+			return Result.Success;
+		}
+		catch (RequestFailedException ex) when (ex.Status == 404)
+		{
+			return Error.NotFound();
+		}
+		catch (Exception ex)
+		{
+			return Error.Failure(description: ex.Message);
+		}
+	}
+
 	private Transaction MapToTransaction(TableEntity entity)
 	{
 		TransactionType type = Enum.Parse<TransactionType>(entity.GetString("Type"));
