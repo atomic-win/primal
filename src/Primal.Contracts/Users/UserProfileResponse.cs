@@ -1,5 +1,3 @@
-using System.Net.Mail;
-
 namespace Primal.Contracts.Users;
 
 public sealed record UserProfileResponse(
