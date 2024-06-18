@@ -11,4 +11,6 @@ public interface IAssetRepository
 	Task<ErrorOr<Asset>> GetByIdAsync(UserId userId, AssetId assetId, CancellationToken cancellationToken);
 
 	Task<ErrorOr<Asset>> AddAsync(UserId userId, string name, InstrumentId instrumentId, CancellationToken cancellationToken);
+
+	Task<ErrorOr<Success>> DeleteAsync(UserId userId, AssetId assetId, CancellationToken cancellationToken);
 }

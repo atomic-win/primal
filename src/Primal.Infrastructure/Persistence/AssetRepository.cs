@@ -86,6 +86,27 @@ internal sealed class AssetRepository : IAssetRepository
 		}
 	}
 
+	public async Task<ErrorOr<Success>> DeleteAsync(UserId userId, AssetId assetId, CancellationToken cancellationToken)
+	{
+		try
+		{
+			await this.tableClient.DeleteEntityAsync(
+				partitionKey: userId.Value.ToString("N"),
+				rowKey: assetId.Value.ToString("N"),
+				cancellationToken: cancellationToken);
+
+			return Result.Success;
+		}
+		catch (RequestFailedException ex) when (ex.Status == 404)
+		{
+			return Error.NotFound();
+		}
+		catch (Exception ex)
+		{
+			return Error.Failure(description: ex.Message);
+		}
+	}
+
 	private sealed class AssetTableEntity : ITableEntity
 	{
 		public string PartitionKey { get; set; }

@@ -97,4 +97,19 @@ public sealed class AssetsController : ApiController
 			stockAsset => this.Ok(this.mapper.Map<AssetResponse>(stockAsset)),
 			errors => this.Problem(errors));
 	}
+
+	[HttpDelete]
+	[Route("{id:guid}")]
+	public async Task<IActionResult> DeleteAssetByIdAsync(Guid id)
+	{
+		UserId userId = this.httpContextAccessor.HttpContext.GetUserId();
+
+		var deleteAssetCommand = new DeleteAssetCommand(userId, new AssetId(id));
+
+		var errorOrSuccess = await this.mediator.Send(deleteAssetCommand);
+
+		return errorOrSuccess.Match(
+			asset => this.Ok(),
+			errors => this.Problem(errors));
+	}
 }
