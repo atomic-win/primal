@@ -112,7 +112,7 @@ internal sealed class InstrumentRepository : IInstrumentRepository
 		{
 			InstrumentIdMappingTableEntity instrumentIdMappingEntity = await this.instrumentIdMappingTableClient.GetEntityAsync<InstrumentIdMappingTableEntity>(
 				partitionKey: "StockSymbol",
-				rowKey: symbol,
+				rowKey: symbol.ToUpperInvariant(),
 				cancellationToken: cancellationToken);
 
 			return await this.GetByIdAsync(
@@ -242,7 +242,7 @@ internal sealed class InstrumentRepository : IInstrumentRepository
 		InstrumentIdMappingTableEntity mappingEntity = new InstrumentIdMappingTableEntity
 		{
 			PartitionKey = "StockSymbol",
-			RowKey = stock.Symbol,
+			RowKey = stock.Symbol.ToUpperInvariant(),
 			InstrumentId = stock.Id.Value.ToString("N"),
 		};
 
