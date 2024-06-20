@@ -178,7 +178,7 @@ internal sealed class TransactionRepository : ITransactionRepository
 				new AssetId(Guid.Parse(entity.GetString("AssetId"))),
 				decimal.Parse(entity.GetString("Units"), CultureInfo.InvariantCulture)),
 
-			TransactionType.Deposit or TransactionType.Withdrawal or TransactionType.Dividend or TransactionType.Interest or TransactionType.SelfInterest => new CashTransaction(
+			TransactionType.Deposit or TransactionType.Withdrawal or TransactionType.Dividend or TransactionType.Interest or TransactionType.SelfInterest or TransactionType.InterestPenalty => new CashTransaction(
 				new TransactionId(Guid.Parse(entity.RowKey)),
 				DateOnly.Parse(entity.GetString("Date"), CultureInfo.InvariantCulture),
 				entity.GetString("Name"),

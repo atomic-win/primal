@@ -10,4 +10,5 @@ public enum TransactionType
 	Dividend,
 	Interest,
 	SelfInterest,
+	InterestPenalty,
 }
