@@ -54,9 +54,9 @@ internal sealed class AddCashTransactionCommandHandler : IRequestHandler<AddCash
 			&& request.Type != TransactionType.Deposit
 			&& request.Type != TransactionType.Withdrawal
 			&& request.Type != TransactionType.Interest
-			&& request.Type != TransactionType.Penalty)
+			&& request.Type != TransactionType.SelfInterest)
 		{
-			return Error.Validation(description: "Only deposits, withdrawals, interest, and penalties are supported for cash deposit accounts");
+			return Error.Validation(description: "Only deposits, withdrawals, interest are supported for cash deposit accounts");
 		}
 
 		return await this.transactionRepository.AddCashTransactionAsync(

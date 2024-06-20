@@ -9,5 +9,5 @@ public enum TransactionType
 	Withdrawal,
 	Dividend,
 	Interest,
-	Penalty,
+	SelfInterest,
 }
