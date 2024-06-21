@@ -1,9 +1,7 @@
-using Primal.Domain.Investments;
-
 namespace Primal.Application.Investments;
 
-public sealed record PortfolioPerAsset(
-	AssetId AssetId,
+public sealed record Portfolio<T>(
+	T Id,
 	decimal InitialAmount,
 	decimal InitialAmountPercent,
 	decimal CurrentAmount,

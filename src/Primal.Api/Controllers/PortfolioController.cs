@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Primal.Api.Common;
 using Primal.Application.Investments;
 using Primal.Contracts.Investments;
+using Primal.Domain.Investments;
 using Primal.Domain.Money;
 
 namespace Primal.Api.Controllers;
@@ -28,12 +29,15 @@ public sealed class PortfolioController : ApiController
 	{
 		var userId = this.httpContextAccessor.HttpContext.GetUserId();
 
-		var getPortfolioPerAssetQuery = new GetPortfolioPerAssetQuery(userId, currency);
+		var getPortfolioPerAssetQuery = new GetPortfolioQuery<AssetId>(
+			userId,
+			currency,
+			(transaction, asset, investmentInstrument) => asset.Id);
 
 		var errorOrPortfolioPerAssets = await this.mediator.Send(getPortfolioPerAssetQuery);
 
 		return errorOrPortfolioPerAssets.Match(
-			portfolioPerAssets => this.Ok(this.mapper.Map<IEnumerable<PortfolioPerAsset>, IEnumerable<PortfolioPerAssetResponse>>(portfolioPerAssets)),
+			portfolioPerAssets => this.Ok(this.mapper.Map<IEnumerable<Portfolio<AssetId>>, IEnumerable<PortfolioResponse<Guid>>>(portfolioPerAssets)),
 			errors => this.Problem(errors));
 	}
 }

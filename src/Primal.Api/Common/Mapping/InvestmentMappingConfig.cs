@@ -74,6 +74,6 @@ internal sealed class InvestmentMappingConfig : IRegister
 
 	private static void RegisterPortfolioMappings(TypeAdapterConfig config)
 	{
-		config.NewConfig<PortfolioPerAsset, PortfolioPerAssetResponse>();
+		config.NewConfig<Portfolio<AssetId>, PortfolioResponse<Guid>>();
 	}
 }

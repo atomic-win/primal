@@ -1,7 +1,7 @@
 namespace Primal.Contracts.Investments;
 
-public sealed record PortfolioPerAssetResponse(
-	Guid AssetId,
+public sealed record PortfolioResponse<T>(
+	T Id,
 	decimal InitialAmount,
 	decimal InitialAmountPercent,
 	decimal CurrentAmount,
