@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using ErrorOr;
 using MediatR;
 using Primal.Application.Common.Interfaces.Investments;
@@ -15,6 +16,11 @@ internal sealed class GetExchangeRatesQueryHandler : IRequestHandler<GetExchange
 
 	public async Task<ErrorOr<IReadOnlyDictionary<DateOnly, decimal>>> Handle(GetExchangeRatesQuery request, CancellationToken cancellationToken)
 	{
+		if (request.From == request.To)
+		{
+			return ImmutableDictionary<DateOnly, decimal>.Empty;
+		}
+
 		var errorOrExchangeRates = await this.exchangeRateProvider.GetExchangeRatesAsync(request.From, request.To, cancellationToken);
 
 		if (errorOrExchangeRates.IsError)
