@@ -10,13 +10,17 @@ public interface IInstrumentRepository
 
 	Task<ErrorOr<InvestmentInstrument>> GetByIdAsync(InstrumentId instrumentId, CancellationToken cancellationToken);
 
-	Task<ErrorOr<InvestmentInstrument>> GetCashDepositAsync(CancellationToken cancellationToken);
+	Task<ErrorOr<InvestmentInstrument>> GetCashDepositAsync(
+		Currency currency,
+		CancellationToken cancellationToken);
 
 	Task<ErrorOr<InvestmentInstrument>> GetMutualFundBySchemeCodeAsync(int schemeCode, CancellationToken cancellationToken);
 
 	Task<ErrorOr<InvestmentInstrument>> GetStockBySymbolAsync(string symbol, CancellationToken cancellationToken);
 
-	Task<ErrorOr<InvestmentInstrument>> AddCashDepositAsync(CancellationToken cancellationToken);
+	Task<ErrorOr<InvestmentInstrument>> AddCashDepositAsync(
+		Currency currency,
+		CancellationToken cancellationToken);
 
 	Task<ErrorOr<InvestmentInstrument>> AddMutualFundAsync(
 		string name,

@@ -2,6 +2,7 @@ using ErrorOr;
 using MediatR;
 using Primal.Application.Common.Interfaces.Persistence;
 using Primal.Domain.Investments;
+using Primal.Domain.Money;
 
 namespace Primal.Application.Investments;
 
@@ -18,7 +19,9 @@ internal sealed class AddCashDepositAssetCommandHandler : IRequestHandler<AddCas
 
 	public async Task<ErrorOr<Asset>> Handle(AddCashDepositAssetCommand request, CancellationToken cancellationToken)
 	{
-		var errorOrCashDeposit = await this.GetCashDepositAsync(cancellationToken);
+		var errorOrCashDeposit = await this.GetCashDepositAsync(
+			request.Currency,
+			cancellationToken);
 
 		if (errorOrCashDeposit.IsError)
 		{
@@ -27,12 +30,20 @@ internal sealed class AddCashDepositAssetCommandHandler : IRequestHandler<AddCas
 
 		var cashDeposit = errorOrCashDeposit.Value;
 
-		return await this.assetRepository.AddAsync(request.UserId, request.Name, cashDeposit.Id, cancellationToken);
+		return await this.assetRepository.AddAsync(
+			request.UserId,
+			request.Name,
+			cashDeposit.Id,
+			cancellationToken);
 	}
 
-	private async Task<ErrorOr<InvestmentInstrument>> GetCashDepositAsync(CancellationToken cancellationToken)
+	private async Task<ErrorOr<InvestmentInstrument>> GetCashDepositAsync(
+		Currency currency,
+		CancellationToken cancellationToken)
 	{
-		var errorOrInvestmentInstrument = await this.instrumentRepository.GetCashDepositAsync(cancellationToken);
+		var errorOrInvestmentInstrument = await this.instrumentRepository.GetCashDepositAsync(
+			currency,
+			cancellationToken);
 
 		if (!errorOrInvestmentInstrument.IsError)
 		{
@@ -44,6 +55,8 @@ internal sealed class AddCashDepositAssetCommandHandler : IRequestHandler<AddCas
 			return errorOrInvestmentInstrument.Errors;
 		}
 
-		return await this.instrumentRepository.AddCashDepositAsync(cancellationToken);
+		return await this.instrumentRepository.AddCashDepositAsync(
+			currency,
+			cancellationToken);
 	}
 }
