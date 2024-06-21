@@ -5,13 +5,13 @@ using Primal.Domain.Investments;
 
 namespace Primal.Application.Investments;
 
-internal sealed class AddCashTransactionCommandHandler : IRequestHandler<AddCashTransactionCommand, ErrorOr<Transaction>>
+internal sealed class AddTransactionCommandHandler : IRequestHandler<AddTransactionCommand, ErrorOr<Transaction>>
 {
 	private readonly IAssetRepository assetRepository;
 	private readonly IInstrumentRepository instrumentRepository;
 	private readonly ITransactionRepository transactionRepository;
 
-	public AddCashTransactionCommandHandler(
+	public AddTransactionCommandHandler(
 		IAssetRepository assetRepository,
 		IInstrumentRepository instrumentRepository,
 		ITransactionRepository transactionRepository)
@@ -21,7 +21,7 @@ internal sealed class AddCashTransactionCommandHandler : IRequestHandler<AddCash
 		this.transactionRepository = transactionRepository;
 	}
 
-	public async Task<ErrorOr<Transaction>> Handle(AddCashTransactionCommand request, CancellationToken cancellationToken)
+	public async Task<ErrorOr<Transaction>> Handle(AddTransactionCommand request, CancellationToken cancellationToken)
 	{
 		var errorOrAsset = await this.assetRepository.GetByIdAsync(request.UserId, request.AssetId, cancellationToken);
 
@@ -39,15 +39,19 @@ internal sealed class AddCashTransactionCommandHandler : IRequestHandler<AddCash
 
 		var instrumentType = errorOrInstrument.Value.Type;
 
-		if (instrumentType == InstrumentType.MutualFunds)
+		if (instrumentType == InstrumentType.MutualFunds
+			&& request.Type != TransactionType.Buy
+			&& request.Type != TransactionType.Sell)
 		{
-			return Error.Validation(description: "Mutual funds do not support cash transactions");
+			return Error.Validation(description: "Only buy and sell transactions are supported for mutual funds");
 		}
 
 		if (instrumentType == InstrumentType.Stocks
+			&& request.Type != TransactionType.Buy
+			&& request.Type != TransactionType.Sell
 			&& request.Type != TransactionType.Dividend)
 		{
-			return Error.Validation(description: "Only dividends are supported for stock cash transactions");
+			return Error.Validation(description: "Only buy, sell and dividend transactions are supported for stocks");
 		}
 
 		if (instrumentType == InstrumentType.CashDeposits
@@ -57,17 +61,16 @@ internal sealed class AddCashTransactionCommandHandler : IRequestHandler<AddCash
 			&& request.Type != TransactionType.SelfInterest
 			&& request.Type != TransactionType.InterestPenalty)
 		{
-			return Error.Validation(description: "Only deposits, withdrawals, interests are supported for cash deposit accounts");
+			return Error.Validation(description: "Only deposit, withdrawal, interest, self-interest and interest penalty transactions are supported for cash deposits");
 		}
 
-		return await this.transactionRepository.AddCashTransactionAsync(
+		return await this.transactionRepository.AddAsync(
 			request.UserId,
 			request.Date,
 			request.Name,
 			request.Type,
 			request.AssetId,
-			request.Amount,
-			request.Currency,
+			request.Units,
 			cancellationToken);
 	}
 }

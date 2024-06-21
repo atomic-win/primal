@@ -1,8 +1,9 @@
 namespace Primal.Contracts.Investments;
 
-public abstract record TransactionResponse(
+public sealed record TransactionResponse(
 	Guid Id,
 	DateOnly Date,
 	string Name,
 	string Type,
-	Guid AssetId);
+	Guid AssetId,
+	decimal Units);

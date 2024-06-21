@@ -5,7 +5,7 @@ using Primal.Domain.Users;
 
 namespace Primal.Application.Investments;
 
-public sealed record AddBuySellTransactionCommand(
+public sealed record AddTransactionCommand(
 	UserId UserId,
 	DateOnly Date,
 	string Name,

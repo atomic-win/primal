@@ -4,7 +4,6 @@ using Azure.Data.Tables;
 using ErrorOr;
 using Primal.Application.Common.Interfaces.Persistence;
 using Primal.Domain.Investments;
-using Primal.Domain.Money;
 using Primal.Domain.Users;
 
 namespace Primal.Infrastructure.Persistence;
@@ -22,13 +21,13 @@ internal sealed class TransactionRepository : ITransactionRepository
 		UserId userId,
 		CancellationToken cancellationToken)
 	{
-		AsyncPageable<TableEntity> entities = this.transactionTableClient.QueryAsync<TableEntity>(
+		AsyncPageable<TransactionTableEntity> entities = this.transactionTableClient.QueryAsync<TransactionTableEntity>(
 			entity => entity.PartitionKey == userId.Value.ToString("N"),
 			cancellationToken: cancellationToken);
 
 		List<Transaction> transactions = new List<Transaction>();
 
-		await foreach (TableEntity entity in entities.WithCancellation(cancellationToken))
+		await foreach (var entity in entities.WithCancellation(cancellationToken))
 		{
 			transactions.Add(this.MapToTransaction(entity));
 		}
@@ -43,7 +42,7 @@ internal sealed class TransactionRepository : ITransactionRepository
 	{
 		try
 		{
-			TableEntity entity = await this.transactionTableClient.GetEntityAsync<TableEntity>(
+			TransactionTableEntity entity = await this.transactionTableClient.GetEntityAsync<TransactionTableEntity>(
 				userId.Value.ToString("N"),
 				transactionId.Value.ToString("N"),
 				cancellationToken: cancellationToken);
@@ -60,7 +59,7 @@ internal sealed class TransactionRepository : ITransactionRepository
 		}
 	}
 
-	public async Task<ErrorOr<Transaction>> AddBuySellTransactionAsync(
+	public async Task<ErrorOr<Transaction>> AddAsync(
 		UserId userId,
 		DateOnly date,
 		string name,
@@ -69,7 +68,7 @@ internal sealed class TransactionRepository : ITransactionRepository
 		decimal units,
 		CancellationToken cancellationToken)
 	{
-		var transaction = new BuySellTransaction(
+		var transaction = new Transaction(
 			new TransactionId(Guid.NewGuid()),
 			date,
 			name,
@@ -79,7 +78,7 @@ internal sealed class TransactionRepository : ITransactionRepository
 
 		try
 		{
-			TransactionTableEntity entity = new BuySellTransactionTableEntity
+			TransactionTableEntity entity = new TransactionTableEntity
 			{
 				PartitionKey = userId.Value.ToString("N"),
 				RowKey = transaction.Id.Value.ToString("N"),
@@ -88,49 +87,6 @@ internal sealed class TransactionRepository : ITransactionRepository
 				Type = type.ToString(),
 				AssetId = assetId.Value.ToString("N"),
 				Units = units.ToString(CultureInfo.InvariantCulture),
-			};
-
-			await this.transactionTableClient.AddEntityAsync(entity, cancellationToken: cancellationToken);
-
-			return transaction;
-		}
-		catch (Exception ex)
-		{
-			return Error.Failure(ex.Message);
-		}
-	}
-
-	public async Task<ErrorOr<Transaction>> AddCashTransactionAsync(
-		UserId userId,
-		DateOnly date,
-		string name,
-		TransactionType type,
-		AssetId assetId,
-		decimal amount,
-		Currency currency,
-		CancellationToken cancellationToken)
-	{
-		var transaction = new CashTransaction(
-			new TransactionId(Guid.NewGuid()),
-			date,
-			name,
-			type,
-			assetId,
-			amount,
-			currency);
-
-		try
-		{
-			TransactionTableEntity entity = new CashTransactionTableEntity
-			{
-				PartitionKey = userId.Value.ToString("N"),
-				RowKey = transaction.Id.Value.ToString("N"),
-				Date = date.ToString(CultureInfo.InvariantCulture),
-				Name = name,
-				Type = type.ToString(),
-				AssetId = assetId.Value.ToString("N"),
-				Amount = amount.ToString(CultureInfo.InvariantCulture),
-				Currency = currency.ToString(),
 			};
 
 			await this.transactionTableClient.AddEntityAsync(entity, cancellationToken: cancellationToken);
@@ -164,46 +120,20 @@ internal sealed class TransactionRepository : ITransactionRepository
 		}
 	}
 
-	private Transaction MapToTransaction(TableEntity entity)
+	private Transaction MapToTransaction(TransactionTableEntity entity)
 	{
-		TransactionType type = Enum.Parse<TransactionType>(entity.GetString("Type"));
+		string units = string.IsNullOrWhiteSpace(entity.Units) ? entity.Amount : entity.Units;
 
-		return type switch
-		{
-			TransactionType.Buy or TransactionType.Sell => new BuySellTransaction(
-				new TransactionId(Guid.Parse(entity.RowKey)),
-				DateOnly.Parse(entity.GetString("Date"), CultureInfo.InvariantCulture),
-				entity.GetString("Name"),
-				type,
-				new AssetId(Guid.Parse(entity.GetString("AssetId"))),
-				decimal.Parse(entity.GetString("Units"), CultureInfo.InvariantCulture)),
-
-			TransactionType.Deposit or TransactionType.Withdrawal or TransactionType.Dividend or TransactionType.Interest or TransactionType.SelfInterest or TransactionType.InterestPenalty => new CashTransaction(
-				new TransactionId(Guid.Parse(entity.RowKey)),
-				DateOnly.Parse(entity.GetString("Date"), CultureInfo.InvariantCulture),
-				entity.GetString("Name"),
-				type,
-				new AssetId(Guid.Parse(entity.GetString("AssetId"))),
-				decimal.Parse(entity.GetString("Amount"), CultureInfo.InvariantCulture),
-				Enum.Parse<Currency>(entity.GetString("Currency"))),
-
-			_ => throw new NotSupportedException($"Transaction type {type} is not supported"),
-		};
+		return new Transaction(
+			new TransactionId(Guid.Parse(entity.RowKey)),
+			DateOnly.Parse(entity.Date, CultureInfo.InvariantCulture),
+			entity.Name,
+			Enum.Parse<TransactionType>(entity.Type),
+			new AssetId(Guid.Parse(entity.AssetId)),
+			decimal.Parse(units, CultureInfo.InvariantCulture));
 	}
 
-	private sealed class BuySellTransactionTableEntity : TransactionTableEntity
-	{
-		public string Units { get; set; }
-	}
-
-	private sealed class CashTransactionTableEntity : TransactionTableEntity
-	{
-		public string Amount { get; set; }
-
-		public string Currency { get; set; }
-	}
-
-	private abstract class TransactionTableEntity : ITableEntity
+	private sealed class TransactionTableEntity : ITableEntity
 	{
 		public string PartitionKey { get; set; }
 
@@ -220,5 +150,9 @@ internal sealed class TransactionRepository : ITransactionRepository
 		public string Type { get; set; }
 
 		public string AssetId { get; set; }
+
+		public string Units { get; set; }
+
+		public string Amount { get; set; }
 	}
 }
