@@ -1,4 +1,5 @@
 using System.Collections.Frozen;
+using System.Collections.Immutable;
 using System.Globalization;
 using CsvHelper;
 using CsvHelper.Configuration.Attributes;
@@ -73,6 +74,11 @@ internal sealed class StockApiClient : IStockApiClient, IExchangeRateProvider
 
 	public async Task<ErrorOr<IReadOnlyDictionary<DateOnly, decimal>>> GetExchangeRatesAsync(Currency from, Currency to, CancellationToken cancellationToken)
 	{
+		if (from == to)
+		{
+			return ImmutableDictionary<DateOnly, decimal>.Empty;
+		}
+
 		var requestUri = $"query?&apikey={this.investmentSettings.AlphaVantageApiKey}&datatype=csv&function=FX_DAILY&from_symbol={from}&to_symbol={to}&outputsize=full";
 
 		using (var reader = new StreamReader(await this.httpClient.GetStreamAsync(requestUri, cancellationToken)))

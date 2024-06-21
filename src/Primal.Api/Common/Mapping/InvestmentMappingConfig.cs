@@ -13,6 +13,7 @@ internal sealed class InvestmentMappingConfig : IRegister
 		RegisterAssetMappings(config);
 		RegisterInstrumentMappings(config);
 		RegisterTransactionMappings(config);
+		RegisterPortfolioMappings(config);
 	}
 
 	private static void RegisterAssetMappings(TypeAdapterConfig config)
@@ -69,5 +70,10 @@ internal sealed class InvestmentMappingConfig : IRegister
 			.Map(dest => dest, src => src.TransactionRequest);
 
 		config.NewConfig<Transaction, TransactionResponse>();
+	}
+
+	private static void RegisterPortfolioMappings(TypeAdapterConfig config)
+	{
+		config.NewConfig<PortfolioPerAsset, PortfolioPerAssetResponse>();
 	}
 }
