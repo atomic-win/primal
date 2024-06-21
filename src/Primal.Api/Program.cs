@@ -12,12 +12,12 @@ var builder = WebApplication.CreateBuilder(args);
 		.ConfigureContainer<ContainerBuilder>(builder =>
 		{
 			builder
-				.RegisterModule<PresentationModule>()
-				.RegisterModule<InfrastructureModule>();
+				.RegisterModule<ApplicationModule>()
+				.RegisterModule<InfrastructureModule>()
+				.RegisterModule<PresentationModule>();
 		});
 
 	builder.Services
-		.AddApplication()
 		.AddInfrastructure(builder.Configuration);
 
 	builder.Services.AddControllers().AddNewtonsoftJson();
