@@ -1,13 +1,24 @@
+using Autofac;
+using Autofac.Extensions.DependencyInjection;
+using Primal.Api;
 using Primal.Api.Middlewares;
 using Primal.Application;
 using Primal.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 {
+	builder.Host
+		.UseServiceProviderFactory(new AutofacServiceProviderFactory())
+		.ConfigureContainer<ContainerBuilder>(builder =>
+		{
+			builder.RegisterModule(new PresentationModule());
+		});
+
 	builder.Services
 		.AddApplication()
-		.AddInfrastructure(builder.Configuration)
-		.AddPresentation();
+		.AddInfrastructure(builder.Configuration);
+
+	builder.Services.AddControllers().AddNewtonsoftJson();
 
 	builder.Services.AddCors(options =>
 	{
