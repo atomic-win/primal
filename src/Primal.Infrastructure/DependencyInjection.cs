@@ -1,14 +1,9 @@
 using System.Text;
-using Azure.Data.Tables;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using Primal.Application.Common.Interfaces.Authentication;
-using Primal.Application.Common.Interfaces.Investments;
-using Primal.Application.Common.Interfaces.Persistence;
 using Primal.Infrastructure.Authentication;
 using Primal.Infrastructure.Investments;
 using Primal.Infrastructure.Persistence;
@@ -20,7 +15,6 @@ public static class DependencyInjection
 	public static IServiceCollection AddInfrastructure(this IServiceCollection services, ConfigurationManager configuration)
 	{
 		return services
-			.AddSingleton<TimeProvider>(TimeProvider.System)
 			.AddRedis(configuration)
 			.AddAuthentication(configuration)
 			.AddInvestments(configuration)
@@ -43,15 +37,6 @@ public static class DependencyInjection
 		configuration.GetSection(TokenIssuerSettings.SectionName).Bind(tokenIssuerSettings);
 
 		services.AddSingleton(Options.Create(tokenIssuerSettings));
-
-		services.AddSingleton<IIdTokenValidator, IdTokenValidator>();
-
-		services.AddSingleton<ITokenIssuer>(serviceProvider =>
-		{
-			return new TokenIssuer(
-				tokenIssuerSettings: serviceProvider.GetRequiredService<IOptions<TokenIssuerSettings>>(),
-				timeProvider: serviceProvider.GetRequiredService<TimeProvider>());
-		});
 
 		services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 			.AddJwtBearer(options =>
@@ -107,100 +92,12 @@ public static class DependencyInjection
 		})
 		.SetHandlerLifetime(Timeout.InfiniteTimeSpan);
 
-		services.AddSingleton<IMutualFundApiClient>(serviceProvider =>
-		{
-			return new CachedMutualFundApiClient(
-				serviceProvider.GetRequiredService<IDistributedCache>(),
-				serviceProvider.GetRequiredService<MutualFundApiClient>());
-		});
-
-		services.AddSingleton<IStockApiClient>(serviceProvider =>
-		{
-			return new CachedStockApiClient(
-				serviceProvider.GetRequiredService<IDistributedCache>(),
-				serviceProvider.GetRequiredService<StockApiClient>());
-		});
-
-		services.AddSingleton<IExchangeRateProvider>(serviceProvider =>
-		{
-			return new CachedExchangeRateProvider(
-				serviceProvider.GetRequiredService<IDistributedCache>(),
-				serviceProvider.GetRequiredService<StockApiClient>());
-		});
-
 		return services;
 	}
 
 	private static IServiceCollection AddPersistence(this IServiceCollection services, ConfigurationManager configuration)
 	{
 		services.Configure<AzureStorageSettings>(configuration.GetSection(AzureStorageSettings.SectionName));
-
-		services.AddSingleton<TableServiceClient>(serviceProvider =>
-		{
-			var azureStorageSettings = serviceProvider.GetRequiredService<IOptions<AzureStorageSettings>>().Value;
-			return new TableServiceClient(azureStorageSettings.ConnectionString);
-		});
-
-		foreach (string tableName in Constants.TableNames.All)
-		{
-			services.AddKeyedSingleton<TableClient>(tableName, (serviceProvider, _) =>
-			{
-				var tableServiceClient = serviceProvider.GetRequiredService<TableServiceClient>();
-				tableServiceClient.CreateTableIfNotExists(tableName);
-				return tableServiceClient.GetTableClient(tableName);
-			});
-		}
-
-		return services
-			.AddRepositories();
-	}
-
-	private static IServiceCollection AddRepositories(this IServiceCollection services)
-	{
-		services.AddSingleton<IUserIdRepository>(serviceProvider =>
-		{
-			var tableClient = serviceProvider.GetKeyedService<TableClient>(Constants.TableNames.UserIds);
-			return new UserIdRepository(tableClient);
-		});
-
-		services.AddSingleton<IUserRepository>(serviceProvider =>
-		{
-			var tableClient = serviceProvider.GetKeyedService<TableClient>(Constants.TableNames.Users);
-			return new UserRepository(tableClient);
-		});
-
-		services.AddSingleton<ISiteRepository>(serviceProvider =>
-		{
-			var tableClient = serviceProvider.GetKeyedService<TableClient>(Constants.TableNames.Sites);
-			return new SiteRepository(tableClient);
-		});
-
-		services.AddSingleton<ISiteTimeRepository>(serviceProvider =>
-		{
-			var tableClient = serviceProvider.GetKeyedService<TableClient>(Constants.TableNames.SiteTimes);
-			return new SiteTimeRepository(tableClient);
-		});
-
-		services.AddSingleton<IInstrumentRepository>(serviceProvider =>
-		{
-			var instrumentIdMappingTableClient = serviceProvider.GetKeyedService<TableClient>(Constants.TableNames.InstrumentIdMapping);
-			var instrumentTableClient = serviceProvider.GetKeyedService<TableClient>(Constants.TableNames.Instruments);
-
-			return new InstrumentRepository(instrumentIdMappingTableClient, instrumentTableClient);
-		});
-
-		services.AddSingleton<IAssetRepository>(serviceProvider =>
-		{
-			var tableClient = serviceProvider.GetKeyedService<TableClient>(Constants.TableNames.Assets);
-			return new AssetRepository(tableClient);
-		});
-
-		services.AddSingleton<ITransactionRepository>(serviceProvider =>
-		{
-			var tableClient = serviceProvider.GetKeyedService<TableClient>(Constants.TableNames.Transactions);
-			return new TransactionRepository(tableClient);
-		});
-
 		return services;
 	}
 }

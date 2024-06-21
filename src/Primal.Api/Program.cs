@@ -11,7 +11,9 @@ var builder = WebApplication.CreateBuilder(args);
 		.UseServiceProviderFactory(new AutofacServiceProviderFactory())
 		.ConfigureContainer<ContainerBuilder>(builder =>
 		{
-			builder.RegisterModule(new PresentationModule());
+			builder
+				.RegisterModule<PresentationModule>()
+				.RegisterModule<InfrastructureModule>();
 		});
 
 	builder.Services
