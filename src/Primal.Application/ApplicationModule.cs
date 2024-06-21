@@ -5,12 +5,21 @@ using MediatR;
 using MediatR.Extensions.Autofac.DependencyInjection;
 using MediatR.Extensions.Autofac.DependencyInjection.Builder;
 using Primal.Application.Common.Behaviors;
+using Primal.Application.Investments;
 
 namespace Primal.Application;
 
 public sealed class ApplicationModule : Autofac.Module
 {
 	protected override void Load(ContainerBuilder builder)
+	{
+		builder.RegisterType<PortfolioCalculator>();
+
+		this.RegisterMediatR(builder);
+		this.RegisterValidators(builder);
+	}
+
+	private void RegisterMediatR(ContainerBuilder builder)
 	{
 		var configuration = MediatRConfigurationBuilder
 			.Create(Assembly.GetExecutingAssembly())
@@ -20,17 +29,18 @@ public sealed class ApplicationModule : Autofac.Module
 
 		builder.RegisterMediatR(configuration);
 
-		var openTypes = new[]
-		{
-			typeof(IValidator<>),
-		};
+		builder.RegisterGeneric(typeof(GetPortfolioQueryHandler<>))
+			.As(typeof(IRequestHandler<,>));
+	}
 
-		foreach (var openType in openTypes)
-		{
-			builder.RegisterAssemblyTypes(Assembly.GetExecutingAssembly())
-				.AsClosedTypesOf(openType)
-				.AsImplementedInterfaces()
-				.InstancePerDependency();
-		}
+	private void RegisterValidators(ContainerBuilder builder)
+	{
+		builder.RegisterAssemblyTypes(Assembly.GetExecutingAssembly())
+			.AsClosedTypesOf(typeof(IValidator<>))
+			.AsImplementedInterfaces()
+			.InstancePerDependency();
+
+		builder.RegisterGeneric(typeof(GetPortfolioQueryValidator<>))
+			.As(typeof(IValidator<>));
 	}
 }
