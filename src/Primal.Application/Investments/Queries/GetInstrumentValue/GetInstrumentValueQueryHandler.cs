@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using ErrorOr;
 using MediatR;
 using Primal.Application.Common.Interfaces.Investments;
@@ -36,14 +37,14 @@ internal sealed class GetInstrumentValueQueryHandler : IRequestHandler<GetInstru
 		if (instrument.Type != InstrumentType.MutualFunds
 			&& instrument.Type != InstrumentType.Stocks)
 		{
-			return Error.Validation(description: "Only mutual funds and stocks have historical values");
+			return ImmutableDictionary<DateOnly, decimal>.Empty;
 		}
 
 		var errorOrInstrumentValues = instrument switch
 		{
 			MutualFund mutualFund => await this.mutualFundApiClient.GetHistoricalValuesAsync(mutualFund.SchemeCode, cancellationToken),
 			Stock stock => await this.stockApiClient.GetHistoricalValuesAsync(stock.Symbol, cancellationToken),
-			_ => Error.Validation(description: "Only mutual funds and stocks have historical values"),
+			_ => ImmutableDictionary<DateOnly, decimal>.Empty,
 		};
 
 		if (errorOrInstrumentValues.IsError)
