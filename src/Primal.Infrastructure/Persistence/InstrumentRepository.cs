@@ -61,13 +61,14 @@ internal sealed class InstrumentRepository : IInstrumentRepository
 	}
 
 	public async Task<ErrorOr<InvestmentInstrument>> GetCashDepositAsync(
+		InstrumentType instrumentType,
 		Currency currency,
 		CancellationToken cancellationToken)
 	{
 		try
 		{
 			InstrumentIdMappingTableEntity instrumentIdMappingEntity = await this.instrumentIdMappingTableClient.GetEntityAsync<InstrumentIdMappingTableEntity>(
-				partitionKey: "CashDeposit",
+				partitionKey: instrumentType.ToString(),
 				rowKey: currency.ToString(),
 				cancellationToken: cancellationToken);
 
@@ -132,14 +133,15 @@ internal sealed class InstrumentRepository : IInstrumentRepository
 	}
 
 	public async Task<ErrorOr<InvestmentInstrument>> AddCashDepositAsync(
+		InstrumentType instrumentType,
 		Currency currency,
 		CancellationToken cancellationToken)
 	{
-		var cashDeposit = new CashDeposit(InstrumentId.New(), currency);
+		var cashDeposit = new CashDeposit(InstrumentId.New(), instrumentType, currency);
 
 		InstrumentIdMappingTableEntity mappingEntity = new InstrumentIdMappingTableEntity
 		{
-			PartitionKey = "CashDeposit",
+			PartitionKey = instrumentType.ToString(),
 			RowKey = currency.ToString(),
 			InstrumentId = cashDeposit.Id.Value.ToString("N"),
 		};
@@ -286,8 +288,9 @@ internal sealed class InstrumentRepository : IInstrumentRepository
 
 		return type switch
 		{
-			InstrumentType.CashDeposits => new CashDeposit(
+			InstrumentType.CashAccounts or InstrumentType.FixedDeposits or InstrumentType.EPF or InstrumentType.PPF => new CashDeposit(
 				new InstrumentId(Guid.Parse(entity.PartitionKey)),
+				type,
 				Enum.Parse<Currency>(entity.GetString("Currency"))),
 
 			InstrumentType.MutualFunds => new MutualFund(

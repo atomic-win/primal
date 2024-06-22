@@ -54,14 +54,14 @@ internal sealed class AddTransactionCommandHandler : IRequestHandler<AddTransact
 			return Error.Validation(description: "Only buy, sell and dividend transactions are supported for stocks");
 		}
 
-		if (instrumentType == InstrumentType.CashDeposits
+		if ((instrumentType == InstrumentType.CashAccounts || instrumentType == InstrumentType.FixedDeposits || instrumentType == InstrumentType.EPF || instrumentType == InstrumentType.PPF)
 			&& request.Type != TransactionType.Deposit
 			&& request.Type != TransactionType.Withdrawal
 			&& request.Type != TransactionType.Interest
 			&& request.Type != TransactionType.SelfInterest
 			&& request.Type != TransactionType.InterestPenalty)
 		{
-			return Error.Validation(description: "Only deposit, withdrawal, interest, self-interest and interest penalty transactions are supported for cash deposits");
+			return Error.Validation(description: $"Only deposit, withdrawal, interest, self-interest and interest penalty transactions are supported for {instrumentType}");
 		}
 
 		return await this.transactionRepository.AddAsync(

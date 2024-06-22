@@ -20,6 +20,7 @@ internal sealed class AddCashDepositAssetCommandHandler : IRequestHandler<AddCas
 	public async Task<ErrorOr<Asset>> Handle(AddCashDepositAssetCommand request, CancellationToken cancellationToken)
 	{
 		var errorOrCashDeposit = await this.GetCashDepositAsync(
+			request.Type,
 			request.Currency,
 			cancellationToken);
 
@@ -38,10 +39,12 @@ internal sealed class AddCashDepositAssetCommandHandler : IRequestHandler<AddCas
 	}
 
 	private async Task<ErrorOr<InvestmentInstrument>> GetCashDepositAsync(
+		InstrumentType instrumentType,
 		Currency currency,
 		CancellationToken cancellationToken)
 	{
 		var errorOrInvestmentInstrument = await this.instrumentRepository.GetCashDepositAsync(
+			instrumentType,
 			currency,
 			cancellationToken);
 
@@ -56,6 +59,7 @@ internal sealed class AddCashDepositAssetCommandHandler : IRequestHandler<AddCas
 		}
 
 		return await this.instrumentRepository.AddCashDepositAsync(
+			instrumentType,
 			currency,
 			cancellationToken);
 	}

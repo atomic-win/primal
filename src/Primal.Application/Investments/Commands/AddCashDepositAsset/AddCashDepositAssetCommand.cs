@@ -9,4 +9,5 @@ namespace Primal.Application.Investments;
 public sealed record AddCashDepositAssetCommand(
 	UserId UserId,
 	string Name,
+	InstrumentType Type,
 	Currency Currency) : IRequest<ErrorOr<Asset>>;
