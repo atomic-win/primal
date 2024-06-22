@@ -10,7 +10,7 @@ public interface IInstrumentRepository
 
 	Task<ErrorOr<InvestmentInstrument>> GetByIdAsync(InstrumentId instrumentId, CancellationToken cancellationToken);
 
-	Task<ErrorOr<InvestmentInstrument>> GetCashDepositAsync(
+	Task<ErrorOr<InvestmentInstrument>> GetCashInstrumentAsync(
 		InstrumentType instrumentType,
 		Currency currency,
 		CancellationToken cancellationToken);
@@ -19,7 +19,7 @@ public interface IInstrumentRepository
 
 	Task<ErrorOr<InvestmentInstrument>> GetStockBySymbolAsync(string symbol, CancellationToken cancellationToken);
 
-	Task<ErrorOr<InvestmentInstrument>> AddCashDepositAsync(
+	Task<ErrorOr<InvestmentInstrument>> AddCashInstrumentAsync(
 		InstrumentType instrumentType,
 		Currency currency,
 		CancellationToken cancellationToken);

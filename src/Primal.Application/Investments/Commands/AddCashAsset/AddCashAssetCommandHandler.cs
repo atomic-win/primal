@@ -6,44 +6,44 @@ using Primal.Domain.Money;
 
 namespace Primal.Application.Investments;
 
-internal sealed class AddCashDepositAssetCommandHandler : IRequestHandler<AddCashDepositAssetCommand, ErrorOr<Asset>>
+internal sealed class AddCashAssetCommandHandler : IRequestHandler<AddCashAssetCommand, ErrorOr<Asset>>
 {
 	private readonly IInstrumentRepository instrumentRepository;
 	private readonly IAssetRepository assetRepository;
 
-	public AddCashDepositAssetCommandHandler(IInstrumentRepository instrumentRepository, IAssetRepository assetRepository)
+	public AddCashAssetCommandHandler(IInstrumentRepository instrumentRepository, IAssetRepository assetRepository)
 	{
 		this.instrumentRepository = instrumentRepository;
 		this.assetRepository = assetRepository;
 	}
 
-	public async Task<ErrorOr<Asset>> Handle(AddCashDepositAssetCommand request, CancellationToken cancellationToken)
+	public async Task<ErrorOr<Asset>> Handle(AddCashAssetCommand request, CancellationToken cancellationToken)
 	{
-		var errorOrCashDeposit = await this.GetCashDepositAsync(
+		var errorOrCashInstrument = await this.GetCashInstrumentAsync(
 			request.Type,
 			request.Currency,
 			cancellationToken);
 
-		if (errorOrCashDeposit.IsError)
+		if (errorOrCashInstrument.IsError)
 		{
-			return errorOrCashDeposit.Errors;
+			return errorOrCashInstrument.Errors;
 		}
 
-		var cashDeposit = errorOrCashDeposit.Value;
+		var cashInstrument = errorOrCashInstrument.Value;
 
 		return await this.assetRepository.AddAsync(
 			request.UserId,
 			request.Name,
-			cashDeposit.Id,
+			cashInstrument.Id,
 			cancellationToken);
 	}
 
-	private async Task<ErrorOr<InvestmentInstrument>> GetCashDepositAsync(
+	private async Task<ErrorOr<InvestmentInstrument>> GetCashInstrumentAsync(
 		InstrumentType instrumentType,
 		Currency currency,
 		CancellationToken cancellationToken)
 	{
-		var errorOrInvestmentInstrument = await this.instrumentRepository.GetCashDepositAsync(
+		var errorOrInvestmentInstrument = await this.instrumentRepository.GetCashInstrumentAsync(
 			instrumentType,
 			currency,
 			cancellationToken);
@@ -58,7 +58,7 @@ internal sealed class AddCashDepositAssetCommandHandler : IRequestHandler<AddCas
 			return errorOrInvestmentInstrument.Errors;
 		}
 
-		return await this.instrumentRepository.AddCashDepositAsync(
+		return await this.instrumentRepository.AddCashInstrumentAsync(
 			instrumentType,
 			currency,
 			cancellationToken);

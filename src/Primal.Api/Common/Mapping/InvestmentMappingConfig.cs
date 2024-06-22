@@ -24,9 +24,9 @@ internal sealed class InvestmentMappingConfig : IRegister
 		config.NewConfig<AssetId, Guid>()
 			.ConstructUsing(src => src.Value);
 
-		config.NewConfig<(UserId UserId, AddCashDepositAssetRequest AddCashDepositAssetRequest), AddCashDepositAssetCommand>()
+		config.NewConfig<(UserId UserId, AddCashAssetRequest AddCashAssetRequest), AddCashAssetCommand>()
 			.Map(dest => dest.UserId, src => src.UserId)
-			.Map(dest => dest, src => src.AddCashDepositAssetRequest);
+			.Map(dest => dest, src => src.AddCashAssetRequest);
 
 		config.NewConfig<(UserId UserId, AddMutualFundAssetRequest AddMutualFundAssetRequest), AddMutualFundAssetCommand>()
 			.Map(dest => dest.UserId, src => src.UserId)
@@ -47,12 +47,12 @@ internal sealed class InvestmentMappingConfig : IRegister
 		config.NewConfig<InstrumentId, Guid>()
 			.ConstructUsing(src => src.Value);
 
-		config.NewConfig<CashDeposit, CashDepositResponse>();
+		config.NewConfig<CashInstrument, CashInstrumentResponse>();
 		config.NewConfig<MutualFund, MutualFundResponse>();
 		config.NewConfig<Stock, StockResponse>();
 
 		config.NewConfig<InvestmentInstrument, InstrumentResponse>()
-			.Include<CashDeposit, CashDepositResponse>()
+			.Include<CashInstrument, CashInstrumentResponse>()
 			.Include<MutualFund, MutualFundResponse>()
 			.Include<Stock, StockResponse>();
 	}

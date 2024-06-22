@@ -3,9 +3,9 @@ using Primal.Domain.Investments;
 
 namespace Primal.Application.Investments;
 
-internal sealed class AddCashDepositAssetCommandValidator : AbstractValidator<AddCashDepositAssetCommand>
+internal sealed class AddCashAssetCommandValidator : AbstractValidator<AddCashAssetCommand>
 {
-	public AddCashDepositAssetCommandValidator()
+	public AddCashAssetCommandValidator()
 	{
 		this.RuleFor(x => x.UserId.Value).NotEmpty();
 		this.RuleFor(x => x.Name).NotEmpty();

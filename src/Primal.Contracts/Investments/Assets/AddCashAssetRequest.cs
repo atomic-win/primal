@@ -1,6 +1,6 @@
 namespace Primal.Contracts.Investments;
 
-public sealed record AddCashDepositAssetRequest(
+public sealed record AddCashAssetRequest(
 	string Name,
 	string Type,
 	string Currency);
