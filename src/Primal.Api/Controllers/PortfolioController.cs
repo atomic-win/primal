@@ -24,38 +24,20 @@ public sealed class PortfolioController : ApiController
 	}
 
 	[HttpGet]
-	[Route("asset")]
-	public async Task<IActionResult> GetPortfolioPerAssetAsync([FromQuery] Currency currency)
+	[Route("all")]
+	public async Task<IActionResult> GetPortfolioAsync([FromQuery] Currency currency)
 	{
 		var userId = this.httpContextAccessor.HttpContext.GetUserId();
 
-		var getPortfolioPerAssetQuery = new GetPortfolioQuery<AssetId>(
+		var getPortfolioQuery = new GetPortfolioQuery<string>(
 			userId,
 			currency,
-			(transaction, asset, investmentInstrument) => asset.Id);
+			(transaction, asset, investmentInstrument) => string.Empty);
 
-		var errorOrPortfolioPerAssets = await this.mediator.Send(getPortfolioPerAssetQuery);
+		var errorOrPortfolio = await this.mediator.Send(getPortfolioQuery);
 
-		return errorOrPortfolioPerAssets.Match(
-			portfolioPerAssets => this.Ok(this.mapper.Map<IEnumerable<Portfolio<AssetId>>, IEnumerable<PortfolioResponse<Guid>>>(portfolioPerAssets)),
-			errors => this.Problem(errors));
-	}
-
-	[HttpGet]
-	[Route("instrument")]
-	public async Task<IActionResult> GetPortfolioPerInstrumentAsync([FromQuery] Currency currency)
-	{
-		var userId = this.httpContextAccessor.HttpContext.GetUserId();
-
-		var getPortfolioPerInstrumentQuery = new GetPortfolioQuery<InstrumentId>(
-			userId,
-			currency,
-			(transaction, asset, investmentInstrument) => investmentInstrument.Id);
-
-		var errorOrPortfolioPerInstruments = await this.mediator.Send(getPortfolioPerInstrumentQuery);
-
-		return errorOrPortfolioPerInstruments.Match(
-			portfolioPerInstruments => this.Ok(this.mapper.Map<IEnumerable<Portfolio<InstrumentId>>, IEnumerable<PortfolioResponse<Guid>>>(portfolioPerInstruments)),
+		return errorOrPortfolio.Match(
+			portfolios => this.Ok(this.mapper.Map<IEnumerable<Portfolio<string>>, IEnumerable<PortfolioResponse<string>>>(portfolios)),
 			errors => this.Problem(errors));
 	}
 
@@ -78,20 +60,38 @@ public sealed class PortfolioController : ApiController
 	}
 
 	[HttpGet]
-	[Route("all")]
-	public async Task<IActionResult> GetPortfolioAsync([FromQuery] Currency currency)
+	[Route("instrument")]
+	public async Task<IActionResult> GetPortfolioPerInstrumentAsync([FromQuery] Currency currency)
 	{
 		var userId = this.httpContextAccessor.HttpContext.GetUserId();
 
-		var getPortfolioQuery = new GetPortfolioQuery<string>(
+		var getPortfolioPerInstrumentQuery = new GetPortfolioQuery<InstrumentId>(
 			userId,
 			currency,
-			(transaction, asset, investmentInstrument) => string.Empty);
+			(transaction, asset, investmentInstrument) => investmentInstrument.Id);
 
-		var errorOrPortfolio = await this.mediator.Send(getPortfolioQuery);
+		var errorOrPortfolioPerInstruments = await this.mediator.Send(getPortfolioPerInstrumentQuery);
 
-		return errorOrPortfolio.Match(
-			portfolios => this.Ok(this.mapper.Map<IEnumerable<Portfolio<string>>, IEnumerable<PortfolioResponse<string>>>(portfolios)),
+		return errorOrPortfolioPerInstruments.Match(
+			portfolioPerInstruments => this.Ok(this.mapper.Map<IEnumerable<Portfolio<InstrumentId>>, IEnumerable<PortfolioResponse<Guid>>>(portfolioPerInstruments)),
+			errors => this.Problem(errors));
+	}
+
+	[HttpGet]
+	[Route("asset")]
+	public async Task<IActionResult> GetPortfolioPerAssetAsync([FromQuery] Currency currency)
+	{
+		var userId = this.httpContextAccessor.HttpContext.GetUserId();
+
+		var getPortfolioPerAssetQuery = new GetPortfolioQuery<AssetId>(
+			userId,
+			currency,
+			(transaction, asset, investmentInstrument) => asset.Id);
+
+		var errorOrPortfolioPerAssets = await this.mediator.Send(getPortfolioPerAssetQuery);
+
+		return errorOrPortfolioPerAssets.Match(
+			portfolioPerAssets => this.Ok(this.mapper.Map<IEnumerable<Portfolio<AssetId>>, IEnumerable<PortfolioResponse<Guid>>>(portfolioPerAssets)),
 			errors => this.Problem(errors));
 	}
 }
