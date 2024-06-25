@@ -6,4 +6,5 @@ public sealed record TransactionResponse(
 	string Name,
 	string Type,
 	Guid AssetId,
-	decimal Units);
+	decimal Units,
+	decimal Amount);

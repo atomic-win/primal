@@ -69,7 +69,7 @@ internal sealed class InvestmentMappingConfig : IRegister
 			.Map(dest => dest.UserId, src => src.UserId)
 			.Map(dest => dest, src => src.TransactionRequest);
 
-		config.NewConfig<Transaction, TransactionResponse>();
+		config.NewConfig<TransactionResult, TransactionResponse>();
 	}
 
 	private static void RegisterPortfolioMappings(TypeAdapterConfig config)

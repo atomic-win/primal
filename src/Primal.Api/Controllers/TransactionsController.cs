@@ -55,16 +55,16 @@ public sealed class TransactionsController : ApiController
 
 	[HttpPost]
 	[Route("")]
-	public async Task<IActionResult> AddTransactionAsync([FromBody] Transaction transactionRequest)
+	public async Task<IActionResult> AddTransactionAsync([FromBody] TransactionRequest transactionRequest)
 	{
 		UserId userId = this.httpContextAccessor.HttpContext.GetUserId();
 
 		var addTransactionCommand = this.mapper.Map<AddTransactionCommand>((userId, transactionRequest));
 
-		var errorOrTransaction = await this.mediator.Send(addTransactionCommand);
+		var errorOrTransactionResult = await this.mediator.Send(addTransactionCommand);
 
-		return errorOrTransaction.Match(
-			transaction => this.Ok(this.mapper.Map<Transaction, TransactionResponse>(transaction)),
+		return errorOrTransactionResult.Match(
+			transactionResult => this.Ok(this.mapper.Map<TransactionResult, TransactionResponse>(transactionResult)),
 			errors => this.Problem(errors));
 	}
 
