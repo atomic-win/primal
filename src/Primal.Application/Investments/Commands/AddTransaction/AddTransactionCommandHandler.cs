@@ -5,7 +5,7 @@ using Primal.Domain.Investments;
 
 namespace Primal.Application.Investments;
 
-internal sealed class AddTransactionCommandHandler : IRequestHandler<AddTransactionCommand, ErrorOr<Transaction>>
+internal sealed class AddTransactionCommandHandler : IRequestHandler<AddTransactionCommand, ErrorOr<TransactionResult>>
 {
 	private readonly IAssetRepository assetRepository;
 	private readonly IInstrumentRepository instrumentRepository;
@@ -21,7 +21,28 @@ internal sealed class AddTransactionCommandHandler : IRequestHandler<AddTransact
 		this.transactionRepository = transactionRepository;
 	}
 
-	public async Task<ErrorOr<Transaction>> Handle(AddTransactionCommand request, CancellationToken cancellationToken)
+	public async Task<ErrorOr<TransactionResult>> Handle(AddTransactionCommand request, CancellationToken cancellationToken)
+	{
+		var errorOrTransaction = await this.CreateTransactionAsync(request, cancellationToken);
+
+		if (errorOrTransaction.IsError)
+		{
+			return errorOrTransaction.Errors;
+		}
+
+		var transaction = errorOrTransaction.Value;
+
+		return new TransactionResult(
+			transaction.Id,
+			transaction.Date,
+			transaction.Name,
+			transaction.Type,
+			transaction.AssetId,
+			transaction.Units,
+			0M);
+	}
+
+	private async Task<ErrorOr<Transaction>> CreateTransactionAsync(AddTransactionCommand request, CancellationToken cancellationToken)
 	{
 		var errorOrAsset = await this.assetRepository.GetByIdAsync(request.UserId, request.AssetId, cancellationToken);
 

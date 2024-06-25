@@ -11,4 +11,4 @@ public sealed record AddTransactionCommand(
 	string Name,
 	TransactionType Type,
 	AssetId AssetId,
-	decimal Units) : IRequest<ErrorOr<Transaction>>;
+	decimal Units) : IRequest<ErrorOr<TransactionResult>>;

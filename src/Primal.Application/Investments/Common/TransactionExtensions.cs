@@ -4,6 +4,14 @@ namespace Primal.Application.Investments;
 
 internal static class TransactionExtensions
 {
+	internal static decimal CalculateTransactionAmount(
+		this Transaction transaction,
+		IReadOnlyDictionary<DateOnly, decimal> historicalPrices,
+		IReadOnlyDictionary<DateOnly, decimal> historicalExchangeRates)
+	{
+		return transaction.CalculateInitialAmount(historicalPrices, historicalExchangeRates);
+	}
+
 	internal static decimal CalculateInitialBalanceAmount(
 		this Transaction transaction,
 		IReadOnlyDictionary<DateOnly, decimal> historicalPrices,

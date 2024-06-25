@@ -5,6 +5,7 @@ using Primal.Api.Common;
 using Primal.Application.Investments;
 using Primal.Contracts.Investments;
 using Primal.Domain.Investments;
+using Primal.Domain.Money;
 using Primal.Domain.Users;
 
 namespace Primal.Api.Controllers;
@@ -25,46 +26,46 @@ public sealed class TransactionsController : ApiController
 
 	[HttpGet]
 	[Route("")]
-	public async Task<IActionResult> GetAllTransactionsAsync()
+	public async Task<IActionResult> GetAllTransactionsAsync([FromQuery] Currency currency)
 	{
 		UserId userId = this.httpContextAccessor.HttpContext.GetUserId();
 
-		var getAllTransactionsQuery = new GetAllTransactionsQuery(userId);
+		var getAllTransactionsQuery = new GetAllTransactionsQuery(userId, currency);
 
-		var errorOrTransactions = await this.mediator.Send(getAllTransactionsQuery);
+		var errorOrTransactionResults = await this.mediator.Send(getAllTransactionsQuery);
 
-		return errorOrTransactions.Match(
-			transactions => this.Ok(this.mapper.Map<IEnumerable<Transaction>, IEnumerable<TransactionResponse>>(transactions)),
+		return errorOrTransactionResults.Match(
+			transactionResults => this.Ok(this.mapper.Map<IEnumerable<TransactionResult>, IEnumerable<TransactionResponse>>(transactionResults)),
 			errors => this.Problem(errors));
 	}
 
 	[HttpGet]
 	[Route("{id:guid}")]
-	public async Task<IActionResult> GetTransactionByIdAsync(Guid id)
+	public async Task<IActionResult> GetTransactionByIdAsync(Guid id, [FromQuery] Currency currency)
 	{
 		UserId userId = this.httpContextAccessor.HttpContext.GetUserId();
 
-		var getTransactionByIdQuery = new GetTransactionByIdQuery(userId, new TransactionId(id));
+		var getTransactionByIdQuery = new GetTransactionByIdQuery(userId, currency, new TransactionId(id));
 
-		var errorOrTransaction = await this.mediator.Send(getTransactionByIdQuery);
+		var errorOrTransactionResult = await this.mediator.Send(getTransactionByIdQuery);
 
-		return errorOrTransaction.Match(
-			transaction => this.Ok(this.mapper.Map<Transaction, TransactionResponse>(transaction)),
+		return errorOrTransactionResult.Match(
+			transactionResult => this.Ok(this.mapper.Map<TransactionResult, TransactionResponse>(transactionResult)),
 			errors => this.Problem(errors));
 	}
 
 	[HttpPost]
 	[Route("")]
-	public async Task<IActionResult> AddTransactionAsync([FromBody] Transaction transactionRequest)
+	public async Task<IActionResult> AddTransactionAsync([FromBody] TransactionRequest transactionRequest)
 	{
 		UserId userId = this.httpContextAccessor.HttpContext.GetUserId();
 
 		var addTransactionCommand = this.mapper.Map<AddTransactionCommand>((userId, transactionRequest));
 
-		var errorOrTransaction = await this.mediator.Send(addTransactionCommand);
+		var errorOrTransactionResult = await this.mediator.Send(addTransactionCommand);
 
-		return errorOrTransaction.Match(
-			transaction => this.Ok(this.mapper.Map<Transaction, TransactionResponse>(transaction)),
+		return errorOrTransactionResult.Match(
+			transactionResult => this.Ok(this.mapper.Map<TransactionResult, TransactionResponse>(transactionResult)),
 			errors => this.Problem(errors));
 	}
 

@@ -6,16 +6,16 @@ namespace Primal.Application.Investments;
 internal sealed class GetPortfolioQueryHandler<T>
 	: IRequestHandler<GetPortfolioQuery<T>, ErrorOr<IEnumerable<Portfolio<T>>>>
 {
-	private readonly PortfolioCalculator portfolioCalculator;
+	private readonly InvestmentCalculator investmentCalculator;
 
-	public GetPortfolioQueryHandler(PortfolioCalculator portfolioCalculator)
+	public GetPortfolioQueryHandler(InvestmentCalculator investmentCalculator)
 	{
-		this.portfolioCalculator = portfolioCalculator;
+		this.investmentCalculator = investmentCalculator;
 	}
 
 	public async Task<ErrorOr<IEnumerable<Portfolio<T>>>> Handle(GetPortfolioQuery<T> request, CancellationToken cancellationToken)
 	{
-		return await this.portfolioCalculator.CalculateAsync(
+		return await this.investmentCalculator.CalculatePortfolioAsync(
 			request.UserId,
 			request.Currency,
 			request.IdSelector,
