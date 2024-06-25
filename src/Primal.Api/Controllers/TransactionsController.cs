@@ -5,6 +5,7 @@ using Primal.Api.Common;
 using Primal.Application.Investments;
 using Primal.Contracts.Investments;
 using Primal.Domain.Investments;
+using Primal.Domain.Money;
 using Primal.Domain.Users;
 
 namespace Primal.Api.Controllers;
@@ -25,16 +26,16 @@ public sealed class TransactionsController : ApiController
 
 	[HttpGet]
 	[Route("")]
-	public async Task<IActionResult> GetAllTransactionsAsync()
+	public async Task<IActionResult> GetAllTransactionsAsync([FromQuery] Currency currency)
 	{
 		UserId userId = this.httpContextAccessor.HttpContext.GetUserId();
 
-		var getAllTransactionsQuery = new GetAllTransactionsQuery(userId);
+		var getAllTransactionsQuery = new GetAllTransactionsQuery(userId, currency);
 
-		var errorOrTransactions = await this.mediator.Send(getAllTransactionsQuery);
+		var errorOrTransactionResults = await this.mediator.Send(getAllTransactionsQuery);
 
-		return errorOrTransactions.Match(
-			transactions => this.Ok(this.mapper.Map<IEnumerable<Transaction>, IEnumerable<TransactionResponse>>(transactions)),
+		return errorOrTransactionResults.Match(
+			transactionResults => this.Ok(this.mapper.Map<IEnumerable<TransactionResult>, IEnumerable<TransactionResponse>>(transactionResults)),
 			errors => this.Problem(errors));
 	}
 

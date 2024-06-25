@@ -9,7 +9,7 @@ using Primal.Domain.Users;
 
 namespace Primal.Application.Investments;
 
-internal sealed class PortfolioCalculator
+internal sealed class InvestmentCalculator
 {
 	private readonly ITransactionRepository transactionRepository;
 	private readonly IAssetRepository assetRepository;
@@ -19,7 +19,7 @@ internal sealed class PortfolioCalculator
 	private readonly IStockApiClient stockApiClient;
 	private readonly IExchangeRateProvider exchangeRateProvider;
 
-	public PortfolioCalculator(
+	public InvestmentCalculator(
 		ITransactionRepository transactionRepository,
 		IAssetRepository assetRepository,
 		IInstrumentRepository instrumentRepository,
@@ -35,7 +35,7 @@ internal sealed class PortfolioCalculator
 		this.exchangeRateProvider = exchangeRateProvider;
 	}
 
-	internal async Task<ErrorOr<IEnumerable<Portfolio<T>>>> CalculateAsync<T>(
+	internal async Task<ErrorOr<IEnumerable<Portfolio<T>>>> CalculatePortfolioAsync<T>(
 		UserId userId,
 		Currency currency,
 		Func<Transaction, Asset, InvestmentInstrument, T> idSelector,
@@ -48,6 +48,37 @@ internal sealed class PortfolioCalculator
 			return errorOrTransactions.Errors;
 		}
 
+		return await this.CalculateAsync(
+			userId,
+			currency,
+			errorOrTransactions.Value,
+			(assetMap, instrumentMap, historicalPricesMap, historicalExchangeRatesMap, transactions) =>
+				this.CalculatePortfolios(idSelector, assetMap, instrumentMap, historicalPricesMap, historicalExchangeRatesMap, transactions),
+			cancellationToken);
+	}
+
+	internal async Task<ErrorOr<IEnumerable<TransactionResult>>> CalculateTransactionResultsAsync(
+		UserId userId,
+		Currency currency,
+		IEnumerable<Transaction> transactions,
+		CancellationToken cancellationToken)
+	{
+		return await this.CalculateAsync(
+			userId,
+			currency,
+			transactions,
+			(assetMap, instrumentMap, historicalPricesMap, historicalExchangeRatesMap, transactions) =>
+				this.CalculateTransactionResults(assetMap, instrumentMap, historicalPricesMap, historicalExchangeRatesMap, transactions),
+			cancellationToken);
+	}
+
+	private async Task<ErrorOr<T>> CalculateAsync<T>(
+		UserId userId,
+		Currency currency,
+		IEnumerable<Transaction> transactions,
+		Func<IReadOnlyDictionary<AssetId, Asset>, IReadOnlyDictionary<InstrumentId, InvestmentInstrument>, IReadOnlyDictionary<InstrumentId, IReadOnlyDictionary<DateOnly, decimal>>, IReadOnlyDictionary<Currency, IReadOnlyDictionary<DateOnly, decimal>>, IEnumerable<Transaction>, T> calculator,
+		CancellationToken cancellationToken)
+	{
 		var errorOrAssets = await this.assetRepository.GetAllAsync(userId, cancellationToken);
 
 		if (errorOrAssets.IsError)
@@ -55,7 +86,6 @@ internal sealed class PortfolioCalculator
 			return errorOrAssets.Errors;
 		}
 
-		var transactions = errorOrTransactions.Value;
 		var assets = errorOrAssets.Value;
 
 		var errorOrInstrumentMap = await this.GetInvestmentInstrumentMap(assets, cancellationToken);
@@ -84,13 +114,9 @@ internal sealed class PortfolioCalculator
 			return errorOrHistoricalExchangeRatesMap.Errors;
 		}
 
-		return this.CalculatePortfolios<T>(
-			idSelector,
-			assets,
-			instrumentMap,
-			errorOrHistoricalPricesMap.Value,
-			errorOrHistoricalExchangeRatesMap.Value,
-			transactions).ToErrorOr();
+		var assetMap = assets.ToFrozenDictionary(x => x.Id, x => x);
+
+		return calculator(assetMap, instrumentMap, errorOrHistoricalPricesMap.Value, errorOrHistoricalExchangeRatesMap.Value, transactions);
 	}
 
 	private async Task<ErrorOr<IReadOnlyDictionary<InstrumentId, InvestmentInstrument>>> GetInvestmentInstrumentMap(
@@ -160,21 +186,20 @@ internal sealed class PortfolioCalculator
 
 	private IEnumerable<Portfolio<T>> CalculatePortfolios<T>(
 		Func<Transaction, Asset, InvestmentInstrument, T> idSelector,
-		IEnumerable<Asset> assets,
+		IReadOnlyDictionary<AssetId, Asset> assetMap,
 		IReadOnlyDictionary<InstrumentId, InvestmentInstrument> instrumentMap,
 		IReadOnlyDictionary<InstrumentId, IReadOnlyDictionary<DateOnly, decimal>> historicalPricesMap,
 		IReadOnlyDictionary<Currency, IReadOnlyDictionary<DateOnly, decimal>> historicalExchangeRatesMap,
 		IEnumerable<Transaction> transactions)
 	{
 		var today = DateOnly.FromDateTime(DateTime.UtcNow);
-		var assetMap = assets.ToFrozenDictionary(x => x.Id, x => x);
 
-		transactions = transactions.Concat(assets.Select(x => new Transaction(
+		transactions = transactions.Concat(assetMap.Keys.Select(assetId => new Transaction(
 			TransactionId.Empty,
 			date: today,
 			"Dummy transaction for asset",
 			TransactionType.Unknown,
-			x.Id,
+			assetId,
 			0.0M)));
 
 		var idToPortfolioTransactions = new Dictionary<T, List<PortfolioTransaction>>();
@@ -220,24 +245,27 @@ internal sealed class PortfolioCalculator
 			.ToImmutableArray();
 	}
 
-	private Portfolio<T> CalculatePortfolio<T>(
-		T id,
-		IReadOnlyDictionary<DateOnly, decimal> historicalPrices,
-		IReadOnlyDictionary<DateOnly, decimal> historicalExchangeRates,
+	private IEnumerable<TransactionResult> CalculateTransactionResults(
+		IReadOnlyDictionary<AssetId, Asset> assetMap,
+		IReadOnlyDictionary<InstrumentId, InvestmentInstrument> instrumentMap,
+		IReadOnlyDictionary<InstrumentId, IReadOnlyDictionary<DateOnly, decimal>> historicalPricesMap,
+		IReadOnlyDictionary<Currency, IReadOnlyDictionary<DateOnly, decimal>> historicalExchangeRatesMap,
 		IEnumerable<Transaction> transactions)
 	{
-		DateOnly today = DateOnly.FromDateTime(DateTime.UtcNow);
-		var portfolioTransactions = transactions
-			.Select(transaction => this.CalculatePortfolioTransaction(historicalPrices, historicalExchangeRates, transaction))
-			.ToImmutableArray();
+		return transactions.Select(transaction =>
+		{
+			var asset = assetMap[transaction.AssetId];
+			var instrument = instrumentMap[asset.InstrumentId];
 
-		return new Portfolio<T>(
-			id,
-			portfolioTransactions.Sum(x => x.InitialBalanceAmount),
-			0.0M,
-			portfolioTransactions.Sum(x => x.CurrentBalanceAmount),
-			0.0M,
-			100 * portfolioTransactions.Select(x => ((today.DayNumber - x.Date.DayNumber) / 365.25M, x.XIRRTransactionAmount, x.XIRRBalanceAmount)).CalculateXIRR());
+			return new TransactionResult(
+				transaction.Id,
+				transaction.Date,
+				transaction.Name,
+				transaction.Type,
+				transaction.AssetId,
+				transaction.Units,
+				transaction.CalculateTransactionAmount(historicalPricesMap[asset.InstrumentId], historicalExchangeRatesMap[instrument.Currency]));
+		});
 	}
 
 	private PortfolioTransaction CalculatePortfolioTransaction(
