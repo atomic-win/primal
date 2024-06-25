@@ -54,17 +54,17 @@ public sealed class AssetsController : ApiController
 	}
 
 	[HttpPost]
-	[Route("cashdeposits")]
-	public async Task<IActionResult> AddCashDepositAssetAsync([FromBody] AddCashDepositAssetRequest addCashDepositAssetRequest)
+	[Route("cash")]
+	public async Task<IActionResult> AddCashAssetAsync([FromBody] AddCashAssetRequest addCashAssetRequest)
 	{
 		UserId userId = this.httpContextAccessor.HttpContext.GetUserId();
 
-		var addCashDepositAssetCommand = this.mapper.Map<AddCashDepositAssetCommand>((userId, addCashDepositAssetRequest));
+		var addCashAssetCommand = this.mapper.Map<AddCashAssetCommand>((userId, addCashAssetRequest));
 
-		var errorOrCashDepositAsset = await this.mediator.Send(addCashDepositAssetCommand);
+		var errorOrCashAsset = await this.mediator.Send(addCashAssetCommand);
 
-		return errorOrCashDepositAsset.Match(
-			cashDepositAsset => this.Ok(this.mapper.Map<AssetResponse>(cashDepositAsset)),
+		return errorOrCashAsset.Match(
+			cashAsset => this.Ok(this.mapper.Map<AssetResponse>(cashAsset)),
 			errors => this.Problem(errors));
 	}
 

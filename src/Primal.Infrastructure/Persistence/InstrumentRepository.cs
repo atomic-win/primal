@@ -60,14 +60,15 @@ internal sealed class InstrumentRepository : IInstrumentRepository
 		}
 	}
 
-	public async Task<ErrorOr<InvestmentInstrument>> GetCashDepositAsync(
+	public async Task<ErrorOr<InvestmentInstrument>> GetCashInstrumentAsync(
+		InstrumentType instrumentType,
 		Currency currency,
 		CancellationToken cancellationToken)
 	{
 		try
 		{
 			InstrumentIdMappingTableEntity instrumentIdMappingEntity = await this.instrumentIdMappingTableClient.GetEntityAsync<InstrumentIdMappingTableEntity>(
-				partitionKey: "CashDeposit",
+				partitionKey: instrumentType.ToString(),
 				rowKey: currency.ToString(),
 				cancellationToken: cancellationToken);
 
@@ -131,32 +132,33 @@ internal sealed class InstrumentRepository : IInstrumentRepository
 		}
 	}
 
-	public async Task<ErrorOr<InvestmentInstrument>> AddCashDepositAsync(
+	public async Task<ErrorOr<InvestmentInstrument>> AddCashInstrumentAsync(
+		InstrumentType instrumentType,
 		Currency currency,
 		CancellationToken cancellationToken)
 	{
-		var cashDeposit = new CashDeposit(InstrumentId.New(), currency);
+		var cashInstrument = new CashInstrument(InstrumentId.New(), instrumentType, currency);
 
 		InstrumentIdMappingTableEntity mappingEntity = new InstrumentIdMappingTableEntity
 		{
-			PartitionKey = "CashDeposit",
+			PartitionKey = instrumentType.ToString(),
 			RowKey = currency.ToString(),
-			InstrumentId = cashDeposit.Id.Value.ToString("N"),
+			InstrumentId = cashInstrument.Id.Value.ToString("N"),
 		};
 
-		var entity = new CashDepositInstrumentTableEntity
+		var entity = new CashInstrumentTableEntity
 		{
-			PartitionKey = cashDeposit.Id.Value.ToString("N"),
-			Name = cashDeposit.Name,
-			Type = cashDeposit.Type.ToString(),
-			Currency = cashDeposit.Currency,
+			PartitionKey = cashInstrument.Id.Value.ToString("N"),
+			Name = cashInstrument.Name,
+			Type = cashInstrument.Type.ToString(),
+			Currency = cashInstrument.Currency,
 		};
 
 		try
 		{
 			await this.instrumentIdMappingTableClient.AddEntityAsync(mappingEntity, cancellationToken);
 			await this.instrumentTableClient.AddEntityAsync(entity, cancellationToken);
-			return cashDeposit;
+			return cashInstrument;
 		}
 		catch (RequestFailedException ex) when (ex.Status == 409)
 		{
@@ -286,8 +288,9 @@ internal sealed class InstrumentRepository : IInstrumentRepository
 
 		return type switch
 		{
-			InstrumentType.CashDeposits => new CashDeposit(
+			InstrumentType.CashAccounts or InstrumentType.FixedDeposits or InstrumentType.EPF or InstrumentType.PPF => new CashInstrument(
 				new InstrumentId(Guid.Parse(entity.PartitionKey)),
+				type,
 				Enum.Parse<Currency>(entity.GetString("Currency"))),
 
 			InstrumentType.MutualFunds => new MutualFund(
@@ -314,7 +317,7 @@ internal sealed class InstrumentRepository : IInstrumentRepository
 		};
 	}
 
-	private sealed class CashDepositInstrumentTableEntity : InstrumentTableEntity
+	private sealed class CashInstrumentTableEntity : InstrumentTableEntity
 	{
 	}
 

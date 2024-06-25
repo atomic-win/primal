@@ -1,6 +1,6 @@
 namespace Primal.Contracts.Investments;
 
-public sealed record CashDepositResponse(
+public sealed record CashInstrumentResponse(
 	Guid Id,
 	string Name,
 	string Type,

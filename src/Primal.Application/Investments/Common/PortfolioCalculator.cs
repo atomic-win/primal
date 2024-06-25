@@ -169,6 +169,14 @@ internal sealed class PortfolioCalculator
 		var today = DateOnly.FromDateTime(DateTime.UtcNow);
 		var assetMap = assets.ToFrozenDictionary(x => x.Id, x => x);
 
+		transactions = transactions.Concat(assets.Select(x => new Transaction(
+			TransactionId.Empty,
+			date: today,
+			"Dummy transaction for asset",
+			TransactionType.Unknown,
+			x.Id,
+			0.0M)));
+
 		var idToPortfolioTransactions = new Dictionary<T, List<PortfolioTransaction>>();
 
 		foreach (var transaction in transactions)

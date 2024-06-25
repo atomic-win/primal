@@ -6,7 +6,8 @@ using Primal.Domain.Users;
 
 namespace Primal.Application.Investments;
 
-public sealed record AddCashDepositAssetCommand(
+public sealed record AddCashAssetCommand(
 	UserId UserId,
 	string Name,
+	InstrumentType Type,
 	Currency Currency) : IRequest<ErrorOr<Asset>>;
