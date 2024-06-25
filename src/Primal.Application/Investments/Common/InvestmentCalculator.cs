@@ -48,10 +48,18 @@ internal sealed class InvestmentCalculator
 			return errorOrTransactions.Errors;
 		}
 
+		var errorOrAssets = await this.assetRepository.GetAllAsync(userId, cancellationToken);
+
+		if (errorOrAssets.IsError)
+		{
+			return errorOrAssets.Errors;
+		}
+
 		return await this.CalculateAsync(
 			userId,
 			currency,
 			errorOrTransactions.Value,
+			errorOrAssets.Value,
 			(assetMap, instrumentMap, historicalPricesMap, historicalExchangeRatesMap, transactions) =>
 				this.CalculatePortfolios(idSelector, assetMap, instrumentMap, historicalPricesMap, historicalExchangeRatesMap, transactions),
 			cancellationToken);
@@ -63,12 +71,19 @@ internal sealed class InvestmentCalculator
 		IEnumerable<Transaction> transactions,
 		CancellationToken cancellationToken)
 	{
+		var errorOrAssets = await this.GetAssets(userId, transactions, cancellationToken);
+
+		if (errorOrAssets.IsError)
+		{
+			return errorOrAssets.Errors;
+		}
+
 		return await this.CalculateAsync(
 			userId,
 			currency,
 			transactions,
-			(assetMap, instrumentMap, historicalPricesMap, historicalExchangeRatesMap, transactions) =>
-				this.CalculateTransactionResults(assetMap, instrumentMap, historicalPricesMap, historicalExchangeRatesMap, transactions),
+			errorOrAssets.Value,
+			this.CalculateTransactionResults,
 			cancellationToken);
 	}
 
@@ -76,19 +91,13 @@ internal sealed class InvestmentCalculator
 		UserId userId,
 		Currency currency,
 		IEnumerable<Transaction> transactions,
+		IEnumerable<Asset> assets,
 		Func<IReadOnlyDictionary<AssetId, Asset>, IReadOnlyDictionary<InstrumentId, InvestmentInstrument>, IReadOnlyDictionary<InstrumentId, IReadOnlyDictionary<DateOnly, decimal>>, IReadOnlyDictionary<Currency, IReadOnlyDictionary<DateOnly, decimal>>, IEnumerable<Transaction>, T> calculator,
 		CancellationToken cancellationToken)
 	{
-		var errorOrAssets = await this.assetRepository.GetAllAsync(userId, cancellationToken);
+		var assetMap = assets.ToFrozenDictionary(x => x.Id, x => x);
 
-		if (errorOrAssets.IsError)
-		{
-			return errorOrAssets.Errors;
-		}
-
-		var assets = errorOrAssets.Value;
-
-		var errorOrInstrumentMap = await this.GetInvestmentInstrumentMap(assets, cancellationToken);
+		var errorOrInstrumentMap = await this.GetInvestmentInstrumentMap(assetMap.Values, cancellationToken);
 
 		if (errorOrInstrumentMap.IsError)
 		{
@@ -114,9 +123,29 @@ internal sealed class InvestmentCalculator
 			return errorOrHistoricalExchangeRatesMap.Errors;
 		}
 
-		var assetMap = assets.ToFrozenDictionary(x => x.Id, x => x);
-
 		return calculator(assetMap, instrumentMap, errorOrHistoricalPricesMap.Value, errorOrHistoricalExchangeRatesMap.Value, transactions);
+	}
+
+	private async Task<ErrorOr<IEnumerable<Asset>>> GetAssets(
+		UserId userId,
+		IEnumerable<Transaction> transactions,
+		CancellationToken cancellationToken)
+	{
+		var assets = new List<Asset>();
+
+		foreach (var assetId in transactions.Select(x => x.AssetId).Distinct())
+		{
+			var errorOrAsset = await this.assetRepository.GetByIdAsync(userId, assetId, cancellationToken);
+
+			if (errorOrAsset.IsError)
+			{
+				return errorOrAsset.Errors;
+			}
+
+			assets.Add(errorOrAsset.Value);
+		}
+
+		return assets;
 	}
 
 	private async Task<ErrorOr<IReadOnlyDictionary<InstrumentId, InvestmentInstrument>>> GetInvestmentInstrumentMap(

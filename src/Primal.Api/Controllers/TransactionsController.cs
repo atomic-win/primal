@@ -41,16 +41,16 @@ public sealed class TransactionsController : ApiController
 
 	[HttpGet]
 	[Route("{id:guid}")]
-	public async Task<IActionResult> GetTransactionByIdAsync(Guid id)
+	public async Task<IActionResult> GetTransactionByIdAsync(Guid id, [FromQuery] Currency currency)
 	{
 		UserId userId = this.httpContextAccessor.HttpContext.GetUserId();
 
-		var getTransactionByIdQuery = new GetTransactionByIdQuery(userId, new TransactionId(id));
+		var getTransactionByIdQuery = new GetTransactionByIdQuery(userId, currency, new TransactionId(id));
 
-		var errorOrTransaction = await this.mediator.Send(getTransactionByIdQuery);
+		var errorOrTransactionResult = await this.mediator.Send(getTransactionByIdQuery);
 
-		return errorOrTransaction.Match(
-			transaction => this.Ok(this.mapper.Map<Transaction, TransactionResponse>(transaction)),
+		return errorOrTransactionResult.Match(
+			transactionResult => this.Ok(this.mapper.Map<TransactionResult, TransactionResponse>(transactionResult)),
 			errors => this.Problem(errors));
 	}
 
