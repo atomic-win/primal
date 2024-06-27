@@ -151,7 +151,7 @@ internal sealed class InvestmentCalculator
 		var errorOrInstruments = await this.instrumentRepository.GetAllAsync(cancellationToken);
 
 		if (errorOrInstruments.IsError)
-			{
+		{
 			return errorOrInstruments.Errors;
 		}
 
@@ -228,10 +228,10 @@ internal sealed class InvestmentCalculator
 		{
 			portfolios.AddRange(this.CalculatePortfolios(
 				evaluationDate,
-			assetMap,
-			instrumentMap,
-			historicalPricesMap,
-			historicalExchangeRatesMap,
+				assetMap,
+				instrumentMap,
+				historicalPricesMap,
+				historicalExchangeRatesMap,
 				transactions));
 		}
 
