@@ -9,8 +9,13 @@ internal static class XIRRExtensions
 		IReadOnlyList<(decimal Years, decimal TransactionAmount, decimal BalanceAmount)> inputsList
 			= inputs.ToImmutableArray();
 
+		if (inputsList.Sum(x => x.BalanceAmount - x.TransactionAmount) == 0)
+		{
+			return 0;
+		}
+
 		decimal rateLowerBound = 0, rateUpperBound = 100;
-		for (int i = 0; i < 100; ++i)
+		while (rateUpperBound - rateLowerBound > 0.0000001M)
 		{
 			decimal rateMiddle = (rateLowerBound + rateUpperBound) / 2;
 			decimal value = inputsList.CalculateValue(rateMiddle);
@@ -32,7 +37,6 @@ internal static class XIRRExtensions
 		decimal rate)
 	{
 		return inputs
-			.Select(x => x.BalanceAmount - ((decimal)Math.Pow((double)(1 + rate), (double)Math.Max(1M, x.Years)) * x.TransactionAmount))
-			.Sum();
+			.Sum(x => x.BalanceAmount - ((decimal)Math.Pow((double)(1 + rate), (double)Math.Max(1M, x.Years)) * x.TransactionAmount));
 	}
 }
