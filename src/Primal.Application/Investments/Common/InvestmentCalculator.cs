@@ -222,13 +222,20 @@ internal sealed class InvestmentCalculator
 			0.0M)))
 			.ToImmutableArray();
 
-		return this.CalculatePortfolios(
-			today,
+		var portfolios = new List<Portfolio>();
+
+		foreach (var evaluationDate in this.GetEvaluationDates(transactions))
+		{
+			portfolios.AddRange(this.CalculatePortfolios(
+				evaluationDate,
 			assetMap,
 			instrumentMap,
 			historicalPricesMap,
 			historicalExchangeRatesMap,
-			transactions);
+				transactions));
+		}
+
+		return portfolios;
 	}
 
 	private IEnumerable<TransactionResult> CalculateTransactionResults(
@@ -363,6 +370,7 @@ internal sealed class InvestmentCalculator
 			.Select(kvp => new Portfolio<T>(
 				kvp.Key,
 				portfolioType,
+				evaluationDate,
 				kvp.Value.Sum(x => x.InitialBalanceAmount),
 				0.0M,
 				kvp.Value.Sum(x => x.CurrentBalanceAmount),
@@ -392,6 +400,26 @@ internal sealed class InvestmentCalculator
 			Stock stock => await this.stockApiClient.GetHistoricalValuesAsync(stock.Symbol, cancellationToken),
 			_ => ImmutableDictionary<DateOnly, decimal>.Empty,
 		};
+	}
+
+	private IEnumerable<DateOnly> GetEvaluationDates(
+		IEnumerable<Transaction> transactions)
+	{
+		DateOnly startDate = transactions.Min(x => x.Date);
+		DateOnly endDate = DateOnly.FromDateTime(DateTime.UtcNow);
+
+		var evaluationDates = new List<DateOnly>();
+		for (DateOnly date = startDate; date <= endDate; date = date.AddMonths(1))
+		{
+			date = new DateOnly(date.Year, date.Month, 1);
+
+			DateOnly evaluationDate = new DateOnly(date.Year, date.Month, DateTime.DaysInMonth(date.Year, date.Month));
+			evaluationDates.Add(evaluationDate);
+		}
+
+		evaluationDates.Add(endDate);
+
+		return evaluationDates.Distinct().ToImmutableArray();
 	}
 
 	private sealed class PortfolioTransaction
