@@ -204,7 +204,6 @@ internal sealed class InvestmentCalculator
 		return historicalExchangeRates.ToFrozenDictionary();
 	}
 
-	[System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "MA0051:Method is too long", Justification = "Refactoring is not necessary.")]
 	private IEnumerable<Portfolio> CalculatePortfolios(
 		IReadOnlyDictionary<AssetId, Asset> assetMap,
 		IReadOnlyDictionary<InstrumentId, InvestmentInstrument> instrumentMap,
@@ -241,39 +240,10 @@ internal sealed class InvestmentCalculator
 				transaction));
 		}
 
-		var portfoliosAll = this.CalculatePortfolios(
-			PortfolioType.All,
-			(Asset asset, InvestmentInstrument instrument) => AssetId.Empty,
+		return this.CalculatePortfolios(
 			assetMap,
 			instrumentMap,
 			assetIdToPortfolioTransactions);
-
-		var portfoliosPerInstrumentType = this.CalculatePortfolios(
-			PortfolioType.PerInvestmentInstrumentType,
-			(Asset asset, InvestmentInstrument instrument) => instrument.Type,
-			assetMap,
-			instrumentMap,
-			assetIdToPortfolioTransactions);
-
-		var portfoliosPerInstrument = this.CalculatePortfolios(
-			PortfolioType.PerInvestmentInstrument,
-			(Asset asset, InvestmentInstrument instrument) => instrument.Id,
-			assetMap,
-			instrumentMap,
-			assetIdToPortfolioTransactions);
-
-		var portfoliosPerAsset = this.CalculatePortfolios(
-			PortfolioType.PerAsset,
-			(Asset asset, InvestmentInstrument instrument) => asset.Id,
-			assetMap,
-			instrumentMap,
-			assetIdToPortfolioTransactions);
-
-		return portfoliosAll
-			.Concat(portfoliosPerInstrumentType)
-			.Concat(portfoliosPerInstrument)
-			.Concat(portfoliosPerAsset)
-			.ToImmutableArray();
 	}
 
 	private IEnumerable<TransactionResult> CalculateTransactionResults(
@@ -313,6 +283,46 @@ internal sealed class InvestmentCalculator
 			XIRRTransactionAmount = transaction.CalculateXIRRTransactionAmount(historicalPrices, historicalExchangeRates),
 			XIRRBalanceAmount = transaction.CalculateXIRRBalanceAmount(historicalPrices, historicalExchangeRates),
 		};
+	}
+
+	private IEnumerable<Portfolio> CalculatePortfolios(
+		IReadOnlyDictionary<AssetId, Asset> assetMap,
+		IReadOnlyDictionary<InstrumentId, InvestmentInstrument> instrumentMap,
+		IReadOnlyDictionary<AssetId, List<PortfolioTransaction>> assetIdToPortfolioTransactions)
+	{
+		var portfoliosAll = this.CalculatePortfolios(
+			PortfolioType.All,
+			(Asset asset, InvestmentInstrument instrument) => AssetId.Empty,
+			assetMap,
+			instrumentMap,
+			assetIdToPortfolioTransactions);
+
+		var portfoliosPerInstrumentType = this.CalculatePortfolios(
+			PortfolioType.PerInvestmentInstrumentType,
+			(Asset asset, InvestmentInstrument instrument) => instrument.Type,
+			assetMap,
+			instrumentMap,
+			assetIdToPortfolioTransactions);
+
+		var portfoliosPerInstrument = this.CalculatePortfolios(
+			PortfolioType.PerInvestmentInstrument,
+			(Asset asset, InvestmentInstrument instrument) => instrument.Id,
+			assetMap,
+			instrumentMap,
+			assetIdToPortfolioTransactions);
+
+		var portfoliosPerAsset = this.CalculatePortfolios(
+			PortfolioType.PerAsset,
+			(Asset asset, InvestmentInstrument instrument) => asset.Id,
+			assetMap,
+			instrumentMap,
+			assetIdToPortfolioTransactions);
+
+		return portfoliosAll
+			.Concat(portfoliosPerInstrumentType)
+			.Concat(portfoliosPerInstrument)
+			.Concat(portfoliosPerAsset)
+			.ToImmutableArray();
 	}
 
 	private IEnumerable<Portfolio> CalculatePortfolios<T>(
