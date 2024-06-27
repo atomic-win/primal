@@ -1,7 +1,6 @@
 using System.Reflection;
 using Autofac;
 using FluentValidation;
-using MediatR;
 using MediatR.Extensions.Autofac.DependencyInjection;
 using MediatR.Extensions.Autofac.DependencyInjection.Builder;
 using Primal.Application.Common.Behaviors;
@@ -28,9 +27,6 @@ public sealed class ApplicationModule : Autofac.Module
 			.Build();
 
 		builder.RegisterMediatR(configuration);
-
-		builder.RegisterGeneric(typeof(GetPortfolioQueryHandler<>))
-			.As(typeof(IRequestHandler<,>));
 	}
 
 	private void RegisterValidators(ContainerBuilder builder)
@@ -39,8 +35,5 @@ public sealed class ApplicationModule : Autofac.Module
 			.AsClosedTypesOf(typeof(IValidator<>))
 			.AsImplementedInterfaces()
 			.InstancePerDependency();
-
-		builder.RegisterGeneric(typeof(GetPortfolioQueryValidator<>))
-			.As(typeof(IValidator<>));
 	}
 }
