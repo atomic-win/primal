@@ -20,17 +20,17 @@ internal sealed class CachedStockApiClient : IStockApiClient
 	public async Task<ErrorOr<Stock>> GetBySymbolAsync(string symbol, CancellationToken cancellationToken)
 	{
 		return await this.cache.GetOrCreateAsync(
-			$"Stock_{symbol}",
+			$"stock/{symbol}",
 			async (cancelToken) => await this.stockApiClient.GetBySymbolAsync(symbol, cancelToken),
 			TimeSpan.FromDays(1),
 			cancellationToken);
 	}
 
-	public async Task<ErrorOr<IReadOnlyDictionary<DateOnly, decimal>>> GetHistoricalValuesAsync(string symbol, CancellationToken cancellationToken)
+	public async Task<ErrorOr<IReadOnlyDictionary<DateOnly, decimal>>> GetPriceAsync(string symbol, CancellationToken cancellationToken)
 	{
 		return await this.cache.GetOrCreateAsync(
-			$"Stock_{symbol}_HistoricalValues",
-			async (cancelToken) => await this.stockApiClient.GetHistoricalValuesAsync(symbol, cancelToken),
+			$"stock/{symbol}/price",
+			async (cancelToken) => await this.stockApiClient.GetPriceAsync(symbol, cancelToken),
 			TimeSpan.FromDays(1),
 			cancellationToken);
 	}

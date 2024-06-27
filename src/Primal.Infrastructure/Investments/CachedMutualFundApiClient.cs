@@ -20,18 +20,18 @@ internal sealed class CachedMutualFundApiClient : IMutualFundApiClient
 	public async Task<ErrorOr<MutualFund>> GetBySchemeCodeAsync(int schemeCode, CancellationToken cancellationToken)
 	{
 		return await this.cache.GetOrCreateAsync(
-			$"MutualFund_{schemeCode}",
+			$"mutualfund/{schemeCode}",
 			async (cancelToken) => await this.mutualFundApiClient.GetBySchemeCodeAsync(schemeCode, cancelToken),
-			TimeSpan.FromDays(1),
+			TimeSpan.FromHours(1),
 			cancellationToken);
 	}
 
-	public async Task<ErrorOr<IReadOnlyDictionary<DateOnly, decimal>>> GetHistoricalValuesAsync(int schemeCode, CancellationToken cancellationToken)
+	public async Task<ErrorOr<IReadOnlyDictionary<DateOnly, decimal>>> GetPriceAsync(int schemeCode, CancellationToken cancellationToken)
 	{
 		return await this.cache.GetOrCreateAsync(
-			$"MutualFund_{schemeCode}_HistoricalValues",
-			async (cancelToken) => await this.mutualFundApiClient.GetHistoricalValuesAsync(schemeCode, cancelToken),
-			TimeSpan.FromDays(1),
+			$"mutualfunds/{schemeCode}/price",
+			async (cancelToken) => await this.mutualFundApiClient.GetPriceAsync(schemeCode, cancelToken),
+			TimeSpan.FromHours(1),
 			cancellationToken);
 	}
 }

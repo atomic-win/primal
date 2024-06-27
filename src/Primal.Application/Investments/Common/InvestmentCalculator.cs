@@ -1,6 +1,5 @@
 using System.Collections.Frozen;
 using System.Collections.Immutable;
-using System.Diagnostics;
 using ErrorOr;
 using Primal.Application.Common.Interfaces.Investments;
 using Primal.Application.Common.Interfaces.Persistence;
@@ -396,8 +395,8 @@ internal sealed class InvestmentCalculator
 	{
 		return investmentInstrument switch
 		{
-			MutualFund mutualFund => await this.mutualFundApiClient.GetHistoricalValuesAsync(mutualFund.SchemeCode, cancellationToken),
-			Stock stock => await this.stockApiClient.GetHistoricalValuesAsync(stock.Symbol, cancellationToken),
+			MutualFund mutualFund => await this.mutualFundApiClient.GetPriceAsync(mutualFund.SchemeCode, cancellationToken),
+			Stock stock => await this.stockApiClient.GetPriceAsync(stock.Symbol, cancellationToken),
 			_ => ImmutableDictionary<DateOnly, decimal>.Empty,
 		};
 	}
