@@ -237,6 +237,7 @@ internal sealed class InvestmentCalculator
 			portfolioTransactions.Add(this.CalculatePortfolioTransaction(
 				historicalPricesMap[asset.InstrumentId],
 				historicalExchangeRatesMap[instrument.Currency],
+				today,
 				transaction));
 		}
 
@@ -265,23 +266,24 @@ internal sealed class InvestmentCalculator
 				transaction.Type,
 				transaction.AssetId,
 				transaction.Units,
-				transaction.CalculateTransactionAmount(historicalPricesMap[asset.InstrumentId], historicalExchangeRatesMap[instrument.Currency]));
+				transaction.CalculateTransactionAmount(historicalPricesMap[asset.InstrumentId], historicalExchangeRatesMap[instrument.Currency], transaction.Date));
 		});
 	}
 
 	private PortfolioTransaction CalculatePortfolioTransaction(
 		IReadOnlyDictionary<DateOnly, decimal> historicalPrices,
 		IReadOnlyDictionary<DateOnly, decimal> historicalExchangeRates,
+		DateOnly evaluationDate,
 		Transaction transaction)
 	{
 		return new PortfolioTransaction
 		{
 			Date = transaction.Date,
 			Type = transaction.Type,
-			InitialBalanceAmount = transaction.CalculateInitialBalanceAmount(historicalPrices, historicalExchangeRates),
-			CurrentBalanceAmount = transaction.CalculateCurrentBalanceAmount(historicalPrices, historicalExchangeRates),
-			XIRRTransactionAmount = transaction.CalculateXIRRTransactionAmount(historicalPrices, historicalExchangeRates),
-			XIRRBalanceAmount = transaction.CalculateXIRRBalanceAmount(historicalPrices, historicalExchangeRates),
+			InitialBalanceAmount = transaction.CalculateInitialBalanceAmount(historicalPrices, historicalExchangeRates, evaluationDate),
+			CurrentBalanceAmount = transaction.CalculateCurrentBalanceAmount(historicalPrices, historicalExchangeRates, evaluationDate),
+			XIRRTransactionAmount = transaction.CalculateXIRRTransactionAmount(historicalPrices, historicalExchangeRates, evaluationDate),
+			XIRRBalanceAmount = transaction.CalculateXIRRBalanceAmount(historicalPrices, historicalExchangeRates, evaluationDate),
 		};
 	}
 
