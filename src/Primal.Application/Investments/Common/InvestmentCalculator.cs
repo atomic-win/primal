@@ -219,32 +219,16 @@ internal sealed class InvestmentCalculator
 			"Dummy transaction for asset",
 			TransactionType.Unknown,
 			assetId,
-			0.0M)));
-
-		var assetIdToPortfolioTransactions = new Dictionary<AssetId, List<PortfolioTransaction>>();
-
-		foreach (var transaction in transactions)
-		{
-			var asset = assetMap[transaction.AssetId];
-			var instrument = instrumentMap[asset.InstrumentId];
-
-			if (!assetIdToPortfolioTransactions.TryGetValue(transaction.AssetId, out var portfolioTransactions))
-			{
-				portfolioTransactions = new List<PortfolioTransaction>();
-				assetIdToPortfolioTransactions.Add(transaction.AssetId, portfolioTransactions);
-			}
-
-			portfolioTransactions.Add(this.CalculatePortfolioTransaction(
-				historicalPricesMap[asset.InstrumentId],
-				historicalExchangeRatesMap[instrument.Currency],
-				today,
-				transaction));
-		}
+			0.0M)))
+			.ToImmutableArray();
 
 		return this.CalculatePortfolios(
+			today,
 			assetMap,
 			instrumentMap,
-			assetIdToPortfolioTransactions);
+			historicalPricesMap,
+			historicalExchangeRatesMap,
+			transactions);
 	}
 
 	private IEnumerable<TransactionResult> CalculateTransactionResults(
@@ -288,37 +272,52 @@ internal sealed class InvestmentCalculator
 	}
 
 	private IEnumerable<Portfolio> CalculatePortfolios(
+		DateOnly evaluationDate,
 		IReadOnlyDictionary<AssetId, Asset> assetMap,
 		IReadOnlyDictionary<InstrumentId, InvestmentInstrument> instrumentMap,
-		IReadOnlyDictionary<AssetId, List<PortfolioTransaction>> assetIdToPortfolioTransactions)
+		IReadOnlyDictionary<InstrumentId, IReadOnlyDictionary<DateOnly, decimal>> historicalPricesMap,
+		IReadOnlyDictionary<Currency, IReadOnlyDictionary<DateOnly, decimal>> historicalExchangeRatesMap,
+		IEnumerable<Transaction> transactions)
 	{
 		var portfoliosAll = this.CalculatePortfolios(
+			evaluationDate,
 			PortfolioType.All,
 			(Asset asset, InvestmentInstrument instrument) => AssetId.Empty,
 			assetMap,
 			instrumentMap,
-			assetIdToPortfolioTransactions);
+			historicalPricesMap,
+			historicalExchangeRatesMap,
+			transactions);
 
 		var portfoliosPerInstrumentType = this.CalculatePortfolios(
+			evaluationDate,
 			PortfolioType.PerInvestmentInstrumentType,
 			(Asset asset, InvestmentInstrument instrument) => instrument.Type,
 			assetMap,
 			instrumentMap,
-			assetIdToPortfolioTransactions);
+			historicalPricesMap,
+			historicalExchangeRatesMap,
+			transactions);
 
 		var portfoliosPerInstrument = this.CalculatePortfolios(
+			evaluationDate,
 			PortfolioType.PerInvestmentInstrument,
 			(Asset asset, InvestmentInstrument instrument) => instrument.Id,
 			assetMap,
 			instrumentMap,
-			assetIdToPortfolioTransactions);
+			historicalPricesMap,
+			historicalExchangeRatesMap,
+			transactions);
 
 		var portfoliosPerAsset = this.CalculatePortfolios(
+			evaluationDate,
 			PortfolioType.PerAsset,
 			(Asset asset, InvestmentInstrument instrument) => asset.Id,
 			assetMap,
 			instrumentMap,
-			assetIdToPortfolioTransactions);
+			historicalPricesMap,
+			historicalExchangeRatesMap,
+			transactions);
 
 		return portfoliosAll
 			.Concat(portfoliosPerInstrumentType)
@@ -328,19 +327,26 @@ internal sealed class InvestmentCalculator
 	}
 
 	private IEnumerable<Portfolio> CalculatePortfolios<T>(
+		DateOnly evaluationDate,
 		PortfolioType portfolioType,
 		Func<Asset, InvestmentInstrument, T> idSelector,
 		IReadOnlyDictionary<AssetId, Asset> assetMap,
 		IReadOnlyDictionary<InstrumentId, InvestmentInstrument> instrumentMap,
-		IReadOnlyDictionary<AssetId, List<PortfolioTransaction>> assetIdToPortfolioTransactions)
+		IReadOnlyDictionary<InstrumentId, IReadOnlyDictionary<DateOnly, decimal>> historicalPricesMap,
+		IReadOnlyDictionary<Currency, IReadOnlyDictionary<DateOnly, decimal>> historicalExchangeRatesMap,
+		IEnumerable<Transaction> transactions)
 	{
-		var today = DateOnly.FromDateTime(DateTime.UtcNow);
 		var idToPortfolioTransactions = new Dictionary<T, List<PortfolioTransaction>>();
 
-		foreach (var kvp in assetIdToPortfolioTransactions)
+		foreach (var transaction in transactions.Where(x => x.Date <= evaluationDate))
 		{
-			var asset = assetMap[kvp.Key];
+			var asset = assetMap[transaction.AssetId];
 			var instrument = instrumentMap[asset.InstrumentId];
+
+			var historicalPrices = historicalPricesMap[instrument.Id];
+			var historicalExchangeRates = historicalExchangeRatesMap[instrument.Currency];
+
+			var portfolioTransaction = this.CalculatePortfolioTransaction(historicalPrices, historicalExchangeRates, evaluationDate, transaction);
 
 			T id = idSelector(asset, instrument);
 
@@ -350,7 +356,7 @@ internal sealed class InvestmentCalculator
 				idToPortfolioTransactions.Add(id, portfolioTransactions);
 			}
 
-			portfolioTransactions.AddRange(kvp.Value);
+			portfolioTransactions.Add(portfolioTransaction);
 		}
 
 		var portfolios = idToPortfolioTransactions
@@ -361,7 +367,7 @@ internal sealed class InvestmentCalculator
 				0.0M,
 				kvp.Value.Sum(x => x.CurrentBalanceAmount),
 				0.0M,
-				100 * kvp.Value.Select(x => ((today.DayNumber - x.Date.DayNumber) / 365.25M, x.XIRRTransactionAmount, x.XIRRBalanceAmount)).CalculateXIRR()))
+				100 * kvp.Value.Select(x => ((evaluationDate.DayNumber - x.Date.DayNumber) / 365.25M, x.XIRRTransactionAmount, x.XIRRBalanceAmount)).CalculateXIRR()))
 			.ToImmutableArray();
 
 		decimal totalInitialAmount = portfolios.Sum(x => x.InitialAmount);
