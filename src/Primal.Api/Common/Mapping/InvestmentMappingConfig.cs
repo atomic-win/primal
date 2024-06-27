@@ -77,6 +77,10 @@ internal sealed class InvestmentMappingConfig : IRegister
 		config.NewConfig<Portfolio<AssetId>, PortfolioResponse<Guid>>();
 		config.NewConfig<Portfolio<InstrumentId>, PortfolioResponse<Guid>>();
 		config.NewConfig<Portfolio<InstrumentType>, PortfolioResponse<string>>();
-		config.NewConfig<Portfolio<string>, PortfolioResponse<string>>();
+
+		config.NewConfig<Portfolio, PortfolioResponse>()
+			.Include<Portfolio<AssetId>, PortfolioResponse<Guid>>()
+			.Include<Portfolio<InstrumentId>, PortfolioResponse<Guid>>()
+			.Include<Portfolio<InstrumentType>, PortfolioResponse<string>>();
 	}
 }
