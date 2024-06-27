@@ -55,7 +55,7 @@ internal sealed class MutualFundApiClient : IMutualFundApiClient
 			Currency.INR);
 	}
 
-	public async Task<ErrorOr<IReadOnlyDictionary<DateOnly, decimal>>> GetHistoricalValuesAsync(int schemeCode, CancellationToken cancellationToken)
+	public async Task<ErrorOr<IReadOnlyDictionary<DateOnly, decimal>>> GetPriceAsync(int schemeCode, CancellationToken cancellationToken)
 	{
 		var response = await this.httpClient.GetAsync($"/mf/{schemeCode}", cancellationToken);
 

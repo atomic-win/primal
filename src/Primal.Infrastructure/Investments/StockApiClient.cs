@@ -56,14 +56,14 @@ internal sealed class StockApiClient : IStockApiClient, IExchangeRateProvider
 		}
 	}
 
-	public async Task<ErrorOr<IReadOnlyDictionary<DateOnly, decimal>>> GetHistoricalValuesAsync(string symbol, CancellationToken cancellationToken)
+	public async Task<ErrorOr<IReadOnlyDictionary<DateOnly, decimal>>> GetPriceAsync(string symbol, CancellationToken cancellationToken)
 	{
 		var requestUri = $"query?&apikey={this.investmentSettings.AlphaVantageApiKey}&datatype=csv&function=TIME_SERIES_DAILY&symbol={symbol}&outputsize=full";
 
 		using (var reader = new StreamReader(await this.httpClient.GetStreamAsync(requestUri, cancellationToken)))
 		{
 			var csvReader = new CsvReader(reader, CultureInfo.InvariantCulture);
-			var records = csvReader.GetRecords<StockHistoricalValue>().ToList();
+			var records = csvReader.GetRecords<StockPriceValue>().ToList();
 
 			return records
 				.ToFrozenDictionary(
@@ -123,7 +123,7 @@ internal sealed class StockApiClient : IStockApiClient, IExchangeRateProvider
 		public double MatchScore { get; init; }
 	}
 
-	private sealed class StockHistoricalValue
+	private sealed class StockPriceValue
 	{
 		[Name("timestamp")]
 		public string Date { get; init; }

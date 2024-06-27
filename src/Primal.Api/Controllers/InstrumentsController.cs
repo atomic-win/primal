@@ -34,10 +34,10 @@ public sealed class InstrumentsController : ApiController
 	}
 
 	[HttpGet]
-	[Route("{id:guid}/historical")]
-	public async Task<IActionResult> GetInstrumentHistoricalAsync(Guid id, DateOnly startDate, DateOnly endDate)
+	[Route("{id:guid}/price")]
+	public async Task<IActionResult> GetInstrumentPriceAsync(Guid id)
 	{
-		var getInstrumentValueQuery = new GetInstrumentValueQuery(new InstrumentId(id), startDate, endDate);
+		var getInstrumentValueQuery = new GetInstrumentPriceQuery(new InstrumentId(id));
 
 		var errorOrInstrumentValues = await this.mediator.Send(getInstrumentValueQuery);
 
@@ -47,10 +47,10 @@ public sealed class InstrumentsController : ApiController
 	}
 
 	[HttpGet]
-	[Route("exchangerates")]
-	public async Task<IActionResult> GetExchangeRatesAsync(Currency from, Currency to, DateOnly startDate, DateOnly endDate)
+	[Route("exchangerate")]
+	public async Task<IActionResult> GetExchangeRatesAsync(Currency from, Currency to)
 	{
-		var getExchangeRatesQuery = new GetExchangeRatesQuery(from, to, startDate, endDate);
+		var getExchangeRatesQuery = new GetExchangeRateQuery(from, to);
 
 		var errorOrExchangeRates = await this.mediator.Send(getExchangeRatesQuery);
 
