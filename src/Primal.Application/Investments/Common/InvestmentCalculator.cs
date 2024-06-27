@@ -152,21 +152,16 @@ internal sealed class InvestmentCalculator
 		IEnumerable<Asset> assets,
 		CancellationToken cancellationToken)
 	{
-		var instruments = new List<InvestmentInstrument>();
+		var errorOrInstruments = await this.instrumentRepository.GetAllAsync(cancellationToken);
 
-		foreach (var instrumentId in assets.Select(x => x.InstrumentId).Distinct())
-		{
-			var errorOrInstrument = await this.instrumentRepository.GetByIdAsync(instrumentId, cancellationToken);
-
-			if (errorOrInstrument.IsError)
+		if (errorOrInstruments.IsError)
 			{
-				return errorOrInstrument.Errors;
-			}
-
-			instruments.Add(errorOrInstrument.Value);
+			return errorOrInstruments.Errors;
 		}
 
-		return instruments.ToFrozenDictionary(x => x.Id, x => x);
+		return errorOrInstruments.Value
+			.Where(x => assets.Any(asset => asset.InstrumentId == x.Id))
+			.ToFrozenDictionary(x => x.Id, x => x);
 	}
 
 	private async Task<ErrorOr<IReadOnlyDictionary<InstrumentId, IReadOnlyDictionary<DateOnly, decimal>>>> GetHistoricalPricesMap(
