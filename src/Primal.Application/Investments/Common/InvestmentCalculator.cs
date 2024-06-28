@@ -287,7 +287,7 @@ internal sealed class InvestmentCalculator
 	{
 		var portfoliosAll = this.CalculatePortfolios(
 			evaluationDate,
-			PortfolioType.All,
+			PortfolioType.Overall,
 			(Asset asset, InvestmentInstrument instrument) => AssetId.Empty,
 			assetMap,
 			instrumentMap,
