@@ -74,6 +74,10 @@ internal sealed class InvestmentMappingConfig : IRegister
 
 	private static void RegisterPortfolioMappings(TypeAdapterConfig config)
 	{
+		config.NewConfig<(UserId UserId, PortfolioRequest PortfolioRequest), GetPortfolioQuery>()
+			.Map(dest => dest.UserId, src => src.UserId)
+			.Map(dest => dest, src => src.PortfolioRequest);
+
 		config.NewConfig<Portfolio<AssetId>, PortfolioResponse<Guid>>();
 		config.NewConfig<Portfolio<InstrumentId>, PortfolioResponse<Guid>>();
 		config.NewConfig<Portfolio<InstrumentType>, PortfolioResponse<string>>();

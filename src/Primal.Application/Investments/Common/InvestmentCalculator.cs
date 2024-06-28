@@ -37,6 +37,7 @@ internal sealed class InvestmentCalculator
 
 	internal async Task<ErrorOr<IEnumerable<Portfolio>>> CalculatePortfolioAsync(
 		UserId userId,
+		IEnumerable<AssetId> assetIds,
 		Currency currency,
 		CancellationToken cancellationToken)
 	{
@@ -54,10 +55,13 @@ internal sealed class InvestmentCalculator
 			return errorOrAssets.Errors;
 		}
 
+		var assets = errorOrAssets.Value.Where(x => assetIds.Contains(x.Id));
+		var transactions = errorOrTransactions.Value.Where(x => assetIds.Contains(x.AssetId));
+
 		return await this.CalculateAsync(
 			currency,
-			errorOrTransactions.Value,
-			errorOrAssets.Value,
+			transactions,
+			assets,
 			this.CalculatePortfolios,
 			cancellationToken);
 	}
@@ -211,7 +215,6 @@ internal sealed class InvestmentCalculator
 		IEnumerable<Transaction> transactions)
 	{
 		var today = DateOnly.FromDateTime(DateTime.UtcNow);
-
 		transactions = transactions.Concat(assetMap.Keys.Select(assetId => new Transaction(
 			TransactionId.Empty,
 			date: today,
@@ -260,23 +263,6 @@ internal sealed class InvestmentCalculator
 		});
 	}
 
-	private PortfolioTransaction CalculatePortfolioTransaction(
-		IReadOnlyDictionary<DateOnly, decimal> historicalPrices,
-		IReadOnlyDictionary<DateOnly, decimal> historicalExchangeRates,
-		DateOnly evaluationDate,
-		Transaction transaction)
-	{
-		return new PortfolioTransaction
-		{
-			Date = transaction.Date,
-			Type = transaction.Type,
-			InitialBalanceAmount = transaction.CalculateInitialBalanceAmount(historicalPrices, historicalExchangeRates, evaluationDate),
-			CurrentBalanceAmount = transaction.CalculateCurrentBalanceAmount(historicalPrices, historicalExchangeRates, evaluationDate),
-			XIRRTransactionAmount = transaction.CalculateXIRRTransactionAmount(historicalPrices, historicalExchangeRates, evaluationDate),
-			XIRRBalanceAmount = transaction.CalculateXIRRBalanceAmount(historicalPrices, historicalExchangeRates, evaluationDate),
-		};
-	}
-
 	private IEnumerable<Portfolio> CalculatePortfolios(
 		DateOnly evaluationDate,
 		IReadOnlyDictionary<AssetId, Asset> assetMap,
@@ -285,9 +271,9 @@ internal sealed class InvestmentCalculator
 		IReadOnlyDictionary<Currency, IReadOnlyDictionary<DateOnly, decimal>> historicalExchangeRatesMap,
 		IEnumerable<Transaction> transactions)
 	{
-		var portfoliosAll = this.CalculatePortfolios(
+		var portfoliosOverall = this.CalculatePortfolios(
 			evaluationDate,
-			PortfolioType.All,
+			PortfolioType.Overall,
 			(Asset asset, InvestmentInstrument instrument) => AssetId.Empty,
 			assetMap,
 			instrumentMap,
@@ -325,7 +311,7 @@ internal sealed class InvestmentCalculator
 			historicalExchangeRatesMap,
 			transactions);
 
-		return portfoliosAll
+		return portfoliosOverall
 			.Concat(portfoliosPerInstrumentType)
 			.Concat(portfoliosPerInstrument)
 			.Concat(portfoliosPerAsset)
@@ -389,6 +375,23 @@ internal sealed class InvestmentCalculator
 			.ToImmutableArray();
 	}
 
+	private PortfolioTransaction CalculatePortfolioTransaction(
+		IReadOnlyDictionary<DateOnly, decimal> historicalPrices,
+		IReadOnlyDictionary<DateOnly, decimal> historicalExchangeRates,
+		DateOnly evaluationDate,
+		Transaction transaction)
+	{
+		return new PortfolioTransaction
+		{
+			Date = transaction.Date,
+			Type = transaction.Type,
+			InitialBalanceAmount = transaction.CalculateInitialBalanceAmount(historicalPrices, historicalExchangeRates, evaluationDate),
+			CurrentBalanceAmount = transaction.CalculateCurrentBalanceAmount(historicalPrices, historicalExchangeRates, evaluationDate),
+			XIRRTransactionAmount = transaction.CalculateXIRRTransactionAmount(historicalPrices, historicalExchangeRates, evaluationDate),
+			XIRRBalanceAmount = transaction.CalculateXIRRBalanceAmount(historicalPrices, historicalExchangeRates, evaluationDate),
+		};
+	}
+
 	private async Task<ErrorOr<IReadOnlyDictionary<DateOnly, decimal>>> GetHistoricalPrices(
 		InvestmentInstrument investmentInstrument,
 		CancellationToken cancellationToken)
@@ -408,12 +411,15 @@ internal sealed class InvestmentCalculator
 		DateOnly endDate = DateOnly.FromDateTime(DateTime.UtcNow);
 
 		var evaluationDates = new List<DateOnly>();
-		for (DateOnly date = startDate; date <= endDate; date = date.AddMonths(1))
+		for (DateOnly date = startDate; date < endDate; date = date.AddMonths(1))
 		{
-			date = new DateOnly(date.Year, date.Month, 1);
+			date = new DateOnly(date.Year, date.Month, DateTime.DaysInMonth(date.Year, date.Month));
+			if (date >= endDate)
+			{
+				break;
+			}
 
-			DateOnly evaluationDate = new DateOnly(date.Year, date.Month, DateTime.DaysInMonth(date.Year, date.Month));
-			evaluationDates.Add(evaluationDate);
+			evaluationDates.Add(date);
 		}
 
 		evaluationDates.Add(endDate);
