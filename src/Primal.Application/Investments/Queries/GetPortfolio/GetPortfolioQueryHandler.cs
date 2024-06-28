@@ -18,6 +18,7 @@ internal sealed class GetPortfolioQueryHandler
 	{
 		return await this.investmentCalculator.CalculatePortfolioAsync(
 			request.UserId,
+			request.AssetIds,
 			request.Currency,
 			cancellationToken);
 	}

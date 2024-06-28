@@ -5,7 +5,7 @@ using Primal.Api.Common;
 using Primal.Application.Investments;
 using Primal.Contracts.Investments;
 using Primal.Domain.Investments;
-using Primal.Domain.Money;
+using Primal.Domain.Users;
 
 namespace Primal.Api.Controllers;
 
@@ -25,13 +25,11 @@ public sealed class PortfolioController : ApiController
 
 	[HttpGet]
 	[Route("")]
-	public async Task<IActionResult> GetPortfolioAsync([FromQuery] Currency currency)
+	public async Task<IActionResult> GetPortfolioAsync([FromBody] PortfolioRequest portfolioRequest)
 	{
 		var userId = this.httpContextAccessor.HttpContext.GetUserId();
 
-		var getPortfolioQuery = new GetPortfolioQuery(
-			userId,
-			currency);
+		var getPortfolioQuery = this.mapper.Map<(UserId, PortfolioRequest), GetPortfolioQuery>((userId, portfolioRequest));
 
 		var errorOrPortfolio = await this.mediator.Send(getPortfolioQuery);
 
