@@ -56,10 +56,11 @@ internal sealed class InvestmentCalculator
 		}
 
 		var assets = errorOrAssets.Value.Where(x => assetIds.Contains(x.Id));
+		var transactions = errorOrTransactions.Value.Where(x => assetIds.Contains(x.AssetId));
 
 		return await this.CalculateAsync(
 			currency,
-			errorOrTransactions.Value,
+			transactions,
 			assets,
 			this.CalculatePortfolios,
 			cancellationToken);
@@ -214,7 +215,6 @@ internal sealed class InvestmentCalculator
 		IEnumerable<Transaction> transactions)
 	{
 		var today = DateOnly.FromDateTime(DateTime.UtcNow);
-
 		transactions = transactions.Concat(assetMap.Keys.Select(assetId => new Transaction(
 			TransactionId.Empty,
 			date: today,
@@ -332,11 +332,7 @@ internal sealed class InvestmentCalculator
 
 		foreach (var transaction in transactions.Where(x => x.Date <= evaluationDate))
 		{
-			if (!assetMap.TryGetValue(transaction.AssetId, out var asset))
-			{
-				continue;
-			}
-
+			var asset = assetMap[transaction.AssetId];
 			var instrument = instrumentMap[asset.InstrumentId];
 
 			var historicalPrices = historicalPricesMap[instrument.Id];
