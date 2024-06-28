@@ -226,18 +226,17 @@ internal sealed class InvestmentCalculator
 
 		var portfolios = new List<Portfolio>();
 
-		foreach (var evaluationDate in this.GetEvaluationDates(transactions))
-		{
-			portfolios.AddRange(this.CalculatePortfolios(
-				evaluationDate,
-				assetMap,
-				instrumentMap,
-				historicalPricesMap,
-				historicalExchangeRatesMap,
-				transactions));
-		}
-
-		return portfolios;
+		return this.GetEvaluationDates(transactions)
+			.AsParallel()
+			.AsUnordered()
+			.SelectMany(evaluationDate =>
+				this.CalculatePortfolios(
+					evaluationDate,
+					assetMap,
+					instrumentMap,
+					historicalPricesMap,
+					historicalExchangeRatesMap,
+					transactions)).ToImmutableArray();
 	}
 
 	private IEnumerable<TransactionResult> CalculateTransactionResults(
@@ -314,8 +313,7 @@ internal sealed class InvestmentCalculator
 		return portfoliosOverall
 			.Concat(portfoliosPerInstrumentType)
 			.Concat(portfoliosPerInstrument)
-			.Concat(portfoliosPerAsset)
-			.ToImmutableArray();
+			.Concat(portfoliosPerAsset);
 	}
 
 	private IEnumerable<Portfolio> CalculatePortfolios<T>(
@@ -352,6 +350,8 @@ internal sealed class InvestmentCalculator
 		}
 
 		var portfolios = idToPortfolioTransactions
+			.AsParallel()
+			.AsUnordered()
 			.Select(kvp => new Portfolio<T>(
 				kvp.Key,
 				portfolioType,
@@ -371,8 +371,7 @@ internal sealed class InvestmentCalculator
 			{
 				InitialAmountPercent = 100 * x.InitialAmount / totalInitialAmount,
 				CurrentAmountPercent = 100 * x.CurrentAmount / totalCurrentAmount,
-			})
-			.ToImmutableArray();
+			});
 	}
 
 	private PortfolioTransaction CalculatePortfolioTransaction(
