@@ -13,6 +13,9 @@ internal sealed class UserRepository : IUserRepository
 	internal UserRepository(LiteDatabase liteDatabase)
 	{
 		this.liteDatabase = liteDatabase;
+
+		var collection = this.liteDatabase.GetCollection<UserTableEntity>("Users");
+		collection.EnsureIndex(x => x.Id, unique: true);
 	}
 
 	public async Task<ErrorOr<Success>> AddUserAsync(User user, CancellationToken cancellationToken)

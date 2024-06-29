@@ -12,6 +12,9 @@ internal sealed class UserIdRepository : IUserIdRepository
 	internal UserIdRepository(LiteDatabase liteDatabase)
 	{
 		this.liteDatabase = liteDatabase;
+
+		var collection = this.liteDatabase.GetCollection<UserIdTableEntity>("UserIds");
+		collection.EnsureIndex(x => x.Id, unique: true);
 	}
 
 	public async Task<ErrorOr<Success>> AddUserId(IdentityProviderUser identityProviderUser, UserId userId, CancellationToken cancellationToken)
