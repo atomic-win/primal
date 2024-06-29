@@ -81,5 +81,10 @@ public sealed class InfrastructureModule : Module
 			c.Resolve<LiteDatabase>()))
 			.As<IInstrumentRepository>()
 			.SingleInstance();
+
+		builder.Register(c => new TransactionRepository(
+			c.Resolve<LiteDatabase>()))
+			.As<ITransactionRepository>()
+			.SingleInstance();
 	}
 }
