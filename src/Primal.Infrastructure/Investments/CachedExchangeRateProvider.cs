@@ -1,5 +1,5 @@
 using ErrorOr;
-using Microsoft.Extensions.Caching.Distributed;
+using Primal.Application.Common.Interfaces;
 using Primal.Application.Common.Interfaces.Investments;
 using Primal.Domain.Money;
 using Primal.Infrastructure.Common;
@@ -8,11 +8,11 @@ namespace Primal.Infrastructure.Investments;
 
 internal sealed class CachedExchangeRateProvider : IExchangeRateProvider
 {
-	private readonly IDistributedCache cache;
+	private readonly ICache cache;
 	private readonly IExchangeRateProvider exchangeRateProvider;
 
 	public CachedExchangeRateProvider(
-		IDistributedCache cache,
+		ICache cache,
 		IExchangeRateProvider exchangeRateProvider)
 	{
 		this.cache = cache;

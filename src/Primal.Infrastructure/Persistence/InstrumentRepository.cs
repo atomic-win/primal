@@ -20,10 +20,10 @@ internal sealed class InstrumentRepository : IInstrumentRepository
 		collection.EnsureIndex(x => x.Currency);
 
 		var mutualFundCollection = this.liteDatabase.GetCollection<MutualFundTableEntity>("Instruments");
-		mutualFundCollection.EnsureIndex(x => x.SchemeCode, unique: true);
+		mutualFundCollection.EnsureIndex(x => x.SchemeCode);
 
 		var stockCollection = this.liteDatabase.GetCollection<StockTableEntity>("Instruments");
-		stockCollection.EnsureIndex(x => x.Symbol, unique: true);
+		stockCollection.EnsureIndex(x => x.Symbol);
 	}
 
 	public async Task<ErrorOr<IEnumerable<InvestmentInstrument>>> GetAllAsync(CancellationToken cancellationToken)
@@ -52,31 +52,15 @@ internal sealed class InstrumentRepository : IInstrumentRepository
 	{
 		await Task.CompletedTask;
 
-		var cashInstrumentCollection = this.liteDatabase.GetCollection<CashInstrumentTableEntity>("Instruments");
+		var instrumentCollection = this.liteDatabase.GetCollection("Instruments");
+		var document = instrumentCollection.FindById(instrumentId.Value);
 
-		var cashInstrumentTableEntity = cashInstrumentCollection.FindById(instrumentId.Value);
-		if (cashInstrumentTableEntity != null)
+		if (document == null)
 		{
-			return this.MapToInstrument(cashInstrumentTableEntity);
+			return Error.NotFound(description: "Instrument does not exist");
 		}
 
-		var mutualFundCollection = this.liteDatabase.GetCollection<MutualFundTableEntity>("Instruments");
-
-		var mutualFundTableEntity = mutualFundCollection.FindById(instrumentId.Value);
-		if (mutualFundTableEntity != null)
-		{
-			return this.MapToInstrument(mutualFundTableEntity);
-		}
-
-		var stockCollection = this.liteDatabase.GetCollection<StockTableEntity>("Instruments");
-
-		var stockTableEntity = stockCollection.FindById(instrumentId.Value);
-		if (stockTableEntity != null)
-		{
-			return this.MapToInstrument(stockTableEntity);
-		}
-
-		return Error.NotFound(description: "Instrument does not exist");
+		return this.MapToInstrument(document);
 	}
 
 	public async Task<ErrorOr<InvestmentInstrument>> GetCashInstrumentAsync(
@@ -217,6 +201,47 @@ internal sealed class InstrumentRepository : IInstrumentRepository
 		stockCollection.Insert(stockTableEntity);
 
 		return this.MapToInstrument(stockTableEntity);
+	}
+
+	private ErrorOr<InvestmentInstrument> MapToInstrument(BsonDocument bsonDocument)
+	{
+		var instrumentId = new InstrumentId(bsonDocument["_id"].AsGuid);
+		var instrumentType = Enum.Parse<InstrumentType>(bsonDocument["InstrumentType"].AsString);
+		var currency = Enum.Parse<Currency>(bsonDocument["Currency"].AsString);
+
+		switch (instrumentType)
+		{
+			case InstrumentType.CashAccounts:
+			case InstrumentType.FixedDeposits:
+			case InstrumentType.EPF:
+			case InstrumentType.PPF:
+				return new CashInstrument(
+					instrumentId,
+					instrumentType,
+					currency);
+			case InstrumentType.MutualFunds:
+				return new MutualFund(
+					instrumentId,
+					bsonDocument["Name"].AsString,
+					bsonDocument["FundHouse"].AsString,
+					bsonDocument["SchemeType"].AsString,
+					bsonDocument["SchemeCategory"].AsString,
+					bsonDocument["SchemeCode"].AsInt32,
+					currency);
+			case InstrumentType.Stocks:
+				return new Stock(
+					instrumentId,
+					bsonDocument["Name"].AsString,
+					bsonDocument["Symbol"].AsString,
+					bsonDocument["StockType"].AsString,
+					bsonDocument["Region"].AsString,
+					bsonDocument["MarketOpen"].AsString,
+					bsonDocument["MarketClose"].AsString,
+					bsonDocument["Timezone"].AsString,
+					currency);
+			default:
+				return Error.Validation(description: "Invalid instrument type");
+		}
 	}
 
 	private InvestmentInstrument MapToInstrument(CashInstrumentTableEntity cashInstrumentTableEntity)

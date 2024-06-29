@@ -1,11 +1,12 @@
 using Autofac;
 using LiteDB;
-using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Options;
+using Primal.Application.Common.Interfaces;
 using Primal.Application.Common.Interfaces.Authentication;
 using Primal.Application.Common.Interfaces.Investments;
 using Primal.Application.Common.Interfaces.Persistence;
 using Primal.Infrastructure.Authentication;
+using Primal.Infrastructure.Common;
 using Primal.Infrastructure.Investments;
 using Primal.Infrastructure.Persistence;
 
@@ -40,17 +41,17 @@ public sealed class InfrastructureModule : Module
 	private void RegisterInvestments(ContainerBuilder builder)
 	{
 		builder.Register(c => new CachedMutualFundApiClient(
-			c.Resolve<IDistributedCache>(),
+			c.Resolve<ICache>(),
 			c.Resolve<MutualFundApiClient>()))
 			.As<IMutualFundApiClient>();
 
 		builder.Register(c => new CachedStockApiClient(
-			c.Resolve<IDistributedCache>(),
+			c.Resolve<ICache>(),
 			c.Resolve<StockApiClient>()))
 			.As<IStockApiClient>();
 
 		builder.Register(c => new CachedExchangeRateProvider(
-			c.Resolve<IDistributedCache>(),
+			c.Resolve<ICache>(),
 			c.Resolve<StockApiClient>()))
 			.As<IExchangeRateProvider>();
 	}
@@ -60,6 +61,11 @@ public sealed class InfrastructureModule : Module
 		builder.Register(c => new LiteDatabase(
 			c.Resolve<IOptions<PersistenceSettings>>().Value.LiteDB.FilePath))
 			.As<LiteDatabase>()
+			.SingleInstance();
+
+		builder.Register(c => new LiteDbCache(
+			c.Resolve<LiteDatabase>()))
+			.As<ICache>()
 			.SingleInstance();
 
 		builder.Register(c => new UserIdRepository(

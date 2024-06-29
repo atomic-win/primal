@@ -1,5 +1,5 @@
 using ErrorOr;
-using Microsoft.Extensions.Caching.Distributed;
+using Primal.Application.Common.Interfaces;
 using Primal.Application.Common.Interfaces.Investments;
 using Primal.Domain.Investments;
 using Primal.Infrastructure.Common;
@@ -8,10 +8,12 @@ namespace Primal.Infrastructure.Investments;
 
 internal sealed class CachedStockApiClient : IStockApiClient
 {
-	private readonly IDistributedCache cache;
+	private readonly ICache cache;
 	private readonly IStockApiClient stockApiClient;
 
-	public CachedStockApiClient(IDistributedCache cache, IStockApiClient stockApiClient)
+	public CachedStockApiClient(
+		ICache cache,
+		IStockApiClient stockApiClient)
 	{
 		this.cache = cache;
 		this.stockApiClient = stockApiClient;

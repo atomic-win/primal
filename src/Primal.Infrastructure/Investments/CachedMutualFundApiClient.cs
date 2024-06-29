@@ -1,5 +1,5 @@
 using ErrorOr;
-using Microsoft.Extensions.Caching.Distributed;
+using Primal.Application.Common.Interfaces;
 using Primal.Application.Common.Interfaces.Investments;
 using Primal.Domain.Investments;
 using Primal.Infrastructure.Common;
@@ -8,10 +8,12 @@ namespace Primal.Infrastructure.Investments;
 
 internal sealed class CachedMutualFundApiClient : IMutualFundApiClient
 {
-	private readonly IDistributedCache cache;
+	private readonly ICache cache;
 	private readonly IMutualFundApiClient mutualFundApiClient;
 
-	public CachedMutualFundApiClient(IDistributedCache cache, IMutualFundApiClient mutualFundApiClient)
+	public CachedMutualFundApiClient(
+		ICache cache,
+		IMutualFundApiClient mutualFundApiClient)
 	{
 		this.cache = cache;
 		this.mutualFundApiClient = mutualFundApiClient;
