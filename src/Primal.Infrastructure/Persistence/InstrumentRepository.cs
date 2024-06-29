@@ -30,20 +30,23 @@ internal sealed class InstrumentRepository : IInstrumentRepository
 	{
 		await Task.CompletedTask;
 
-		var cashInstrumentCollection = this.liteDatabase.GetCollection<CashInstrumentTableEntity>("Instruments");
-		var mutualFundCollection = this.liteDatabase.GetCollection<MutualFundTableEntity>("Instruments");
-		var stockCollection = this.liteDatabase.GetCollection<StockTableEntity>("Instruments");
+		var instrumentCollection = this.liteDatabase.GetCollection("Instruments");
 
-		return cashInstrumentCollection
-			.FindAll()
-			.Select(x => this.MapToInstrument(x))
-			.Concat(mutualFundCollection
-				.FindAll()
-				.Select(this.MapToInstrument))
-			.Concat(stockCollection
-				.FindAll()
-				.Select(this.MapToInstrument))
-			.ToList();
+		var instruments = new List<InvestmentInstrument>();
+
+		foreach (var document in instrumentCollection.FindAll())
+		{
+			var errorOrInstrument = this.MapToInstrument(document);
+
+			if (errorOrInstrument.IsError)
+			{
+				return errorOrInstrument.Errors;
+			}
+
+			instruments.Add(errorOrInstrument.Value);
+		}
+
+		return instruments;
 	}
 
 	public async Task<ErrorOr<InvestmentInstrument>> GetByIdAsync(
