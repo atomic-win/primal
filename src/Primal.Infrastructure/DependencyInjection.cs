@@ -15,20 +15,9 @@ public static class DependencyInjection
 	public static IServiceCollection AddInfrastructure(this IServiceCollection services, ConfigurationManager configuration)
 	{
 		return services
-			.AddRedis(configuration)
 			.AddAuthentication(configuration)
 			.AddInvestments(configuration)
 			.AddPersistence(configuration);
-	}
-
-	private static IServiceCollection AddRedis(this IServiceCollection services, ConfigurationManager configuration)
-	{
-		services.AddStackExchangeRedisCache(options =>
-		{
-			options.Configuration = configuration["Redis:ConnectionString"];
-		});
-
-		return services;
 	}
 
 	private static IServiceCollection AddAuthentication(this IServiceCollection services, ConfigurationManager configuration)
@@ -97,7 +86,7 @@ public static class DependencyInjection
 
 	private static IServiceCollection AddPersistence(this IServiceCollection services, ConfigurationManager configuration)
 	{
-		services.Configure<AzureStorageSettings>(configuration.GetSection(AzureStorageSettings.SectionName));
+		services.Configure<PersistenceSettings>(configuration.GetSection(PersistenceSettings.SectionName));
 		return services;
 	}
 }

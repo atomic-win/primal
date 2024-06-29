@@ -1,6 +1,5 @@
-using Azure;
-using Azure.Data.Tables;
 using ErrorOr;
+using LiteDB;
 using Primal.Application.Common.Interfaces.Persistence;
 using Primal.Domain.Users;
 
@@ -8,64 +7,57 @@ namespace Primal.Infrastructure.Persistence;
 
 internal sealed class UserIdRepository : IUserIdRepository
 {
-	private readonly TableClient tableClient;
+	private readonly LiteDatabase liteDatabase;
 
-	internal UserIdRepository(TableClient tableClient)
+	internal UserIdRepository(LiteDatabase liteDatabase)
 	{
-		this.tableClient = tableClient;
-	}
-
-	public async Task<ErrorOr<UserId>> GetUserId(IdentityProviderUser identityProviderUser, CancellationToken cancellationToken)
-	{
-		AsyncPageable<UserIdTableEntity> entities = this.tableClient.QueryAsync<UserIdTableEntity>(
-			entity => entity.PartitionKey == identityProviderUser.Id.Value
-				&& entity.IdentityProvider == identityProviderUser.IdentityProvider.ToString(),
-			cancellationToken: cancellationToken);
-
-		await foreach (UserIdTableEntity entity in entities.WithCancellation(cancellationToken))
-		{
-			return new UserId(entity.UserId);
-		}
-
-		return Error.NotFound();
+		this.liteDatabase = liteDatabase;
 	}
 
 	public async Task<ErrorOr<Success>> AddUserId(IdentityProviderUser identityProviderUser, UserId userId, CancellationToken cancellationToken)
 	{
-		var tableEntity = new UserIdTableEntity
+		await Task.CompletedTask;
+
+		var collection = this.liteDatabase.GetCollection<UserIdTableEntity>("UserIds");
+
+		if (collection.FindById(identityProviderUser.Id.Value) != null)
 		{
-			PartitionKey = identityProviderUser.Id.Value,
-			IdentityProvider = identityProviderUser.IdentityProvider.ToString(),
+			return Error.Conflict(description: "Identity provider user already has a user ID.");
+		}
+
+		var userIdTableEntity = new UserIdTableEntity
+		{
+			Id = identityProviderUser.Id.Value,
+			IdentityProvider = identityProviderUser.IdentityProvider,
 			UserId = userId.Value,
 		};
 
-		try
-		{
-			await this.tableClient.AddEntityAsync(tableEntity, cancellationToken: cancellationToken);
-			return Result.Success;
-		}
-		catch (RequestFailedException ex) when (ex.Status == 409)
-		{
-			return Error.Conflict();
-		}
-		catch (Exception ex)
-		{
-			return Error.Failure(ex.Message);
-		}
+		collection.Insert(userIdTableEntity);
+		return Result.Success;
 	}
 
-	private sealed class UserIdTableEntity : ITableEntity
+	public async Task<ErrorOr<UserId>> GetUserId(IdentityProviderUser identityProviderUser, CancellationToken cancellationToken)
 	{
-		public string PartitionKey { get; set; } = default!;
+		await Task.CompletedTask;
 
-		public string RowKey { get; set; } = string.Empty;
+		var collection = this.liteDatabase.GetCollection<UserIdTableEntity>("UserIds");
 
-		public DateTimeOffset? Timestamp { get; set; }
+		var userIdTableEntity = collection.FindById(identityProviderUser.Id.Value);
 
-		public ETag ETag { get; set; }
+		if (userIdTableEntity == null)
+		{
+			return Error.NotFound(description: "Identity provider user does not have a user ID.");
+		}
 
-		public string IdentityProvider { get; set; }
+		return new UserId(userIdTableEntity.UserId);
+	}
 
-		public Guid UserId { get; set; }
+	private sealed class UserIdTableEntity
+	{
+		public string Id { get; init; }
+
+		public IdentityProvider IdentityProvider { get; init; }
+
+		public Guid UserId { get; init; }
 	}
 }
