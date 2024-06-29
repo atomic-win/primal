@@ -4,7 +4,14 @@ namespace Primal.Domain.Investments;
 
 public sealed class MutualFund : InvestmentInstrument
 {
-	public MutualFund(InstrumentId id, string name, string fundHouse, string schemeType, string schemeCategory, int schemeCode, Currency currency)
+	public MutualFund(
+		InstrumentId id,
+		string name,
+		string fundHouse,
+		string schemeType,
+		string schemeCategory,
+		int schemeCode,
+		Currency currency)
 		: base(id, name, InstrumentType.MutualFunds, currency)
 	{
 		this.FundHouse = fundHouse;

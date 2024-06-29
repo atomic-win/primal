@@ -1,7 +1,6 @@
 using System.Globalization;
-using Azure;
-using Azure.Data.Tables;
 using ErrorOr;
+using LiteDB;
 using Primal.Application.Common.Interfaces.Persistence;
 using Primal.Domain.Investments;
 using Primal.Domain.Users;
@@ -10,29 +9,29 @@ namespace Primal.Infrastructure.Persistence;
 
 internal sealed class TransactionRepository : ITransactionRepository
 {
-	private readonly TableClient transactionTableClient;
+	private readonly LiteDatabase liteDatabase;
 
-	internal TransactionRepository(TableClient transactionTableClient)
+	internal TransactionRepository(LiteDatabase liteDatabase)
 	{
-		this.transactionTableClient = transactionTableClient;
+		this.liteDatabase = liteDatabase;
+
+		var collection = this.liteDatabase.GetCollection<TransactionTableEntity>("Transactions");
+		collection.EnsureIndex(x => x.Id, unique: true);
+		collection.EnsureIndex(x => x.UserId);
 	}
 
 	public async Task<ErrorOr<IEnumerable<Transaction>>> GetAllAsync(
 		UserId userId,
 		CancellationToken cancellationToken)
 	{
-		AsyncPageable<TransactionTableEntity> entities = this.transactionTableClient.QueryAsync<TransactionTableEntity>(
-			entity => entity.PartitionKey == userId.Value.ToString("N"),
-			cancellationToken: cancellationToken);
+		await Task.CompletedTask;
 
-		List<Transaction> transactions = new List<Transaction>();
+		var collection = this.liteDatabase.GetCollection<TransactionTableEntity>("Transactions");
 
-		await foreach (var entity in entities.WithCancellation(cancellationToken))
-		{
-			transactions.Add(this.MapToTransaction(entity));
-		}
-
-		return transactions;
+		return collection
+			.Find(x => x.UserId == userId.Value)
+			.Select(this.MapToTransaction)
+			.ToList();
 	}
 
 	public async Task<ErrorOr<Transaction>> GetByIdAsync(
@@ -40,23 +39,15 @@ internal sealed class TransactionRepository : ITransactionRepository
 		TransactionId transactionId,
 		CancellationToken cancellationToken)
 	{
-		try
-		{
-			TransactionTableEntity entity = await this.transactionTableClient.GetEntityAsync<TransactionTableEntity>(
-				userId.Value.ToString("N"),
-				transactionId.Value.ToString("N"),
-				cancellationToken: cancellationToken);
+		await Task.CompletedTask;
 
-			return this.MapToTransaction(entity);
-		}
-		catch (RequestFailedException ex) when (ex.Status == 404)
-		{
-			return Error.NotFound();
-		}
-		catch (Exception ex)
-		{
-			return Error.Failure(ex.Message);
-		}
+		var collection = this.liteDatabase.GetCollection<TransactionTableEntity>("Transactions");
+
+		var transactionTableEntity = collection.FindOne(x => x.Id == transactionId.Value && x.UserId == userId.Value);
+
+		return transactionTableEntity != null
+			? this.MapToTransaction(transactionTableEntity)
+			: Error.NotFound(description: "Transaction not found.");
 	}
 
 	public async Task<ErrorOr<Transaction>> AddAsync(
@@ -68,91 +59,71 @@ internal sealed class TransactionRepository : ITransactionRepository
 		decimal units,
 		CancellationToken cancellationToken)
 	{
-		var transaction = new Transaction(
-			new TransactionId(Guid.NewGuid()),
-			date,
-			name,
-			type,
-			assetId,
-			units);
+		await Task.CompletedTask;
 
-		try
+		var collection = this.liteDatabase.GetCollection<TransactionTableEntity>("Transactions");
+
+		var transactionTableEntity = new TransactionTableEntity
 		{
-			TransactionTableEntity entity = new TransactionTableEntity
-			{
-				PartitionKey = userId.Value.ToString("N"),
-				RowKey = transaction.Id.Value.ToString("N"),
-				Date = date.ToString(CultureInfo.InvariantCulture),
-				Name = name,
-				Type = type.ToString(),
-				AssetId = assetId.Value.ToString("N"),
-				Units = units.ToString(CultureInfo.InvariantCulture),
-			};
+			Id = TransactionId.New().Value,
+			UserId = userId.Value,
+			Date = date.ToString(CultureInfo.InvariantCulture),
+			Name = name,
+			Type = type,
+			AssetId = assetId.Value,
+			Units = units,
+		};
 
-			await this.transactionTableClient.AddEntityAsync(entity, cancellationToken: cancellationToken);
+		collection.Insert(transactionTableEntity);
 
-			return transaction;
-		}
-		catch (Exception ex)
-		{
-			return Error.Failure(ex.Message);
-		}
+		return this.MapToTransaction(transactionTableEntity);
 	}
 
-	public async Task<ErrorOr<Success>> DeleteAsync(UserId userId, TransactionId transactionId, CancellationToken cancellationToken)
+	public async Task<ErrorOr<Success>> DeleteAsync(
+		UserId userId,
+		TransactionId transactionId,
+		CancellationToken cancellationToken)
 	{
-		try
-		{
-			await this.transactionTableClient.DeleteEntityAsync(
-				partitionKey: userId.Value.ToString("N"),
-				rowKey: transactionId.Value.ToString("N"),
-				cancellationToken: cancellationToken);
+		await Task.CompletedTask;
 
-			return Result.Success;
-		}
-		catch (RequestFailedException ex) when (ex.Status == 404)
+		var collection = this.liteDatabase.GetCollection<TransactionTableEntity>("Transactions");
+
+		var transactionTableEntity = collection.FindOne(x => x.Id == transactionId.Value && x.UserId == userId.Value);
+		if (transactionTableEntity == null)
 		{
-			return Error.NotFound();
+			return Error.NotFound(description: "Transaction not found.");
 		}
-		catch (Exception ex)
-		{
-			return Error.Failure(description: ex.Message);
-		}
+
+		collection.Delete(transactionTableEntity.Id);
+
+		return Result.Success;
 	}
 
-	private Transaction MapToTransaction(TransactionTableEntity entity)
+	private Transaction MapToTransaction(TransactionTableEntity transactionTableEntity)
 	{
-		string units = string.IsNullOrWhiteSpace(entity.Units) ? entity.Amount : entity.Units;
-
 		return new Transaction(
-			new TransactionId(Guid.Parse(entity.RowKey)),
-			DateOnly.Parse(entity.Date, CultureInfo.InvariantCulture),
-			entity.Name,
-			Enum.Parse<TransactionType>(entity.Type),
-			new AssetId(Guid.Parse(entity.AssetId)),
-			decimal.Parse(units, CultureInfo.InvariantCulture));
+			new TransactionId(transactionTableEntity.Id),
+			DateOnly.Parse(transactionTableEntity.Date, CultureInfo.InvariantCulture),
+			transactionTableEntity.Name,
+			transactionTableEntity.Type,
+			new AssetId(transactionTableEntity.AssetId),
+			transactionTableEntity.Units);
 	}
 
-	private sealed class TransactionTableEntity : ITableEntity
+	private sealed class TransactionTableEntity
 	{
-		public string PartitionKey { get; set; }
+		public Guid Id { get; set; }
 
-		public string RowKey { get; set; }
-
-		public DateTimeOffset? Timestamp { get; set; }
-
-		public ETag ETag { get; set; }
+		public Guid UserId { get; set; }
 
 		public string Date { get; set; }
 
 		public string Name { get; set; }
 
-		public string Type { get; set; }
+		public TransactionType Type { get; set; }
 
-		public string AssetId { get; set; }
+		public Guid AssetId { get; set; }
 
-		public string Units { get; set; }
-
-		public string Amount { get; set; }
+		public decimal Units { get; set; }
 	}
 }

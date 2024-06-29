@@ -4,7 +4,16 @@ namespace Primal.Domain.Investments;
 
 public sealed class Stock : InvestmentInstrument
 {
-	public Stock(InstrumentId id, string name, string symbol, string stockType, string region, string marketOpen, string marketClose, string timezone, Currency currency)
+	public Stock(
+		InstrumentId id,
+		string name,
+		string symbol,
+		string stockType,
+		string region,
+		string marketOpen,
+		string marketClose,
+		string timezone,
+		Currency currency)
 		: base(id, name, InstrumentType.Stocks, currency)
 	{
 		this.Symbol = symbol;

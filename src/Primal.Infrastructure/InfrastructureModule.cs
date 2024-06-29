@@ -1,11 +1,12 @@
 using Autofac;
-using Azure.Data.Tables;
-using Microsoft.Extensions.Caching.Distributed;
+using LiteDB;
 using Microsoft.Extensions.Options;
+using Primal.Application.Common.Interfaces;
 using Primal.Application.Common.Interfaces.Authentication;
 using Primal.Application.Common.Interfaces.Investments;
 using Primal.Application.Common.Interfaces.Persistence;
 using Primal.Infrastructure.Authentication;
+using Primal.Infrastructure.Common;
 using Primal.Infrastructure.Investments;
 using Primal.Infrastructure.Persistence;
 
@@ -40,73 +41,55 @@ public sealed class InfrastructureModule : Module
 	private void RegisterInvestments(ContainerBuilder builder)
 	{
 		builder.Register(c => new CachedMutualFundApiClient(
-			c.Resolve<IDistributedCache>(),
+			c.Resolve<ICache>(),
 			c.Resolve<MutualFundApiClient>()))
 			.As<IMutualFundApiClient>();
 
 		builder.Register(c => new CachedStockApiClient(
-			c.Resolve<IDistributedCache>(),
+			c.Resolve<ICache>(),
 			c.Resolve<StockApiClient>()))
 			.As<IStockApiClient>();
 
 		builder.Register(c => new CachedExchangeRateProvider(
-			c.Resolve<IDistributedCache>(),
+			c.Resolve<ICache>(),
 			c.Resolve<StockApiClient>()))
 			.As<IExchangeRateProvider>();
 	}
 
 	private void RegisterPersistence(ContainerBuilder builder)
 	{
-		builder.Register(c => new TableServiceClient(
-			connectionString: c.Resolve<IOptions<AzureStorageSettings>>().Value.ConnectionString))
-			.As<TableServiceClient>()
+		builder.Register(c => new LiteDatabase(
+			c.Resolve<IOptions<PersistenceSettings>>().Value.LiteDB.FilePath))
+			.As<LiteDatabase>()
 			.SingleInstance();
 
-		foreach (string tableName in Constants.TableNames.All)
-		{
-			builder.Register(c =>
-			{
-				var tableServiceClient = c.Resolve<TableServiceClient>();
-				tableServiceClient.CreateTableIfNotExists(tableName);
-				return tableServiceClient.GetTableClient(tableName);
-			})
-			.Keyed<TableClient>(tableName)
+		builder.Register(c => new LiteDbCache(
+			c.Resolve<LiteDatabase>()))
+			.As<ICache>()
 			.SingleInstance();
-		}
 
 		builder.Register(c => new UserIdRepository(
-			c.ResolveKeyed<TableClient>(Constants.TableNames.UserIds)))
+			c.Resolve<LiteDatabase>()))
 			.As<IUserIdRepository>()
 			.SingleInstance();
 
 		builder.Register(c => new UserRepository(
-			c.ResolveKeyed<TableClient>(Constants.TableNames.Users)))
+			c.Resolve<LiteDatabase>()))
 			.As<IUserRepository>()
 			.SingleInstance();
 
-		builder.Register(c => new SiteRepository(
-			c.ResolveKeyed<TableClient>(Constants.TableNames.Sites)))
-			.As<ISiteRepository>()
-			.SingleInstance();
-
-		builder.Register(c => new SiteTimeRepository(
-			c.ResolveKeyed<TableClient>(Constants.TableNames.SiteTimes)))
-			.As<ISiteTimeRepository>()
-			.SingleInstance();
-
-		builder.Register(c => new InstrumentRepository(
-			c.ResolveKeyed<TableClient>(Constants.TableNames.InstrumentIdMapping),
-			c.ResolveKeyed<TableClient>(Constants.TableNames.Instruments)))
-			.As<IInstrumentRepository>()
-			.SingleInstance();
-
 		builder.Register(c => new AssetRepository(
-			c.ResolveKeyed<TableClient>(Constants.TableNames.Assets)))
+			c.Resolve<LiteDatabase>()))
 			.As<IAssetRepository>()
 			.SingleInstance();
 
+		builder.Register(c => new InstrumentRepository(
+			c.Resolve<LiteDatabase>()))
+			.As<IInstrumentRepository>()
+			.SingleInstance();
+
 		builder.Register(c => new TransactionRepository(
-			c.ResolveKeyed<TableClient>(Constants.TableNames.Transactions)))
+			c.Resolve<LiteDatabase>()))
 			.As<ITransactionRepository>()
 			.SingleInstance();
 	}

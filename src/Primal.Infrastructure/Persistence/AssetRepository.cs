@@ -1,6 +1,6 @@
-using Azure;
-using Azure.Data.Tables;
+using System.Collections.Immutable;
 using ErrorOr;
+using LiteDB;
 using Primal.Application.Common.Interfaces.Persistence;
 using Primal.Domain.Investments;
 using Primal.Domain.Users;
@@ -9,116 +9,102 @@ namespace Primal.Infrastructure.Persistence;
 
 internal sealed class AssetRepository : IAssetRepository
 {
-	private readonly TableClient tableClient;
+	private readonly LiteDatabase liteDatabase;
 
-	internal AssetRepository(TableClient tableClient)
+	internal AssetRepository(LiteDatabase liteDatabase)
 	{
-		this.tableClient = tableClient;
+		this.liteDatabase = liteDatabase;
+
+		var collection = this.liteDatabase.GetCollection<AssetTableEntity>("Assets");
+		collection.EnsureIndex(x => x.Id, unique: true);
+		collection.EnsureIndex(x => x.UserId);
 	}
 
 	public async Task<ErrorOr<IEnumerable<Asset>>> GetAllAsync(UserId userId, CancellationToken cancellationToken)
 	{
-		AsyncPageable<AssetTableEntity> entities = this.tableClient.QueryAsync<AssetTableEntity>(
-			entity => entity.PartitionKey == userId.Value.ToString("N"),
-			cancellationToken: cancellationToken);
+		await Task.CompletedTask;
 
-		List<Asset> assets = new List<Asset>();
+		var collection = this.liteDatabase.GetCollection<AssetTableEntity>("Assets");
 
-		await foreach (AssetTableEntity entity in entities.WithCancellation(cancellationToken))
-		{
-			assets.Add(new Asset(
-				new AssetId(Guid.Parse(entity.RowKey)),
-				entity.Name,
-				new InstrumentId(Guid.Parse(entity.InstrumentId))));
-		}
+		var assetTableEntities = collection.Find(x => x.UserId == userId.Value);
 
-		return assets;
+		return assetTableEntities.Select(this.MapToAsset).ToImmutableArray();
 	}
 
 	public async Task<ErrorOr<Asset>> GetByIdAsync(UserId userId, AssetId assetId, CancellationToken cancellationToken)
 	{
-		try
-		{
-			AssetTableEntity entity = await this.tableClient.GetEntityAsync<AssetTableEntity>(
-				userId.Value.ToString("N"),
-				assetId.Value.ToString("N"),
-				cancellationToken: cancellationToken);
+		await Task.CompletedTask;
 
-			return new Asset(
-				new AssetId(Guid.Parse(entity.RowKey)),
-				entity.Name,
-				new InstrumentId(Guid.Parse(entity.InstrumentId)));
-		}
-		catch (RequestFailedException ex) when (ex.Status == 404)
+		var collection = this.liteDatabase.GetCollection<AssetTableEntity>("Assets");
+
+		var assetTableEntity = collection.FindOne(x => x.Id == assetId.Value && x.UserId == userId.Value);
+
+		if (assetTableEntity == null)
 		{
-			return Error.NotFound();
+			return Error.NotFound(description: "Asset does not exist");
 		}
-		catch (Exception ex)
-		{
-			return Error.Failure(ex.Message);
-		}
+
+		return this.MapToAsset(assetTableEntity);
 	}
 
 	public async Task<ErrorOr<Asset>> AddAsync(UserId userId, string name, InstrumentId instrumentId, CancellationToken cancellationToken)
 	{
-		var assetId = AssetId.New();
+		await Task.CompletedTask;
 
-		var assetEntity = new AssetTableEntity
+		var collection = this.liteDatabase.GetCollection<AssetTableEntity>("Assets");
+
+		if (collection.FindOne(x => x.UserId == userId.Value && x.Name == name) != null)
 		{
-			PartitionKey = userId.Value.ToString("N"),
-			RowKey = assetId.Value.ToString("N"),
+			return Error.Conflict(description: "Asset with the same name already exists");
+		}
+
+		var assetTableEntity = new AssetTableEntity
+		{
+			Id = AssetId.New().Value,
+			UserId = userId.Value,
 			Name = name,
-			InstrumentId = instrumentId.Value.ToString("N"),
+			InstrumentId = instrumentId.Value,
 		};
 
-		try
-		{
-			await this.tableClient.AddEntityAsync(assetEntity, cancellationToken: cancellationToken);
-			return new Asset(assetId, name, instrumentId);
-		}
-		catch (RequestFailedException ex) when (ex.Status == 409)
-		{
-			return Error.Conflict();
-		}
-		catch (Exception ex)
-		{
-			return Error.Failure(ex.Message);
-		}
+		collection.Insert(assetTableEntity);
+
+		return this.MapToAsset(assetTableEntity);
 	}
 
 	public async Task<ErrorOr<Success>> DeleteAsync(UserId userId, AssetId assetId, CancellationToken cancellationToken)
 	{
-		try
-		{
-			await this.tableClient.DeleteEntityAsync(
-				partitionKey: userId.Value.ToString("N"),
-				rowKey: assetId.Value.ToString("N"),
-				cancellationToken: cancellationToken);
+		await Task.CompletedTask;
 
-			return Result.Success;
-		}
-		catch (RequestFailedException ex) when (ex.Status == 404)
+		var collection = this.liteDatabase.GetCollection<AssetTableEntity>("Assets");
+
+		var assetTableEntity = collection.FindOne(x => x.Id == assetId.Value && x.UserId == userId.Value);
+
+		if (assetTableEntity == null)
 		{
-			return Error.NotFound();
+			return Error.NotFound(description: "Asset does not exist");
 		}
-		catch (Exception ex)
-		{
-			return Error.Failure(description: ex.Message);
-		}
+
+		collection.Delete(assetId.Value);
+
+		return Result.Success;
 	}
 
-	private sealed class AssetTableEntity : ITableEntity
+	private Asset MapToAsset(AssetTableEntity assetTableEntity)
 	{
-		public string PartitionKey { get; set; }
+		return new Asset(
+			new AssetId(assetTableEntity.Id),
+			assetTableEntity.Name,
+			new InstrumentId(assetTableEntity.InstrumentId));
+	}
 
-		public string RowKey { get; set; }
+	private sealed class AssetTableEntity
+	{
+		public Guid Id { get; set; }
 
-		public DateTimeOffset? Timestamp { get; set; }
-
-		public ETag ETag { get; set; }
+		public Guid UserId { get; set; }
 
 		public string Name { get; set; }
 
-		public string InstrumentId { get; set; }
+		public Guid InstrumentId { get; set; }
 	}
 }

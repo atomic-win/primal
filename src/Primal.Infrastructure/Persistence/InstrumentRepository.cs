@@ -1,7 +1,5 @@
-using System.Globalization;
-using Azure;
-using Azure.Data.Tables;
 using ErrorOr;
+using LiteDB;
 using Primal.Application.Common.Interfaces.Persistence;
 using Primal.Domain.Investments;
 using Primal.Domain.Money;
@@ -10,54 +8,62 @@ namespace Primal.Infrastructure.Persistence;
 
 internal sealed class InstrumentRepository : IInstrumentRepository
 {
-	private readonly TableClient instrumentIdMappingTableClient;
-	private readonly TableClient instrumentTableClient;
+	private readonly LiteDatabase liteDatabase;
 
-	internal InstrumentRepository(
-		TableClient instrumentIdMappingTableClient,
-		TableClient instrumentTableClient)
+	internal InstrumentRepository(LiteDatabase liteDatabase)
 	{
-		this.instrumentIdMappingTableClient = instrumentIdMappingTableClient;
-		this.instrumentTableClient = instrumentTableClient;
+		this.liteDatabase = liteDatabase;
+
+		var collection = this.liteDatabase.GetCollection<InstrumentTableEntity>("Instruments");
+		collection.EnsureIndex(x => x.Id, unique: true);
+		collection.EnsureIndex(x => x.InstrumentType);
+		collection.EnsureIndex(x => x.Currency);
+
+		var mutualFundCollection = this.liteDatabase.GetCollection<MutualFundTableEntity>("Instruments");
+		mutualFundCollection.EnsureIndex(x => x.SchemeCode);
+
+		var stockCollection = this.liteDatabase.GetCollection<StockTableEntity>("Instruments");
+		stockCollection.EnsureIndex(x => x.Symbol);
 	}
 
 	public async Task<ErrorOr<IEnumerable<InvestmentInstrument>>> GetAllAsync(CancellationToken cancellationToken)
 	{
-		try
-		{
-			List<InvestmentInstrument> instruments = new List<InvestmentInstrument>();
+		await Task.CompletedTask;
 
-			await foreach (TableEntity entity in this.instrumentTableClient.QueryAsync<TableEntity>(cancellationToken: cancellationToken))
+		var instrumentCollection = this.liteDatabase.GetCollection("Instruments");
+
+		var instruments = new List<InvestmentInstrument>();
+
+		foreach (var document in instrumentCollection.FindAll())
+		{
+			var errorOrInstrument = this.MapToInstrument(document);
+
+			if (errorOrInstrument.IsError)
 			{
-				instruments.Add(this.MapToInstrument(entity));
+				return errorOrInstrument.Errors;
 			}
 
-			return instruments;
+			instruments.Add(errorOrInstrument.Value);
 		}
-		catch (Exception ex)
-		{
-			return Error.Failure(description: ex.Message);
-		}
+
+		return instruments;
 	}
 
-	public async Task<ErrorOr<InvestmentInstrument>> GetByIdAsync(InstrumentId instrumentId, CancellationToken cancellationToken)
+	public async Task<ErrorOr<InvestmentInstrument>> GetByIdAsync(
+		InstrumentId instrumentId,
+		CancellationToken cancellationToken)
 	{
-		try
-		{
-			TableEntity entity = await this.instrumentTableClient.GetEntityAsync<TableEntity>(
-				partitionKey: instrumentId.Value.ToString("N"),
-				rowKey: string.Empty);
+		await Task.CompletedTask;
 
-			return this.MapToInstrument(entity);
-		}
-		catch (RequestFailedException ex) when (ex.Status == 404)
+		var instrumentCollection = this.liteDatabase.GetCollection("Instruments");
+		var document = instrumentCollection.FindById(instrumentId.Value);
+
+		if (document == null)
 		{
-			return Error.NotFound();
+			return Error.NotFound(description: "Instrument does not exist");
 		}
-		catch (Exception ex)
-		{
-			return Error.Failure(ex.Message);
-		}
+
+		return this.MapToInstrument(document);
 	}
 
 	public async Task<ErrorOr<InvestmentInstrument>> GetCashInstrumentAsync(
@@ -65,71 +71,54 @@ internal sealed class InstrumentRepository : IInstrumentRepository
 		Currency currency,
 		CancellationToken cancellationToken)
 	{
-		try
-		{
-			InstrumentIdMappingTableEntity instrumentIdMappingEntity = await this.instrumentIdMappingTableClient.GetEntityAsync<InstrumentIdMappingTableEntity>(
-				partitionKey: instrumentType.ToString(),
-				rowKey: currency.ToString(),
-				cancellationToken: cancellationToken);
+		await Task.CompletedTask;
 
-			return await this.GetByIdAsync(
-				new InstrumentId(Guid.Parse(instrumentIdMappingEntity.InstrumentId)),
-				cancellationToken);
-		}
-		catch (RequestFailedException ex) when (ex.Status == 404)
+		var cashInstrumentCollection = this.liteDatabase.GetCollection<CashInstrumentTableEntity>("Instruments");
+
+		var cashInstrumentTableEntity = cashInstrumentCollection.FindOne(x => x.InstrumentType == instrumentType && x.Currency == currency);
+
+		if (cashInstrumentTableEntity == null)
 		{
-			return Error.NotFound();
+			return Error.NotFound(description: "Cash instrument does not exist");
 		}
-		catch (Exception ex)
-		{
-			return Error.Failure(ex.Message);
-		}
+
+		return this.MapToInstrument(cashInstrumentTableEntity);
 	}
 
-	public async Task<ErrorOr<InvestmentInstrument>> GetMutualFundBySchemeCodeAsync(int schemeCode, CancellationToken cancellationToken)
+	public async Task<ErrorOr<InvestmentInstrument>> GetMutualFundBySchemeCodeAsync(
+		int schemeCode,
+		CancellationToken cancellationToken)
 	{
-		try
-		{
-			InstrumentIdMappingTableEntity instrumentIdMappingEntity = await this.instrumentIdMappingTableClient.GetEntityAsync<InstrumentIdMappingTableEntity>(
-				partitionKey: "MutualFundSchemeCode",
-				rowKey: schemeCode.ToString(CultureInfo.InvariantCulture),
-				cancellationToken: cancellationToken);
+		await Task.CompletedTask;
 
-			return await this.GetByIdAsync(
-				new InstrumentId(Guid.Parse(instrumentIdMappingEntity.InstrumentId)),
-				cancellationToken);
-		}
-		catch (RequestFailedException ex) when (ex.Status == 404)
+		var mutualFundCollection = this.liteDatabase.GetCollection<MutualFundTableEntity>("Instruments");
+
+		var mutualFundTableEntity = mutualFundCollection.FindOne(x => x.InstrumentType == InstrumentType.MutualFunds && x.SchemeCode == schemeCode);
+
+		if (mutualFundTableEntity == null)
 		{
-			return Error.NotFound();
+			return Error.NotFound(description: "Mutual fund does not exist");
 		}
-		catch (Exception ex)
-		{
-			return Error.Failure(ex.Message);
-		}
+
+		return this.MapToInstrument(mutualFundTableEntity);
 	}
 
-	public async Task<ErrorOr<InvestmentInstrument>> GetStockBySymbolAsync(string symbol, CancellationToken cancellationToken)
+	public async Task<ErrorOr<InvestmentInstrument>> GetStockBySymbolAsync(
+		string symbol,
+		CancellationToken cancellationToken)
 	{
-		try
-		{
-			InstrumentIdMappingTableEntity instrumentIdMappingEntity = await this.instrumentIdMappingTableClient.GetEntityAsync<InstrumentIdMappingTableEntity>(
-				partitionKey: "StockSymbol",
-				rowKey: symbol.ToUpperInvariant(),
-				cancellationToken: cancellationToken);
+		await Task.CompletedTask;
 
-			return await this.GetByIdAsync(
-				new InstrumentId(Guid.Parse(instrumentIdMappingEntity.InstrumentId)),
-				cancellationToken);
-		}
-		catch (RequestFailedException ex) when (ex.Status == 404)
+		var stockCollection = this.liteDatabase.GetCollection<StockTableEntity>("Instruments");
+
+		var stockTableEntity = stockCollection.FindOne(x => x.InstrumentType == InstrumentType.Stocks && x.Symbol == symbol);
+
+		if (stockTableEntity == null)
 		{
-			return Error.NotFound();
+			return Error.NotFound(description: "Stock does not exist");
 		}
-		catch (Exception ex)
-		{
-			return Error.Failure(ex.Message);
-		}
+
+		return this.MapToInstrument(stockTableEntity);
 	}
 
 	public async Task<ErrorOr<InvestmentInstrument>> AddCashInstrumentAsync(
@@ -137,37 +126,20 @@ internal sealed class InstrumentRepository : IInstrumentRepository
 		Currency currency,
 		CancellationToken cancellationToken)
 	{
-		var cashInstrument = new CashInstrument(InstrumentId.New(), instrumentType, currency);
+		await Task.CompletedTask;
 
-		InstrumentIdMappingTableEntity mappingEntity = new InstrumentIdMappingTableEntity
+		var cashInstrumentCollection = this.liteDatabase.GetCollection<CashInstrumentTableEntity>("Instruments");
+
+		var cashInstrumentTableEntity = new CashInstrumentTableEntity
 		{
-			PartitionKey = instrumentType.ToString(),
-			RowKey = currency.ToString(),
-			InstrumentId = cashInstrument.Id.Value.ToString("N"),
+			Id = InstrumentId.New().Value,
+			InstrumentType = instrumentType,
+			Currency = currency,
 		};
 
-		var entity = new CashInstrumentTableEntity
-		{
-			PartitionKey = cashInstrument.Id.Value.ToString("N"),
-			Name = cashInstrument.Name,
-			Type = cashInstrument.Type.ToString(),
-			Currency = cashInstrument.Currency,
-		};
+		cashInstrumentCollection.Insert(cashInstrumentTableEntity);
 
-		try
-		{
-			await this.instrumentIdMappingTableClient.AddEntityAsync(mappingEntity, cancellationToken);
-			await this.instrumentTableClient.AddEntityAsync(entity, cancellationToken);
-			return cashInstrument;
-		}
-		catch (RequestFailedException ex) when (ex.Status == 409)
-		{
-			return Error.Conflict();
-		}
-		catch (Exception ex)
-		{
-			return Error.Failure(ex.Message);
-		}
+		return this.MapToInstrument(cashInstrumentTableEntity);
 	}
 
 	public async Task<ErrorOr<InvestmentInstrument>> AddMutualFundAsync(
@@ -179,48 +151,25 @@ internal sealed class InstrumentRepository : IInstrumentRepository
 		Currency currency,
 		CancellationToken cancellationToken)
 	{
-		var mutualFund = new MutualFund(
-			InstrumentId.New(),
-			name,
-			fundHouse,
-			schemeType,
-			schemeCategory,
-			schemeCode,
-			currency);
+		await Task.CompletedTask;
 
-		InstrumentIdMappingTableEntity mappingEntity = new InstrumentIdMappingTableEntity
+		var mutualFundCollection = this.liteDatabase.GetCollection<MutualFundTableEntity>("Instruments");
+
+		var mutualFundTableEntity = new MutualFundTableEntity
 		{
-			PartitionKey = "MutualFundSchemeCode",
-			RowKey = schemeCode.ToString(CultureInfo.InvariantCulture),
-			InstrumentId = mutualFund.Id.Value.ToString("N"),
+			Id = InstrumentId.New().Value,
+			Name = name,
+			FundHouse = fundHouse,
+			SchemeType = schemeType,
+			SchemeCategory = schemeCategory,
+			SchemeCode = schemeCode,
+			InstrumentType = InstrumentType.MutualFunds,
+			Currency = currency,
 		};
 
-		MutualFundInstrumentTableEntity entity = new MutualFundInstrumentTableEntity
-		{
-			PartitionKey = mutualFund.Id.Value.ToString("N"),
-			Name = mutualFund.Name,
-			Type = mutualFund.Type.ToString(),
-			FundHouse = mutualFund.FundHouse,
-			SchemeType = mutualFund.SchemeType,
-			SchemeCategory = mutualFund.SchemeCategory,
-			SchemeCode = mutualFund.SchemeCode,
-			Currency = mutualFund.Currency,
-		};
+		mutualFundCollection.Insert(mutualFundTableEntity);
 
-		try
-		{
-			await this.instrumentIdMappingTableClient.AddEntityAsync(mappingEntity, cancellationToken);
-			await this.instrumentTableClient.AddEntityAsync(entity, cancellationToken);
-			return mutualFund;
-		}
-		catch (RequestFailedException ex) when (ex.Status == 409)
-		{
-			return Error.Conflict();
-		}
-		catch (Exception ex)
-		{
-			return Error.Failure(ex.Message);
-		}
+		return this.MapToInstrument(mutualFundTableEntity);
 	}
 
 	public async Task<ErrorOr<InvestmentInstrument>> AddStockAsync(
@@ -234,94 +183,120 @@ internal sealed class InstrumentRepository : IInstrumentRepository
 		Currency currency,
 		CancellationToken cancellationToken)
 	{
-		var stock = new Stock(
-			InstrumentId.New(),
-			name,
-			symbol,
-			stockType,
-			region,
-			marketOpen,
-			marketClose,
-			timezone,
-			currency);
+		await Task.CompletedTask;
 
-		InstrumentIdMappingTableEntity mappingEntity = new InstrumentIdMappingTableEntity
+		var stockCollection = this.liteDatabase.GetCollection<StockTableEntity>("Instruments");
+
+		var stockTableEntity = new StockTableEntity
 		{
-			PartitionKey = "StockSymbol",
-			RowKey = stock.Symbol.ToUpperInvariant(),
-			InstrumentId = stock.Id.Value.ToString("N"),
+			Id = InstrumentId.New().Value,
+			Name = name,
+			Symbol = symbol,
+			StockType = stockType,
+			Region = region,
+			MarketOpen = marketOpen,
+			MarketClose = marketClose,
+			Timezone = timezone,
+			InstrumentType = InstrumentType.Stocks,
+			Currency = currency,
 		};
 
-		StockInstrumentTableEntity entity = new StockInstrumentTableEntity
-		{
-			PartitionKey = stock.Id.Value.ToString("N"),
-			Name = stock.Name,
-			Type = stock.Type.ToString(),
-			Symbol = stock.Symbol,
-			StockType = stock.StockType,
-			Region = stock.Region,
-			MarketOpen = stock.MarketOpen,
-			MarketClose = stock.MarketClose,
-			Timezone = stock.Timezone,
-			Currency = stock.Currency,
-		};
+		stockCollection.Insert(stockTableEntity);
 
-		try
+		return this.MapToInstrument(stockTableEntity);
+	}
+
+	private ErrorOr<InvestmentInstrument> MapToInstrument(BsonDocument bsonDocument)
+	{
+		var instrumentId = new InstrumentId(bsonDocument["_id"].AsGuid);
+		var instrumentType = Enum.Parse<InstrumentType>(bsonDocument["InstrumentType"].AsString);
+		var currency = Enum.Parse<Currency>(bsonDocument["Currency"].AsString);
+
+		switch (instrumentType)
 		{
-			await this.instrumentIdMappingTableClient.AddEntityAsync(mappingEntity, cancellationToken);
-			await this.instrumentTableClient.AddEntityAsync(entity, cancellationToken);
-			return stock;
-		}
-		catch (RequestFailedException ex) when (ex.Status == 409)
-		{
-			return Error.Conflict();
-		}
-		catch (Exception ex)
-		{
-			return Error.Failure(ex.Message);
+			case InstrumentType.CashAccounts:
+			case InstrumentType.FixedDeposits:
+			case InstrumentType.EPF:
+			case InstrumentType.PPF:
+				return new CashInstrument(
+					instrumentId,
+					instrumentType,
+					currency);
+			case InstrumentType.MutualFunds:
+				return new MutualFund(
+					instrumentId,
+					bsonDocument["Name"].AsString,
+					bsonDocument["FundHouse"].AsString,
+					bsonDocument["SchemeType"].AsString,
+					bsonDocument["SchemeCategory"].AsString,
+					bsonDocument["SchemeCode"].AsInt32,
+					currency);
+			case InstrumentType.Stocks:
+				return new Stock(
+					instrumentId,
+					bsonDocument["Name"].AsString,
+					bsonDocument["Symbol"].AsString,
+					bsonDocument["StockType"].AsString,
+					bsonDocument["Region"].AsString,
+					bsonDocument["MarketOpen"].AsString,
+					bsonDocument["MarketClose"].AsString,
+					bsonDocument["Timezone"].AsString,
+					currency);
+			default:
+				return Error.Validation(description: "Invalid instrument type");
 		}
 	}
 
-	private InvestmentInstrument MapToInstrument(TableEntity entity)
+	private InvestmentInstrument MapToInstrument(CashInstrumentTableEntity cashInstrumentTableEntity)
 	{
-		var type = Enum.Parse<InstrumentType>(entity.GetString("Type"));
+		return new CashInstrument(
+			new InstrumentId(cashInstrumentTableEntity.Id),
+			cashInstrumentTableEntity.InstrumentType,
+			cashInstrumentTableEntity.Currency);
+	}
 
-		return type switch
-		{
-			InstrumentType.CashAccounts or InstrumentType.FixedDeposits or InstrumentType.EPF or InstrumentType.PPF => new CashInstrument(
-				new InstrumentId(Guid.Parse(entity.PartitionKey)),
-				type,
-				Enum.Parse<Currency>(entity.GetString("Currency"))),
+	private InvestmentInstrument MapToInstrument(MutualFundTableEntity mutualFundTableEntity)
+	{
+		return new MutualFund(
+			new InstrumentId(mutualFundTableEntity.Id),
+			mutualFundTableEntity.Name,
+			mutualFundTableEntity.FundHouse,
+			mutualFundTableEntity.SchemeType,
+			mutualFundTableEntity.SchemeCategory,
+			mutualFundTableEntity.SchemeCode,
+			mutualFundTableEntity.Currency);
+	}
 
-			InstrumentType.MutualFunds => new MutualFund(
-				new InstrumentId(Guid.Parse(entity.PartitionKey)),
-				entity.GetString("Name"),
-				entity.GetString("FundHouse"),
-				entity.GetString("SchemeType"),
-				entity.GetString("SchemeCategory"),
-				(int)entity.GetInt32("SchemeCode"),
-				Enum.Parse<Currency>(entity.GetString("Currency"))),
+	private InvestmentInstrument MapToInstrument(StockTableEntity stockTableEntity)
+	{
+		return new Stock(
+			new InstrumentId(stockTableEntity.Id),
+			stockTableEntity.Name,
+			stockTableEntity.Symbol,
+			stockTableEntity.StockType,
+			stockTableEntity.Region,
+			stockTableEntity.MarketOpen,
+			stockTableEntity.MarketClose,
+			stockTableEntity.Timezone,
+			stockTableEntity.Currency);
+	}
 
-			InstrumentType.Stocks => new Stock(
-				new InstrumentId(Guid.Parse(entity.PartitionKey)),
-				entity.GetString("Name"),
-				entity.GetString("Symbol"),
-				entity.GetString("StockType"),
-				entity.GetString("Region"),
-				entity.GetString("MarketOpen"),
-				entity.GetString("MarketClose"),
-				entity.GetString("Timezone"),
-				Enum.Parse<Currency>(entity.GetString("Currency"))),
+	private abstract class InstrumentTableEntity
+	{
+		public Guid Id { get; set; }
 
-			_ => throw new NotSupportedException($"Investment type '{type}' is not supported."),
-		};
+		public string Name { get; set; }
+
+		public InstrumentType InstrumentType { get; set; }
+
+		public Currency Currency { get; set; }
 	}
 
 	private sealed class CashInstrumentTableEntity : InstrumentTableEntity
 	{
 	}
 
-	private sealed class MutualFundInstrumentTableEntity : InstrumentTableEntity
+	private sealed class MutualFundTableEntity : InstrumentTableEntity
 	{
 		public string FundHouse { get; set; }
 
@@ -332,7 +307,7 @@ internal sealed class InstrumentRepository : IInstrumentRepository
 		public int SchemeCode { get; set; }
 	}
 
-	private sealed class StockInstrumentTableEntity : InstrumentTableEntity
+	private sealed class StockTableEntity : InstrumentTableEntity
 	{
 		public string Symbol { get; set; }
 
@@ -345,35 +320,5 @@ internal sealed class InstrumentRepository : IInstrumentRepository
 		public string MarketClose { get; set; }
 
 		public string Timezone { get; set; }
-	}
-
-	private abstract class InstrumentTableEntity : ITableEntity
-	{
-		public string PartitionKey { get; set; }
-
-		public string RowKey { get; set; } = string.Empty;
-
-		public DateTimeOffset? Timestamp { get; set; }
-
-		public ETag ETag { get; set; }
-
-		public string Name { get; set; }
-
-		public string Type { get; set; }
-
-		public Currency Currency { get; set; }
-	}
-
-	private sealed class InstrumentIdMappingTableEntity : ITableEntity
-	{
-		public string PartitionKey { get; set; }
-
-		public string RowKey { get; set; }
-
-		public DateTimeOffset? Timestamp { get; set; }
-
-		public ETag ETag { get; set; }
-
-		public string InstrumentId { get; set; }
 	}
 }

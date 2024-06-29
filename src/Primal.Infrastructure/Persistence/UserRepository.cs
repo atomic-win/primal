@@ -1,7 +1,6 @@
 using System.Net.Mail;
-using Azure;
-using Azure.Data.Tables;
 using ErrorOr;
+using LiteDB;
 using Primal.Application.Common.Interfaces.Persistence;
 using Primal.Domain.Users;
 
@@ -9,85 +8,76 @@ namespace Primal.Infrastructure.Persistence;
 
 internal sealed class UserRepository : IUserRepository
 {
-	private readonly TableClient tableClient;
+	private readonly LiteDatabase liteDatabase;
 
-	internal UserRepository(TableClient tableClient)
+	internal UserRepository(LiteDatabase liteDatabase)
 	{
-		this.tableClient = tableClient;
-	}
+		this.liteDatabase = liteDatabase;
 
-	public async Task<ErrorOr<User>> GetUserAsync(UserId userId, CancellationToken cancellationToken)
-	{
-		try
-		{
-			UserTableEntity entity = await this.tableClient.GetEntityAsync<UserTableEntity>(
-				partitionKey: userId.Value.ToString("N"),
-				rowKey: string.Empty,
-				cancellationToken: cancellationToken);
-
-			return new User(
-				new UserId(Guid.ParseExact(entity.PartitionKey, "N")),
-				new MailAddress(entity.Email),
-				entity.FirstName,
-				entity.LastName,
-				entity.FullName,
-				new Uri(entity.ProfilePictureUrl));
-		}
-		catch (RequestFailedException ex) when (ex.Status == 404)
-		{
-			return Error.NotFound();
-		}
-		catch (Exception ex)
-		{
-			return Error.Failure(ex.Message);
-		}
+		var collection = this.liteDatabase.GetCollection<UserTableEntity>("Users");
+		collection.EnsureIndex(x => x.Id, unique: true);
 	}
 
 	public async Task<ErrorOr<Success>> AddUserAsync(User user, CancellationToken cancellationToken)
 	{
-		var tableEntity = new UserTableEntity
+		await Task.CompletedTask;
+
+		var collection = this.liteDatabase.GetCollection<UserTableEntity>("Users");
+
+		if (collection.FindById(user.Id.Value) != null)
 		{
-			PartitionKey = user.Id.Value.ToString("N"),
+			return Error.Conflict(description: "User already exists.");
+		}
+
+		var userTableEntity = new UserTableEntity
+		{
+			Id = user.Id.Value,
 			Email = user.Email.Address,
 			FirstName = user.FirstName,
 			LastName = user.LastName,
 			FullName = user.FullName,
-			ProfilePictureUrl = user.ProfilePictureUrl.ToString(),
+			ProfilePictureUrl = user.ProfilePictureUrl.AbsoluteUri,
 		};
 
-		try
-		{
-			await this.tableClient.AddEntityAsync(tableEntity, cancellationToken: cancellationToken);
-			return Result.Success;
-		}
-		catch (RequestFailedException ex) when (ex.Status == 409)
-		{
-			return Error.Conflict();
-		}
-		catch (Exception ex)
-		{
-			return Error.Failure(ex.Message);
-		}
+		collection.Insert(userTableEntity);
+
+		return Result.Success;
 	}
 
-	private sealed class UserTableEntity : ITableEntity
+	public async Task<ErrorOr<User>> GetUserAsync(UserId userId, CancellationToken cancellationToken)
 	{
-		public string PartitionKey { get; set; } = default!;
+		await Task.CompletedTask;
 
-		public string RowKey { get; set; } = string.Empty;
+		var collection = this.liteDatabase.GetCollection<UserTableEntity>("Users");
 
-		public DateTimeOffset? Timestamp { get; set; }
+		var userTableEntity = collection.FindById(userId.Value);
 
-		public ETag ETag { get; set; }
+		if (userTableEntity == null)
+		{
+			return Error.NotFound(description: "User does not exist.");
+		}
 
-		public string Email { get; set; } = default!;
+		return new User(
+			new UserId(userTableEntity.Id),
+			new MailAddress(userTableEntity.Email),
+			userTableEntity.FirstName,
+			userTableEntity.LastName,
+			userTableEntity.FullName,
+			new Uri(userTableEntity.ProfilePictureUrl));
+	}
 
-		public string FirstName { get; set; } = string.Empty;
+	private sealed class UserTableEntity
+	{
+		public Guid Id { get; init; }
 
-		public string LastName { get; set; } = string.Empty;
+		public string Email { get; init; }
 
-		public string FullName { get; set; } = string.Empty;
+		public string FirstName { get; init; }
 
-		public string ProfilePictureUrl { get; set; } = string.Empty;
+		public string LastName { get; init; }
+
+		public string FullName { get; init; }
+
+		public string ProfilePictureUrl { get; init; }
 	}
 }
