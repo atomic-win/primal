@@ -24,6 +24,7 @@ public sealed class PortfolioController : ApiController
 	}
 
 	[HttpGet]
+	[HttpPost]
 	[Route("")]
 	public async Task<IActionResult> GetPortfolioAsync([FromBody] PortfolioRequest portfolioRequest)
 	{
