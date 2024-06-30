@@ -67,11 +67,13 @@ internal static class TransactionExtensions
 		switch (transaction.Type)
 		{
 			case TransactionType.Buy:
-			case TransactionType.Deposit:
 				return transaction.CalculateInitialAmount(historicalPrices, historicalExchangeRates, evaluationDate);
+			case TransactionType.Deposit:
+				return transaction.CalculateCurrentAmount(historicalPrices, historicalExchangeRates, evaluationDate);
 			case TransactionType.Sell:
-			case TransactionType.Withdrawal:
 				return -transaction.CalculateInitialAmount(historicalPrices, historicalExchangeRates, evaluationDate);
+			case TransactionType.Withdrawal:
+				return -transaction.CalculateCurrentAmount(historicalPrices, historicalExchangeRates, evaluationDate);
 			default:
 				return 0;
 		}
@@ -86,16 +88,15 @@ internal static class TransactionExtensions
 		switch (transaction.Type)
 		{
 			case TransactionType.Buy:
-				return transaction.CalculateCurrentAmount(historicalPrices, historicalExchangeRates, evaluationDate);
 			case TransactionType.Deposit:
 			case TransactionType.SelfInterest:
 			case TransactionType.Dividend:
 			case TransactionType.Interest:
-				return transaction.CalculateInitialAmount(historicalPrices, historicalExchangeRates, evaluationDate);
+				return transaction.CalculateCurrentAmount(historicalPrices, historicalExchangeRates, evaluationDate);
 			case TransactionType.Sell:
 			case TransactionType.Withdrawal:
 			case TransactionType.InterestPenalty:
-				return -transaction.CalculateInitialAmount(historicalPrices, historicalExchangeRates, evaluationDate);
+				return -transaction.CalculateCurrentAmount(historicalPrices, historicalExchangeRates, evaluationDate);
 			default:
 				return 0;
 		}
