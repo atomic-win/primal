@@ -14,6 +14,14 @@ internal static class XIRRExtensions
 			return 0;
 		}
 
+		bool allLessThanYear = inputsList.All(x => x.Years < 1);
+
+		if (allLessThanYear)
+		{
+			inputsList = inputsList.Select(
+				x => (1M, x.TransactionAmount, x.BalanceAmount)).ToImmutableArray();
+		}
+
 		decimal rateLowerBound = 0, rateUpperBound = 100;
 		while (rateUpperBound - rateLowerBound > 0.0000001M)
 		{
@@ -37,6 +45,6 @@ internal static class XIRRExtensions
 		decimal rate)
 	{
 		return inputs
-			.Sum(x => x.BalanceAmount - ((decimal)Math.Pow((double)(1 + rate), (double)Math.Max(1M, x.Years)) * x.TransactionAmount));
+			.Sum(x => x.BalanceAmount - ((decimal)Math.Pow((double)(1 + rate), (double)x.Years) * x.TransactionAmount));
 	}
 }
