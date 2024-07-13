@@ -32,7 +32,10 @@ internal sealed class SignInCommandHandler : IRequestHandler<SignInCommand, Erro
 
 	private async Task<ErrorOr<SignInResult>> HandleTokenValidationSuccess(IdentityProviderUser identityProviderUser, CancellationToken cancellationToken)
 	{
-		var errorOrUserId = await this.userIdRepository.GetUserId(identityProviderUser, cancellationToken);
+		var errorOrUserId = await this.userIdRepository.GetUserId(
+			identityProviderUser.IdentityProvider,
+			identityProviderUser.Id,
+			cancellationToken);
 
 		if (!errorOrUserId.IsError)
 		{
@@ -66,21 +69,22 @@ internal sealed class SignInCommandHandler : IRequestHandler<SignInCommand, Erro
 
 	private async Task<ErrorOr<SignInResult>> HandleUserIdNotFound(IdentityProviderUser identityProviderUser, CancellationToken cancellationToken)
 	{
-		var userId = UserId.New();
+		var errorOrUserId = await this.userIdRepository.AddUserId(
+			identityProviderUser.IdentityProvider,
+			identityProviderUser.Id,
+			cancellationToken);
 
-		var errorOrAddUserId = await this.userIdRepository.AddUserId(identityProviderUser, userId, cancellationToken);
-
-		if (!errorOrAddUserId.IsError)
+		if (!errorOrUserId.IsError)
 		{
-			return await this.HandleGetUserIdSuccess(userId, identityProviderUser, cancellationToken);
+			return await this.HandleGetUserIdSuccess(errorOrUserId.Value, identityProviderUser, cancellationToken);
 		}
 
-		if (errorOrAddUserId.FirstError is { Type: ErrorType.Conflict })
+		if (errorOrUserId.FirstError is { Type: ErrorType.Conflict })
 		{
 			return await this.HandleTokenValidationSuccess(identityProviderUser, cancellationToken);
 		}
 
-		return (ErrorOr<SignInResult>)errorOrAddUserId.Errors;
+		return (ErrorOr<SignInResult>)errorOrUserId.Errors;
 	}
 
 	private async Task<ErrorOr<SignInResult>> HandleGetUserSuccess(User user, CancellationToken cancellationToken)
@@ -94,26 +98,24 @@ internal sealed class SignInCommandHandler : IRequestHandler<SignInCommand, Erro
 
 	private async Task<ErrorOr<SignInResult>> HandleUserNotFound(UserId userId, IdentityProviderUser identityProviderUser, CancellationToken cancellationToken)
 	{
-		var user = new User(
-			userId,
+		var errorOrUser = await this.userRepository.AddUserAsync(
 			identityProviderUser.Email,
 			identityProviderUser.FirstName,
 			identityProviderUser.LastName,
 			identityProviderUser.FullName,
-			identityProviderUser.ProfilePictureUrl);
+			identityProviderUser.ProfilePictureUrl,
+			cancellationToken);
 
-		var errorOrAddUser = await this.userRepository.AddUserAsync(user, cancellationToken);
-
-		if (!errorOrAddUser.IsError)
+		if (!errorOrUser.IsError)
 		{
-			return await this.HandleGetUserSuccess(user, cancellationToken);
+			return await this.HandleGetUserSuccess(errorOrUser.Value, cancellationToken);
 		}
 
-		if (errorOrAddUser.FirstError is { Type: ErrorType.Conflict })
+		if (errorOrUser.FirstError is { Type: ErrorType.Conflict })
 		{
 			return await this.HandleGetUserIdSuccess(userId, identityProviderUser, cancellationToken);
 		}
 
-		return (ErrorOr<SignInResult>)errorOrAddUser.Errors;
+		return (ErrorOr<SignInResult>)errorOrUser.Errors;
 	}
 }

@@ -5,7 +5,13 @@ namespace Primal.Application.Common.Interfaces.Persistence;
 
 public interface IUserIdRepository
 {
-	Task<ErrorOr<UserId>> GetUserId(IdentityProviderUser identityProviderUser, CancellationToken cancellationToken);
+	Task<ErrorOr<UserId>> GetUserId(
+		IdentityProvider identityProvider,
+		IdentityProviderUserId identityProviderUserId,
+		CancellationToken cancellationToken);
 
-	Task<ErrorOr<Success>> AddUserId(IdentityProviderUser identityProviderUser, UserId userId, CancellationToken cancellationToken);
+	Task<ErrorOr<UserId>> AddUserId(
+		IdentityProvider identityProvider,
+		IdentityProviderUserId identityProviderUserId,
+		CancellationToken cancellationToken);
 }

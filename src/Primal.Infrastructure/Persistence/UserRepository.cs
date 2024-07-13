@@ -3,6 +3,7 @@ using ErrorOr;
 using LiteDB;
 using Primal.Application.Common.Interfaces.Persistence;
 using Primal.Domain.Users;
+using SequentialGuid;
 
 namespace Primal.Infrastructure.Persistence;
 
@@ -18,33 +19,9 @@ internal sealed class UserRepository : IUserRepository
 		collection.EnsureIndex(x => x.Id, unique: true);
 	}
 
-	public async Task<ErrorOr<Success>> AddUserAsync(User user, CancellationToken cancellationToken)
-	{
-		await Task.CompletedTask;
-
-		var collection = this.liteDatabase.GetCollection<UserTableEntity>("Users");
-
-		if (collection.FindById(user.Id.Value) != null)
-		{
-			return Error.Conflict(description: "User already exists.");
-		}
-
-		var userTableEntity = new UserTableEntity
-		{
-			Id = user.Id.Value,
-			Email = user.Email.Address,
-			FirstName = user.FirstName,
-			LastName = user.LastName,
-			FullName = user.FullName,
-			ProfilePictureUrl = user.ProfilePictureUrl.AbsoluteUri,
-		};
-
-		collection.Insert(userTableEntity);
-
-		return Result.Success;
-	}
-
-	public async Task<ErrorOr<User>> GetUserAsync(UserId userId, CancellationToken cancellationToken)
+	public async Task<ErrorOr<User>> GetUserAsync(
+		UserId userId,
+		CancellationToken cancellationToken)
 	{
 		await Task.CompletedTask;
 
@@ -57,6 +34,38 @@ internal sealed class UserRepository : IUserRepository
 			return Error.NotFound(description: "User does not exist.");
 		}
 
+		return this.MapToUser(userTableEntity);
+	}
+
+	public async Task<ErrorOr<User>> AddUserAsync(
+		MailAddress email,
+		string firstName,
+		string lastName,
+		string fullName,
+		Uri profilePictureUrl,
+		CancellationToken cancellationToken)
+	{
+		await Task.CompletedTask;
+
+		var collection = this.liteDatabase.GetCollection<UserTableEntity>("Users");
+
+		var userTableEntity = new UserTableEntity
+		{
+			Id = SequentialGuidGenerator.Instance.NewGuid(),
+			Email = email.Address,
+			FirstName = firstName,
+			LastName = lastName,
+			FullName = fullName,
+			ProfilePictureUrl = profilePictureUrl.AbsoluteUri,
+		};
+
+		collection.Insert(userTableEntity);
+
+		return this.MapToUser(userTableEntity);
+	}
+
+	private User MapToUser(UserTableEntity userTableEntity)
+	{
 		return new User(
 			new UserId(userTableEntity.Id),
 			new MailAddress(userTableEntity.Email),

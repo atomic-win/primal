@@ -2,6 +2,7 @@ using ErrorOr;
 using LiteDB;
 using Primal.Application.Common.Interfaces.Persistence;
 using Primal.Domain.Users;
+using SequentialGuid;
 
 namespace Primal.Infrastructure.Persistence;
 
@@ -17,41 +18,47 @@ internal sealed class UserIdRepository : IUserIdRepository
 		collection.EnsureIndex(x => x.Id, unique: true);
 	}
 
-	public async Task<ErrorOr<Success>> AddUserId(IdentityProviderUser identityProviderUser, UserId userId, CancellationToken cancellationToken)
+	public async Task<ErrorOr<UserId>> GetUserId(
+		IdentityProvider identityProvider,
+		IdentityProviderUserId identityProviderUserId,
+		CancellationToken cancellationToken)
 	{
 		await Task.CompletedTask;
 
 		var collection = this.liteDatabase.GetCollection<UserIdTableEntity>("UserIds");
 
-		if (collection.FindById(identityProviderUser.Id.Value) != null)
-		{
-			return Error.Conflict(description: "Identity provider user already has a user ID.");
-		}
-
-		var userIdTableEntity = new UserIdTableEntity
-		{
-			Id = identityProviderUser.Id.Value,
-			IdentityProvider = identityProviderUser.IdentityProvider,
-			UserId = userId.Value,
-		};
-
-		collection.Insert(userIdTableEntity);
-		return Result.Success;
-	}
-
-	public async Task<ErrorOr<UserId>> GetUserId(IdentityProviderUser identityProviderUser, CancellationToken cancellationToken)
-	{
-		await Task.CompletedTask;
-
-		var collection = this.liteDatabase.GetCollection<UserIdTableEntity>("UserIds");
-
-		var userIdTableEntity = collection.FindById(identityProviderUser.Id.Value);
+		var userIdTableEntity = collection.FindById(identityProviderUserId.Value);
 
 		if (userIdTableEntity == null)
 		{
 			return Error.NotFound(description: "Identity provider user does not have a user ID.");
 		}
 
+		return new UserId(userIdTableEntity.UserId);
+	}
+
+	public async Task<ErrorOr<UserId>> AddUserId(
+		IdentityProvider identityProvider,
+		IdentityProviderUserId identityProviderUserId,
+		CancellationToken cancellationToken)
+	{
+		await Task.CompletedTask;
+
+		var collection = this.liteDatabase.GetCollection<UserIdTableEntity>("UserIds");
+
+		if (collection.FindById(identityProviderUserId.Value) != null)
+		{
+			return Error.Conflict(description: "Identity provider user already has a user ID.");
+		}
+
+		var userIdTableEntity = new UserIdTableEntity
+		{
+			Id = identityProviderUserId.Value,
+			IdentityProvider = identityProvider,
+			UserId = SequentialGuidGenerator.Instance.NewGuid(),
+		};
+
+		collection.Insert(userIdTableEntity);
 		return new UserId(userIdTableEntity.UserId);
 	}
 
