@@ -4,6 +4,7 @@ using LiteDB;
 using Primal.Application.Common.Interfaces.Persistence;
 using Primal.Domain.Investments;
 using Primal.Domain.Users;
+using SequentialGuid;
 
 namespace Primal.Infrastructure.Persistence;
 
@@ -60,7 +61,7 @@ internal sealed class AssetRepository : IAssetRepository
 
 		var assetTableEntity = new AssetTableEntity
 		{
-			Id = AssetId.New().Value,
+			Id = SequentialGuidGenerator.Instance.NewGuid(),
 			UserId = userId.Value,
 			Name = name,
 			InstrumentId = instrumentId.Value,
