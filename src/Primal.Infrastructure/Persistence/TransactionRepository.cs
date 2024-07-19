@@ -4,7 +4,6 @@ using LiteDB;
 using Primal.Application.Common.Interfaces.Persistence;
 using Primal.Domain.Investments;
 using Primal.Domain.Users;
-using SequentialGuid;
 
 namespace Primal.Infrastructure.Persistence;
 
@@ -66,7 +65,7 @@ internal sealed class TransactionRepository : ITransactionRepository
 
 		var transactionTableEntity = new TransactionTableEntity
 		{
-			Id = SequentialGuidGenerator.Instance.NewGuid(new DateTime(date.Year, date.Month, date.Day, 0, 0, 0, DateTimeKind.Utc)),
+			Id = Ulid.NewUlid(new DateTimeOffset(date, TimeOnly.MinValue, TimeSpan.Zero)).ToGuid(),
 			UserId = userId.Value,
 			Date = date.ToString(CultureInfo.InvariantCulture),
 			Name = name,

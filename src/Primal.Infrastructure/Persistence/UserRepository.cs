@@ -3,7 +3,6 @@ using ErrorOr;
 using LiteDB;
 using Primal.Application.Common.Interfaces.Persistence;
 using Primal.Domain.Users;
-using SequentialGuid;
 
 namespace Primal.Infrastructure.Persistence;
 
@@ -51,7 +50,7 @@ internal sealed class UserRepository : IUserRepository
 
 		var userTableEntity = new UserTableEntity
 		{
-			Id = SequentialGuidGenerator.Instance.NewGuid(),
+			Id = Ulid.NewUlid().ToGuid(),
 			Email = email.Address,
 			FirstName = firstName,
 			LastName = lastName,

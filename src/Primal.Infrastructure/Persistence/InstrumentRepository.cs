@@ -3,7 +3,6 @@ using LiteDB;
 using Primal.Application.Common.Interfaces.Persistence;
 using Primal.Domain.Investments;
 using Primal.Domain.Money;
-using SequentialGuid;
 
 namespace Primal.Infrastructure.Persistence;
 
@@ -133,7 +132,7 @@ internal sealed class InstrumentRepository : IInstrumentRepository
 
 		var cashInstrumentTableEntity = new CashInstrumentTableEntity
 		{
-			Id = SequentialGuidGenerator.Instance.NewGuid(),
+			Id = Ulid.NewUlid().ToGuid(),
 			InstrumentType = instrumentType,
 			Currency = currency,
 		};
@@ -158,7 +157,7 @@ internal sealed class InstrumentRepository : IInstrumentRepository
 
 		var mutualFundTableEntity = new MutualFundTableEntity
 		{
-			Id = SequentialGuidGenerator.Instance.NewGuid(),
+			Id = Ulid.NewUlid().ToGuid(),
 			Name = name,
 			FundHouse = fundHouse,
 			SchemeType = schemeType,
@@ -190,7 +189,7 @@ internal sealed class InstrumentRepository : IInstrumentRepository
 
 		var stockTableEntity = new StockTableEntity
 		{
-			Id = SequentialGuidGenerator.Instance.NewGuid(),
+			Id = Ulid.NewUlid().ToGuid(),
 			Name = name,
 			Symbol = symbol,
 			StockType = stockType,
