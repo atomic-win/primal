@@ -214,6 +214,7 @@ internal sealed class InstrumentRepository : IInstrumentRepository
 
 		switch (instrumentType)
 		{
+			case InstrumentType.EmergencyFunds:
 			case InstrumentType.CashAccounts:
 			case InstrumentType.FixedDeposits:
 			case InstrumentType.EPF:

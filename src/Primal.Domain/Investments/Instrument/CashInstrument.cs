@@ -13,6 +13,7 @@ public sealed class CashInstrument : InvestmentInstrument
 	{
 		return type switch
 		{
+			InstrumentType.EmergencyFunds => $"Emergency Fund - {currency}",
 			InstrumentType.CashAccounts => $"Cash Account - {currency}",
 			InstrumentType.FixedDeposits => $"Fixed Deposit - {currency}",
 			InstrumentType.EPF => $"EPF - {currency}",

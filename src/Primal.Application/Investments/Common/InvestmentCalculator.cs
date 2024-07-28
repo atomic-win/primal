@@ -369,8 +369,8 @@ internal sealed class InvestmentCalculator
 		return portfolios
 			.Select(x => x with
 			{
-				InitialAmountPercent = 100 * x.InitialAmount / totalInitialAmount,
-				CurrentAmountPercent = 100 * x.CurrentAmount / totalCurrentAmount,
+				InitialAmountPercent = 100 * x.InitialAmount / Math.Max(1.0M, totalInitialAmount),
+				CurrentAmountPercent = 100 * x.CurrentAmount / Math.Max(1.0M, totalCurrentAmount),
 			});
 	}
 

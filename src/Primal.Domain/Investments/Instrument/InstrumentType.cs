@@ -4,6 +4,7 @@ public enum InstrumentType
 {
 	Unknown = 0,
 	CashAccounts,
+	EmergencyFunds,
 	FixedDeposits,
 	EPF,
 	PPF,

@@ -75,7 +75,11 @@ internal sealed class AddTransactionCommandHandler : IRequestHandler<AddTransact
 			return Error.Validation(description: "Only buy, sell and dividend transactions are supported for stocks");
 		}
 
-		if ((instrumentType == InstrumentType.CashAccounts || instrumentType == InstrumentType.FixedDeposits || instrumentType == InstrumentType.EPF || instrumentType == InstrumentType.PPF)
+		if ((instrumentType == InstrumentType.EmergencyFunds
+				|| instrumentType == InstrumentType.CashAccounts
+				|| instrumentType == InstrumentType.FixedDeposits
+				|| instrumentType == InstrumentType.EPF
+				|| instrumentType == InstrumentType.PPF)
 			&& request.Type != TransactionType.Deposit
 			&& request.Type != TransactionType.Withdrawal
 			&& request.Type != TransactionType.Interest
