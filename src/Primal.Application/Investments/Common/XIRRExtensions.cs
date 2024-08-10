@@ -22,7 +22,7 @@ internal static class XIRRExtensions
 				x => (1M, x.TransactionAmount, x.BalanceAmount)).ToImmutableArray();
 		}
 
-		decimal rateLowerBound = -100, rateUpperBound = 100;
+		decimal rateLowerBound = -1, rateUpperBound = 100;
 		while (rateUpperBound - rateLowerBound > 0.0000001M)
 		{
 			decimal rateMiddle = (rateLowerBound + rateUpperBound) / 2;
