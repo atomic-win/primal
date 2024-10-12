@@ -108,9 +108,9 @@ internal static class TransactionExtensions
 		IReadOnlyDictionary<DateOnly, decimal> historicalExchangeRates,
 		DateOnly evaluationDate)
 	{
-		return transaction.Date > evaluationDate
-			? 0
-			: transaction.CalculateAmount(historicalPrices.GetHistoricalValue(transaction.Date), historicalExchangeRates.GetHistoricalValue(transaction.Date));
+		ArgumentOutOfRangeException.ThrowIfGreaterThan(transaction.Date, evaluationDate);
+
+		return transaction.CalculateAmount(historicalPrices.GetHistoricalValue(transaction.Date), historicalExchangeRates.GetHistoricalValue(transaction.Date));
 	}
 
 	private static decimal CalculateCurrentAmount(
@@ -119,9 +119,9 @@ internal static class TransactionExtensions
 		IReadOnlyDictionary<DateOnly, decimal> historicalExchangeRates,
 		DateOnly evaluationDate)
 	{
-		return transaction.Date > evaluationDate
-			? 0
-			: transaction.CalculateAmount(historicalPrices.GetHistoricalValue(evaluationDate), historicalExchangeRates.GetHistoricalValue(evaluationDate));
+		ArgumentOutOfRangeException.ThrowIfGreaterThan(transaction.Date, evaluationDate);
+
+		return transaction.CalculateAmount(historicalPrices.GetHistoricalValue(evaluationDate), historicalExchangeRates.GetHistoricalValue(evaluationDate));
 	}
 
 	private static decimal CalculateAmount(
