@@ -9,31 +9,33 @@ internal static class XIRRExtensions
 		IReadOnlyList<(decimal Years, decimal TransactionAmount, decimal BalanceAmount)> inputsList
 			= inputs.ToImmutableArray();
 
-		if (inputsList.Sum(x => x.BalanceAmount - x.TransactionAmount) == 0)
-		{
-			return 0;
-		}
+		decimal outValue = inputsList.Sum(x => x.BalanceAmount);
+		var inValues = inputsList.Select(x => (x.Years, x.TransactionAmount)).ToImmutableArray();
 
-		bool allLessThanYear = inputsList.All(x => x.Years < 1);
+		return CalculateXIRR(inValues, outValue);
+	}
 
-		if (allLessThanYear)
+	private static decimal CalculateXIRR(IReadOnlyList<(decimal Years, decimal Amount)> inValues, decimal outValue)
+	{
+		bool allLessThanYear = inValues.All(x => x.Years < 1);
+
+		if (allLessThanYear && outValue != 0)
 		{
-			inputsList = inputsList.Select(
-				x => (1M, x.TransactionAmount, x.BalanceAmount)).ToImmutableArray();
+			inValues = inValues.Select(x => (1M, x.Amount)).ToImmutableArray();
 		}
 
 		decimal rateLowerBound = -1, rateUpperBound = 100;
 		while (rateUpperBound - rateLowerBound > 0.0000001M)
 		{
 			decimal rateMiddle = (rateLowerBound + rateUpperBound) / 2;
-			decimal value = inputsList.CalculateValue(rateMiddle);
-			if (value > 0)
+			decimal value = inValues.CalculateValue(rateMiddle);
+			if (value > outValue)
 			{
-				rateLowerBound = rateMiddle;
+				rateUpperBound = rateMiddle;
 			}
 			else
 			{
-				rateUpperBound = rateMiddle;
+				rateLowerBound = rateMiddle;
 			}
 		}
 
@@ -41,10 +43,10 @@ internal static class XIRRExtensions
 	}
 
 	private static decimal CalculateValue(
-		this IReadOnlyList<(decimal Years, decimal TransactionAmount, decimal BalanceAmount)> inputs,
+		this IReadOnlyList<(decimal Years, decimal Amount)> inValues,
 		decimal rate)
 	{
-		return inputs
-			.Sum(x => x.BalanceAmount - ((decimal)Math.Pow((double)(1 + rate), (double)x.Years) * x.TransactionAmount));
+		return inValues
+			.Sum(x => (decimal)Math.Pow((double)(1 + rate), (double)x.Years) * x.Amount);
 	}
 }
