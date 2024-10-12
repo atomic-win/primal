@@ -272,45 +272,36 @@ internal sealed class InvestmentCalculator
 	{
 		transactions = transactions.Where(x => x.Date <= evaluationDate).ToImmutableArray();
 
-		var portfoliosOverall = this.CalculatePortfolios(
-			evaluationDate,
+		IEnumerable<Portfolio> CalculatePortfolios<T>(
+			PortfolioType portfolioType,
+			Func<Asset, InvestmentInstrument, T> idSelector)
+		{
+			return this.CalculatePortfolios(
+				evaluationDate,
+				portfolioType,
+				idSelector,
+				assetMap,
+				instrumentMap,
+				historicalPricesMap,
+				historicalExchangeRatesMap,
+				transactions);
+		}
+
+		var portfoliosOverall = CalculatePortfolios(
 			PortfolioType.Overall,
-			(Asset asset, InvestmentInstrument instrument) => AssetId.Empty,
-			assetMap,
-			instrumentMap,
-			historicalPricesMap,
-			historicalExchangeRatesMap,
-			transactions);
+			(Asset asset, InvestmentInstrument instrument) => AssetId.Empty);
 
-		var portfoliosPerInstrumentType = this.CalculatePortfolios(
-			evaluationDate,
+		var portfoliosPerInstrumentType = CalculatePortfolios(
 			PortfolioType.PerInvestmentInstrumentType,
-			(Asset asset, InvestmentInstrument instrument) => instrument.Type,
-			assetMap,
-			instrumentMap,
-			historicalPricesMap,
-			historicalExchangeRatesMap,
-			transactions);
+			(Asset asset, InvestmentInstrument instrument) => instrument.Type);
 
-		var portfoliosPerInstrument = this.CalculatePortfolios(
-			evaluationDate,
+		var portfoliosPerInstrument = CalculatePortfolios(
 			PortfolioType.PerInvestmentInstrument,
-			(Asset asset, InvestmentInstrument instrument) => instrument.Id,
-			assetMap,
-			instrumentMap,
-			historicalPricesMap,
-			historicalExchangeRatesMap,
-			transactions);
+			(Asset asset, InvestmentInstrument instrument) => instrument.Id);
 
-		var portfoliosPerAsset = this.CalculatePortfolios(
-			evaluationDate,
+		var portfoliosPerAsset = CalculatePortfolios(
 			PortfolioType.PerAsset,
-			(Asset asset, InvestmentInstrument instrument) => asset.Id,
-			assetMap,
-			instrumentMap,
-			historicalPricesMap,
-			historicalExchangeRatesMap,
-			transactions);
+			(Asset asset, InvestmentInstrument instrument) => asset.Id);
 
 		return portfoliosOverall
 			.Concat(portfoliosPerInstrumentType)
