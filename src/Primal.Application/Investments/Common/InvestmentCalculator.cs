@@ -270,6 +270,8 @@ internal sealed class InvestmentCalculator
 		IReadOnlyDictionary<Currency, IReadOnlyDictionary<DateOnly, decimal>> historicalExchangeRatesMap,
 		IEnumerable<Transaction> transactions)
 	{
+		transactions = transactions.Where(x => x.Date <= evaluationDate).ToImmutableArray();
+
 		var portfoliosOverall = this.CalculatePortfolios(
 			evaluationDate,
 			PortfolioType.Overall,
@@ -328,7 +330,7 @@ internal sealed class InvestmentCalculator
 	{
 		var idToPortfolioTransactions = new Dictionary<T, List<PortfolioTransaction>>();
 
-		foreach (var transaction in transactions.Where(x => x.Date <= evaluationDate))
+		foreach (var transaction in transactions)
 		{
 			var asset = assetMap[transaction.AssetId];
 			var instrument = instrumentMap[asset.InstrumentId];
