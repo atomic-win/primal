@@ -37,7 +37,6 @@ internal sealed class AddTransactionCommandHandler : IRequestHandler<AddTransact
 			transaction.Date,
 			transaction.Name,
 			transaction.Type,
-			transaction.AssetId,
 			transaction.Units,
 			0M);
 	}
@@ -91,10 +90,10 @@ internal sealed class AddTransactionCommandHandler : IRequestHandler<AddTransact
 
 		return await this.transactionRepository.AddAsync(
 			request.UserId,
+			request.AssetId,
 			request.Date,
 			request.Name,
 			request.Type,
-			request.AssetId,
 			request.Units,
 			cancellationToken);
 	}

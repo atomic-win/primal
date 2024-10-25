@@ -7,6 +7,5 @@ public sealed record TransactionResult(
 	DateOnly Date,
 	string Name,
 	TransactionType Type,
-	AssetId AssetId,
 	decimal Units,
 	decimal Amount);

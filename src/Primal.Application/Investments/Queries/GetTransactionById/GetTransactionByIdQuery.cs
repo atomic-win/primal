@@ -8,5 +8,6 @@ namespace Primal.Application.Investments;
 
 public sealed record GetTransactionByIdQuery(
 	UserId UserId,
-	Currency Currency,
-	TransactionId TransactionId) : IRequest<ErrorOr<TransactionResult>>;
+	AssetId AssetId,
+	TransactionId TransactionId,
+	Currency Currency) : IRequest<ErrorOr<TransactionResult>>;

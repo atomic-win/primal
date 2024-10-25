@@ -19,16 +19,17 @@ internal sealed class DeleteAssetCommandHandler : IRequestHandler<DeleteAssetCom
 
 	public async Task<ErrorOr<Success>> Handle(DeleteAssetCommand request, CancellationToken cancellationToken)
 	{
-		var errorOrTransactions = await this.transactionRepository.GetAllAsync(request.UserId, cancellationToken);
+		var errorOrTransactions = await this.transactionRepository.GetByAssetIdAsync(
+			request.UserId,
+			request.AssetId,
+			cancellationToken);
 
 		if (errorOrTransactions.IsError)
 		{
 			return errorOrTransactions.Errors;
 		}
 
-		var assetTransactions = errorOrTransactions.Value.Where(x => x.AssetId == request.AssetId);
-
-		if (assetTransactions.Any())
+		if (errorOrTransactions.Value.Any())
 		{
 			return Error.Conflict(description: "Existing transactions for the asset");
 		}

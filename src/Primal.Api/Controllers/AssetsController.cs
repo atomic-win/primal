@@ -5,6 +5,7 @@ using Primal.Api.Common;
 using Primal.Application.Investments;
 using Primal.Contracts.Investments;
 using Primal.Domain.Investments;
+using Primal.Domain.Money;
 using Primal.Domain.Users;
 
 namespace Primal.Api.Controllers;
@@ -53,6 +54,43 @@ public sealed class AssetsController : ApiController
 			errors => this.Problem(errors));
 	}
 
+	[HttpGet]
+	[Route("{id:guid}/transactions")]
+	public async Task<IActionResult> GetTransactionsAsync(Guid id, [FromQuery] Currency currency)
+	{
+		UserId userId = this.httpContextAccessor.HttpContext.GetUserId();
+
+		var getTransactionsByAssetIdQuery = new GetTransactionsByAssetIdQuery(
+			userId,
+			new AssetId(id),
+			currency);
+
+		var errorOrTransactionResults = await this.mediator.Send(getTransactionsByAssetIdQuery);
+
+		return errorOrTransactionResults.Match(
+			transactionResults => this.Ok(this.mapper.Map<IEnumerable<TransactionResult>, IEnumerable<TransactionResponse>>(transactionResults)),
+			errors => this.Problem(errors));
+	}
+
+	[HttpGet]
+	[Route("{id:guid}/transactions/{transactionId:guid}")]
+	public async Task<IActionResult> GetTransactionByIdAsync(Guid id, Guid transactionId, [FromQuery] Currency currency)
+	{
+		UserId userId = this.httpContextAccessor.HttpContext.GetUserId();
+
+		var getTransactionByIdQuery = new GetTransactionByIdQuery(
+			userId,
+			new AssetId(id),
+			new TransactionId(transactionId),
+			currency);
+
+		var errorOrTransactionResult = await this.mediator.Send(getTransactionByIdQuery);
+
+		return errorOrTransactionResult.Match(
+			transactionResult => this.Ok(this.mapper.Map<TransactionResult, TransactionResponse>(transactionResult)),
+			errors => this.Problem(errors));
+	}
+
 	[HttpPost]
 	[Route("cash")]
 	public async Task<IActionResult> AddCashAssetAsync([FromBody] AddCashAssetRequest addCashAssetRequest)
@@ -98,6 +136,21 @@ public sealed class AssetsController : ApiController
 			errors => this.Problem(errors));
 	}
 
+	[HttpPost]
+	[Route("{id:guid}/transactions")]
+	public async Task<IActionResult> AddTransactionAsync(Guid id, [FromBody] TransactionRequest transactionRequest)
+	{
+		UserId userId = this.httpContextAccessor.HttpContext.GetUserId();
+
+		var addTransactionCommand = this.mapper.Map<AddTransactionCommand>((userId, new AssetId(id), transactionRequest));
+
+		var errorOrTransactionResult = await this.mediator.Send(addTransactionCommand);
+
+		return errorOrTransactionResult.Match(
+			transactionResult => this.Ok(this.mapper.Map<TransactionResult, TransactionResponse>(transactionResult)),
+			errors => this.Problem(errors));
+	}
+
 	[HttpDelete]
 	[Route("{id:guid}")]
 	public async Task<IActionResult> DeleteAssetByIdAsync(Guid id)
@@ -107,6 +160,24 @@ public sealed class AssetsController : ApiController
 		var deleteAssetCommand = new DeleteAssetCommand(userId, new AssetId(id));
 
 		var errorOrSuccess = await this.mediator.Send(deleteAssetCommand);
+
+		return errorOrSuccess.Match(
+			asset => this.Ok(),
+			errors => this.Problem(errors));
+	}
+
+	[HttpDelete]
+	[Route("{id:guid}/transactions/{transactionId:guid}")]
+	public async Task<IActionResult> DeleteTransactionByIdAsync(Guid id, Guid transactionId)
+	{
+		UserId userId = this.httpContextAccessor.HttpContext.GetUserId();
+
+		var deleteTransactionCommand = new DeleteTransactionCommand(
+			userId,
+			new AssetId(id),
+			new TransactionId(transactionId));
+
+		var errorOrSuccess = await this.mediator.Send(deleteTransactionCommand);
 
 		return errorOrSuccess.Match(
 			asset => this.Ok(),

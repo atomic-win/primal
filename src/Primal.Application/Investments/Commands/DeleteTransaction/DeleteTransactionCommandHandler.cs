@@ -17,6 +17,7 @@ internal sealed class DeleteTransactionCommandHandler : IRequestHandler<DeleteTr
 	{
 		return await this.transactionRepository.DeleteAsync(
 			request.UserId,
+			request.AssetId,
 			request.TransactionId,
 			cancellationToken);
 	}

@@ -7,8 +7,8 @@ namespace Primal.Application.Investments;
 
 public sealed record AddTransactionCommand(
 	UserId UserId,
+	AssetId AssetId,
 	DateOnly Date,
 	string Name,
 	TransactionType Type,
-	AssetId AssetId,
 	decimal Units) : IRequest<ErrorOr<TransactionResult>>;

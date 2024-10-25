@@ -17,7 +17,11 @@ internal sealed class GetTransactionByIdQueryHandler : IRequestHandler<GetTransa
 
 	public async Task<ErrorOr<TransactionResult>> Handle(GetTransactionByIdQuery request, CancellationToken cancellationToken)
 	{
-		var errorOrTransaction = await this.transactionRepository.GetByIdAsync(request.UserId, request.TransactionId, cancellationToken);
+		var errorOrTransaction = await this.transactionRepository.GetByIdAsync(
+			request.UserId,
+			request.AssetId,
+			request.TransactionId,
+			cancellationToken);
 
 		if (errorOrTransaction.IsError)
 		{

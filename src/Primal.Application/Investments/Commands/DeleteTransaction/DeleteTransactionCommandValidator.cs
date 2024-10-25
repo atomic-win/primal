@@ -7,6 +7,7 @@ internal sealed class DeleteTransactionCommandValidator : AbstractValidator<Dele
 	public DeleteTransactionCommandValidator()
 	{
 		this.RuleFor(x => x.UserId.Value).NotEmpty();
+		this.RuleFor(x => x.AssetId.Value).NotEmpty();
 		this.RuleFor(x => x.TransactionId.Value).NotEmpty();
 	}
 }

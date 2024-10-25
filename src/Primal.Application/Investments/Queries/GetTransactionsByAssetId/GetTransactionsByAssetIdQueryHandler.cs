@@ -4,12 +4,12 @@ using Primal.Application.Common.Interfaces.Persistence;
 
 namespace Primal.Application.Investments;
 
-internal sealed class GetAllTransactionsQueryHandler : IRequestHandler<GetAllTransactionsQuery, ErrorOr<IEnumerable<TransactionResult>>>
+internal sealed class GetTransactionsByAssetIdQueryHandler : IRequestHandler<GetTransactionsByAssetIdQuery, ErrorOr<IEnumerable<TransactionResult>>>
 {
 	private readonly ITransactionRepository transactionRepository;
 	private readonly InvestmentCalculator investmentCalculator;
 
-	public GetAllTransactionsQueryHandler(
+	public GetTransactionsByAssetIdQueryHandler(
 		ITransactionRepository transactionRepository,
 		InvestmentCalculator investmentCalculator)
 	{
@@ -17,9 +17,12 @@ internal sealed class GetAllTransactionsQueryHandler : IRequestHandler<GetAllTra
 		this.investmentCalculator = investmentCalculator;
 	}
 
-	public async Task<ErrorOr<IEnumerable<TransactionResult>>> Handle(GetAllTransactionsQuery request, CancellationToken cancellationToken)
+	public async Task<ErrorOr<IEnumerable<TransactionResult>>> Handle(GetTransactionsByAssetIdQuery request, CancellationToken cancellationToken)
 	{
-		var errorOrTransactions = await this.transactionRepository.GetAllAsync(request.UserId, cancellationToken);
+		var errorOrTransactions = await this.transactionRepository.GetByAssetIdAsync(
+			request.UserId,
+			request.AssetId,
+			cancellationToken);
 
 		if (errorOrTransactions.IsError)
 		{

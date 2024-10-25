@@ -3,11 +3,12 @@ using Primal.Domain.Money;
 
 namespace Primal.Application.Investments;
 
-internal sealed class GetAllTransactionsQueryValidator : AbstractValidator<GetAllTransactionsQuery>
+internal sealed class GetTransactionsByAssetIdQueryValidator : AbstractValidator<GetTransactionsByAssetIdQuery>
 {
-	public GetAllTransactionsQueryValidator()
+	public GetTransactionsByAssetIdQueryValidator()
 	{
 		this.RuleFor(x => x.UserId.Value).NotEmpty();
+		this.RuleFor(x => x.AssetId.Value).NotEmpty();
 		this.RuleFor(x => x.Currency).IsInEnum().NotEqual(Currency.Unknown);
 	}
 }

@@ -41,13 +41,6 @@ internal sealed class InvestmentCalculator
 		Currency currency,
 		CancellationToken cancellationToken)
 	{
-		var errorOrTransactions = await this.transactionRepository.GetAllAsync(userId, cancellationToken);
-
-		if (errorOrTransactions.IsError)
-		{
-			return errorOrTransactions.Errors;
-		}
-
 		var errorOrAssets = await this.assetRepository.GetAllAsync(userId, cancellationToken);
 
 		if (errorOrAssets.IsError)
@@ -56,7 +49,28 @@ internal sealed class InvestmentCalculator
 		}
 
 		var assets = errorOrAssets.Value.Where(x => assetIds.Contains(x.Id));
-		var transactions = errorOrTransactions.Value.Where(x => assetIds.Contains(x.AssetId));
+
+		foreach (var assetId in assetIds)
+		{
+			if (!assets.Any(x => x.Id == assetId))
+			{
+				return Error.NotFound(description: $"Asset with ID '{assetId}' not found.");
+			}
+		}
+
+		var transactions = new List<Transaction>();
+
+		foreach (var assetId in assetIds)
+		{
+			var errorOrTransactions = await this.transactionRepository.GetByAssetIdAsync(userId, assetId, cancellationToken);
+
+			if (errorOrTransactions.IsError)
+			{
+				return errorOrTransactions.Errors;
+			}
+
+			transactions.AddRange(errorOrTransactions.Value);
+		}
 
 		return await this.CalculateAsync(
 			currency,
@@ -256,7 +270,6 @@ internal sealed class InvestmentCalculator
 				transaction.Date,
 				transaction.Name,
 				transaction.Type,
-				transaction.AssetId,
 				transaction.Units,
 				transaction.CalculateTransactionAmount(historicalPricesMap[asset.InstrumentId], historicalExchangeRatesMap[instrument.Currency], transaction.Date));
 		});
@@ -399,6 +412,11 @@ internal sealed class InvestmentCalculator
 	private IEnumerable<DateOnly> GetEvaluationDates(
 		IEnumerable<Transaction> transactions)
 	{
+		if (!transactions.Any())
+		{
+			return Enumerable.Empty<DateOnly>();
+		}
+
 		DateOnly startDate = transactions.Min(x => x.Date);
 		DateOnly endDate = DateOnly.FromDateTime(DateTime.UtcNow);
 

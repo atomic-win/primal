@@ -7,4 +7,5 @@ namespace Primal.Application.Investments;
 
 public sealed record DeleteTransactionCommand(
 	UserId UserId,
+	AssetId AssetId,
 	TransactionId TransactionId) : IRequest<ErrorOr<Success>>;

@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using System.Globalization;
 using ErrorOr;
 using LiteDB;
@@ -18,24 +19,12 @@ internal sealed class TransactionRepository : ITransactionRepository
 		var collection = this.liteDatabase.GetCollection<TransactionTableEntity>("Transactions");
 		collection.EnsureIndex(x => x.Id, unique: true);
 		collection.EnsureIndex(x => x.UserId);
-	}
-
-	public async Task<ErrorOr<IEnumerable<Transaction>>> GetAllAsync(
-		UserId userId,
-		CancellationToken cancellationToken)
-	{
-		await Task.CompletedTask;
-
-		var collection = this.liteDatabase.GetCollection<TransactionTableEntity>("Transactions");
-
-		return collection
-			.Find(x => x.UserId == userId.Value)
-			.Select(this.MapToTransaction)
-			.ToList();
+		collection.EnsureIndex(x => x.AssetId);
 	}
 
 	public async Task<ErrorOr<Transaction>> GetByIdAsync(
 		UserId userId,
+		AssetId assetId,
 		TransactionId transactionId,
 		CancellationToken cancellationToken)
 	{
@@ -43,19 +32,35 @@ internal sealed class TransactionRepository : ITransactionRepository
 
 		var collection = this.liteDatabase.GetCollection<TransactionTableEntity>("Transactions");
 
-		var transactionTableEntity = collection.FindOne(x => x.Id == transactionId.Value && x.UserId == userId.Value);
+		var transactionTableEntity = collection
+			.FindOne(x => x.Id == transactionId.Value && x.UserId == userId.Value && x.AssetId == assetId.Value);
 
 		return transactionTableEntity != null
 			? this.MapToTransaction(transactionTableEntity)
 			: Error.NotFound(description: "Transaction not found.");
 	}
 
+	public async Task<ErrorOr<IEnumerable<Transaction>>> GetByAssetIdAsync(
+		UserId userId,
+		AssetId assetId,
+		CancellationToken cancellationToken)
+	{
+		await Task.CompletedTask;
+
+		var collection = this.liteDatabase.GetCollection<TransactionTableEntity>("Transactions");
+
+		return collection
+			.Find(x => x.UserId == userId.Value && x.AssetId == assetId.Value)
+			.Select(this.MapToTransaction)
+			.ToImmutableArray();
+	}
+
 	public async Task<ErrorOr<Transaction>> AddAsync(
 		UserId userId,
+		AssetId assetId,
 		DateOnly date,
 		string name,
 		TransactionType type,
-		AssetId assetId,
 		decimal units,
 		CancellationToken cancellationToken)
 	{
@@ -67,10 +72,10 @@ internal sealed class TransactionRepository : ITransactionRepository
 		{
 			Id = Ulid.NewUlid(new DateTimeOffset(date, TimeOnly.MinValue, TimeSpan.Zero)).ToGuid(),
 			UserId = userId.Value,
+			AssetId = assetId.Value,
 			Date = date.ToString(CultureInfo.InvariantCulture),
 			Name = name,
 			Type = type,
-			AssetId = assetId.Value,
 			Units = units,
 		};
 
@@ -81,6 +86,7 @@ internal sealed class TransactionRepository : ITransactionRepository
 
 	public async Task<ErrorOr<Success>> DeleteAsync(
 		UserId userId,
+		AssetId assetId,
 		TransactionId transactionId,
 		CancellationToken cancellationToken)
 	{
@@ -88,7 +94,9 @@ internal sealed class TransactionRepository : ITransactionRepository
 
 		var collection = this.liteDatabase.GetCollection<TransactionTableEntity>("Transactions");
 
-		var transactionTableEntity = collection.FindOne(x => x.Id == transactionId.Value && x.UserId == userId.Value);
+		var transactionTableEntity = collection
+			.FindOne(x => x.Id == transactionId.Value && x.UserId == userId.Value && x.AssetId == assetId.Value);
+
 		if (transactionTableEntity == null)
 		{
 			return Error.NotFound(description: "Transaction not found.");
@@ -116,13 +124,13 @@ internal sealed class TransactionRepository : ITransactionRepository
 
 		public Guid UserId { get; set; }
 
+		public Guid AssetId { get; set; }
+
 		public string Date { get; set; }
 
 		public string Name { get; set; }
 
 		public TransactionType Type { get; set; }
-
-		public Guid AssetId { get; set; }
 
 		public decimal Units { get; set; }
 	}

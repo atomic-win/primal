@@ -65,8 +65,9 @@ internal sealed class InvestmentMappingConfig : IRegister
 		config.NewConfig<TransactionId, Guid>()
 			.ConstructUsing(src => src.Value);
 
-		config.NewConfig<(UserId UserId, TransactionRequest TransactionRequest), AddTransactionCommand>()
+		config.NewConfig<(UserId UserId, AssetId AssetId, TransactionRequest TransactionRequest), AddTransactionCommand>()
 			.Map(dest => dest.UserId, src => src.UserId)
+			.Map(dest => dest.AssetId, src => src.AssetId)
 			.Map(dest => dest, src => src.TransactionRequest);
 
 		config.NewConfig<TransactionResult, TransactionResponse>();
