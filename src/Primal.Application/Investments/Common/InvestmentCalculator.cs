@@ -352,6 +352,11 @@ internal sealed class InvestmentCalculator
 				idToPortfolioTransactions.Add(id, portfolioTransactions);
 			}
 
+			if (transaction.Type == TransactionType.Unknown)
+			{
+				continue;
+			}
+
 			portfolioTransactions.Add(portfolioTransaction);
 		}
 

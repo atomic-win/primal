@@ -9,6 +9,11 @@ internal static class XIRRExtensions
 		IReadOnlyList<(decimal Years, decimal TransactionAmount, decimal BalanceAmount)> inputsList
 			= inputs.ToImmutableArray();
 
+		if (inputsList.Count == 0)
+		{
+			return 0;
+		}
+
 		decimal outValue = inputsList.Sum(x => x.BalanceAmount);
 		var inValues = inputsList.Select(x => (x.Years, x.TransactionAmount)).ToImmutableArray();
 
