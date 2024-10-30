@@ -6,7 +6,8 @@ using Primal.Domain.Users;
 
 namespace Primal.Application.Investments;
 
-public sealed record GetPortfolioQuery(
+public sealed record GetValuationQuery(
 	UserId UserId,
+	DateOnly Date,
 	IReadOnlyCollection<AssetId> AssetIds,
-	Currency Currency) : IRequest<ErrorOr<IEnumerable<Portfolio>>>;
+	Currency Currency) : IRequest<ErrorOr<ValuationResult>>;

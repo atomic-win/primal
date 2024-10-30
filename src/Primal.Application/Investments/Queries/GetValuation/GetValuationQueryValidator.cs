@@ -3,11 +3,13 @@ using Primal.Domain.Money;
 
 namespace Primal.Application.Investments;
 
-internal sealed class GetPortfolioQueryValidator : AbstractValidator<GetPortfolioQuery>
+internal sealed class GetValuationQueryValidator : AbstractValidator<GetValuationQuery>
 {
-	public GetPortfolioQueryValidator()
+	public GetValuationQueryValidator()
 	{
 		this.RuleFor(x => x.UserId.Value).NotEmpty();
+
+		this.RuleFor(x => x.Date).NotEqual(DateOnly.MinValue).NotEqual(DateOnly.MaxValue);
 
 		this.RuleFor(x => x.AssetIds).NotEmpty();
 		this.RuleForEach(x => x.AssetIds).ChildRules(assetId =>
