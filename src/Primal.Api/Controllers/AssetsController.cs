@@ -55,6 +55,22 @@ public sealed class AssetsController : ApiController
 	}
 
 	[HttpGet]
+	[HttpPost]
+	[Route("valuation")]
+	public async Task<IActionResult> GetValuationAsync([FromBody] ValuationRequest valuationRequest)
+	{
+		UserId userId = this.httpContextAccessor.HttpContext.GetUserId();
+
+		var getValuationQuery = this.mapper.Map<(UserId, ValuationRequest), GetValuationQuery>((userId, valuationRequest));
+
+		var errorOrValuationResult = await this.mediator.Send(getValuationQuery);
+
+		return errorOrValuationResult.Match(
+			valuationResult => this.Ok(this.mapper.Map<ValuationResult, ValuationResponse>(valuationResult)),
+			errors => this.Problem(errors));
+	}
+
+	[HttpGet]
 	[Route("{id:guid}/transactions")]
 	public async Task<IActionResult> GetTransactionsAsync(Guid id, [FromQuery] Currency currency)
 	{
