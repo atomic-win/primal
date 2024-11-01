@@ -42,6 +42,7 @@ public static class DependencyInjection
 					ValidIssuer = tokenIssuerSettings.Issuer,
 					ValidAudience = tokenIssuerSettings.Audience,
 					IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(tokenIssuerSettings.SecretKey)),
+					ClockSkew = TimeSpan.FromSeconds(5),
 				};
 			});
 
