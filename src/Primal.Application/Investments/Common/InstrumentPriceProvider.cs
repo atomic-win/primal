@@ -18,7 +18,7 @@ internal sealed class InstrumentPriceProvider
 		this.stockApiClient = stockApiClient;
 	}
 
-	internal async Task<ErrorOr<IReadOnlyDictionary<DateOnly, decimal>>> GetHistoricalPrices(
+	internal async Task<ErrorOr<IReadOnlyDictionary<DateOnly, decimal>>> GetHistoricalPricesAsync(
 		InvestmentInstrument investmentInstrument,
 		CancellationToken cancellationToken)
 	{

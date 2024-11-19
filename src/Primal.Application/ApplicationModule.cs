@@ -14,7 +14,6 @@ public sealed class ApplicationModule : Autofac.Module
 	{
 		builder.RegisterType<InstrumentPriceProvider>();
 		builder.RegisterType<TransactionResultCalculator>();
-		builder.RegisterType<InvestmentCalculator>();
 
 		this.RegisterMediatR(builder);
 		this.RegisterValidators(builder);

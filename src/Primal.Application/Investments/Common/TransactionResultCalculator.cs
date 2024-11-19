@@ -39,7 +39,7 @@ internal sealed class TransactionResultCalculator
 			return errorOrInstrument.Errors;
 		}
 
-		var errorOrHistoricalPrices = await this.instrumentPriceProvider.GetHistoricalPrices(
+		var errorOrHistoricalPrices = await this.instrumentPriceProvider.GetHistoricalPricesAsync(
 			errorOrInstrument.Value,
 			cancellationToken);
 
