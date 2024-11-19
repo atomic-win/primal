@@ -13,50 +13,6 @@ internal static class TransactionExtensions
 		return transaction.CalculateInitialAmount(historicalPrices, historicalExchangeRates, evaluationDate);
 	}
 
-	internal static decimal CalculateInvestedValue(
-		this Transaction transaction,
-		IReadOnlyDictionary<DateOnly, decimal> historicalPrices,
-		IReadOnlyDictionary<DateOnly, decimal> historicalExchangeRates,
-		DateOnly evaluationDate)
-	{
-		switch (transaction.Type)
-		{
-			case TransactionType.Buy:
-				return transaction.CalculateInitialAmount(historicalPrices, historicalExchangeRates, evaluationDate);
-			case TransactionType.Deposit:
-				return transaction.CalculateCurrentAmount(historicalPrices, historicalExchangeRates, evaluationDate);
-			case TransactionType.Sell:
-				return -transaction.CalculateInitialAmount(historicalPrices, historicalExchangeRates, evaluationDate);
-			case TransactionType.Withdrawal:
-			case TransactionType.InterestPenalty:
-				return -transaction.CalculateCurrentAmount(historicalPrices, historicalExchangeRates, evaluationDate);
-			default:
-				return 0;
-		}
-	}
-
-	internal static decimal CalculateCurrentValue(
-		this Transaction transaction,
-		IReadOnlyDictionary<DateOnly, decimal> historicalPrices,
-		IReadOnlyDictionary<DateOnly, decimal> historicalExchangeRates,
-		DateOnly evaluationDate)
-	{
-		switch (transaction.Type)
-		{
-			case TransactionType.Buy:
-			case TransactionType.Deposit:
-			case TransactionType.SelfInterest:
-				return transaction.CalculateCurrentAmount(historicalPrices, historicalExchangeRates, evaluationDate);
-			case TransactionType.Sell:
-				return -transaction.CalculateInitialAmount(historicalPrices, historicalExchangeRates, evaluationDate);
-			case TransactionType.Withdrawal:
-			case TransactionType.InterestPenalty:
-				return -transaction.CalculateCurrentAmount(historicalPrices, historicalExchangeRates, evaluationDate);
-			default:
-				return 0;
-		}
-	}
-
 	internal static decimal CalculateXIRRTransactionAmount(
 		this Transaction transaction,
 		IReadOnlyDictionary<DateOnly, decimal> historicalPrices,
@@ -100,7 +56,7 @@ internal static class TransactionExtensions
 		}
 	}
 
-	private static decimal CalculateInitialAmount(
+	internal static decimal CalculateInitialAmount(
 		this Transaction transaction,
 		IReadOnlyDictionary<DateOnly, decimal> historicalPrices,
 		IReadOnlyDictionary<DateOnly, decimal> historicalExchangeRates,
@@ -111,7 +67,7 @@ internal static class TransactionExtensions
 		return transaction.CalculateAmount(historicalPrices.GetHistoricalValue(transaction.Date), historicalExchangeRates.GetHistoricalValue(transaction.Date));
 	}
 
-	private static decimal CalculateCurrentAmount(
+	internal static decimal CalculateCurrentAmount(
 		this Transaction transaction,
 		IReadOnlyDictionary<DateOnly, decimal> historicalPrices,
 		IReadOnlyDictionary<DateOnly, decimal> historicalExchangeRates,

@@ -242,24 +242,18 @@ internal sealed class InvestmentCalculator
 			var historicalExchangeRates = historicalExchangeRatesMap[investmentInstrument.Currency];
 			var assetTransactions = transactions.Where(x => x.AssetId == asset.Id).ToImmutableArray();
 
-			var (assetInvestedValue, assetCurrentValue) = this.CalculateValuationInputs(
-				evaluationDate,
-				historicalPrices,
-				historicalExchangeRates,
-				transactions.Where(x => x.AssetId == asset.Id));
-
 			var assetXIRRInputs = assetTransactions.Select(transaction => (
 				(evaluationDate.DayNumber - transaction.Date.DayNumber) / 365.25m,
 				transaction.CalculateXIRRTransactionAmount(historicalPrices, historicalExchangeRates, evaluationDate),
 				transaction.CalculateXIRRBalanceAmount(historicalPrices, historicalExchangeRates, evaluationDate)));
 
-			investedValue += assetInvestedValue;
-			currentValue += assetCurrentValue;
+			investedValue += this.CalculateInvestedValue(evaluationDate, historicalPrices, historicalExchangeRates, assetTransactions);
+			currentValue += assetTransactions.Sum(transaction => this.CalculateCurrentValue(transaction, historicalPrices, historicalExchangeRates, evaluationDate));
 			xirrInputs.AddRange(assetXIRRInputs);
 		}
 
 		return new ValuationResult(
-			Math.Max(0m, investedValue),
+			investedValue,
 			currentValue,
 			100 * xirrInputs.CalculateXIRR());
 	}
@@ -286,24 +280,80 @@ internal sealed class InvestmentCalculator
 		});
 	}
 
-	private (decimal InvestedValue, decimal CurrentValue) CalculateValuationInputs(
+	private decimal CalculateInvestedValue(
 		  DateOnly evaluationDate,
 		  IReadOnlyDictionary<DateOnly, decimal> historicalPrices,
 		  IReadOnlyDictionary<DateOnly, decimal> historicalExchangeRates,
 		  IEnumerable<Transaction> transactions)
 	{
+		transactions = transactions.OrderByDescending(x => x.Date).ToImmutableArray();
+
+		decimal withdrawnCashUnits = transactions.Select(transaction => transaction switch
+		{
+			{ Type: TransactionType.Withdrawal or TransactionType.InterestPenalty } => transaction.Units,
+			_ => 0m,
+		}).Sum();
+
+		decimal withdrawnNonCashUnits = transactions.Select(transaction => transaction switch
+		{
+			{ Type: TransactionType.Sell } => transaction.Units,
+			_ => 0m,
+		}).Sum();
+
 		decimal investedValue = 0;
-		decimal currentValue = 0;
 
 		foreach (var transaction in transactions)
 		{
-			var transactionAmount = transaction.CalculateTransactionAmount(historicalPrices, historicalExchangeRates, evaluationDate);
+			switch (transaction.Type)
+			{
+				case TransactionType.Deposit:
+					{
+						var transactionUnits = transaction.Units - Math.Min(withdrawnCashUnits, transaction.Units);
+						withdrawnCashUnits -= transaction.Units - transactionUnits;
 
-			investedValue += transaction.CalculateInvestedValue(historicalPrices, historicalExchangeRates, evaluationDate);
-			currentValue += transaction.CalculateCurrentValue(historicalPrices, historicalExchangeRates, evaluationDate);
+						var balanceUnitsTransaction = new Transaction(transaction.Id, transaction.Date, transaction.Name, transaction.Type, transaction.AssetId, transactionUnits);
+						investedValue += balanceUnitsTransaction.CalculateInitialAmount(historicalPrices, historicalExchangeRates, evaluationDate);
+						break;
+					}
+
+				case TransactionType.Buy:
+					{
+						var transactionUnits = transaction.Units - Math.Min(withdrawnNonCashUnits, transaction.Units);
+						withdrawnNonCashUnits -= transaction.Units - transactionUnits;
+
+						var balanceUnitsTransaction = new Transaction(transaction.Id, transaction.Date, transaction.Name, transaction.Type, transaction.AssetId, transactionUnits);
+						investedValue += balanceUnitsTransaction.CalculateInitialAmount(historicalPrices, historicalExchangeRates, evaluationDate);
+						break;
+					}
+
+				default:
+					break;
+			}
 		}
 
-		return (investedValue, currentValue);
+		return investedValue;
+	}
+
+	private decimal CalculateCurrentValue(
+		Transaction transaction,
+		IReadOnlyDictionary<DateOnly, decimal> historicalPrices,
+		IReadOnlyDictionary<DateOnly, decimal> historicalExchangeRates,
+		DateOnly evaluationDate)
+	{
+		switch (transaction.Type)
+		{
+			case TransactionType.Buy:
+			case TransactionType.Deposit:
+			case TransactionType.SelfInterest:
+				return transaction.CalculateCurrentAmount(historicalPrices, historicalExchangeRates, evaluationDate);
+			case TransactionType.Sell:
+				return -transaction.CalculateInitialAmount(historicalPrices, historicalExchangeRates, evaluationDate);
+			case TransactionType.Withdrawal:
+			case TransactionType.InterestPenalty:
+				return -transaction.CalculateCurrentAmount(historicalPrices, historicalExchangeRates, evaluationDate);
+			default:
+				return 0;
+		}
 	}
 
 	private async Task<ErrorOr<IReadOnlyDictionary<DateOnly, decimal>>> GetHistoricalPrices(
