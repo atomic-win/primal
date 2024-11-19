@@ -8,16 +8,17 @@ internal sealed class GetTransactionsByAssetIdQueryHandler : IRequestHandler<Get
 {
 	private readonly IAssetRepository assetRepository;
 	private readonly ITransactionRepository transactionRepository;
-	private readonly InvestmentCalculator investmentCalculator;
+
+	private readonly TransactionResultCalculator transactionResultCalculator;
 
 	public GetTransactionsByAssetIdQueryHandler(
 		IAssetRepository assetRepository,
 		ITransactionRepository transactionRepository,
-		InvestmentCalculator investmentCalculator)
+		TransactionResultCalculator transactionResultCalculator)
 	{
 		this.assetRepository = assetRepository;
 		this.transactionRepository = transactionRepository;
-		this.investmentCalculator = investmentCalculator;
+		this.transactionResultCalculator = transactionResultCalculator;
 	}
 
 	public async Task<ErrorOr<IEnumerable<TransactionResult>>> Handle(GetTransactionsByAssetIdQuery request, CancellationToken cancellationToken)
@@ -42,8 +43,8 @@ internal sealed class GetTransactionsByAssetIdQueryHandler : IRequestHandler<Get
 			return errorOrTransactions.Errors;
 		}
 
-		return await this.investmentCalculator.CalculateTransactionResultsAsync(
-			request.UserId,
+		return await this.transactionResultCalculator.CalculateAsync(
+			errorOrAsset.Value,
 			request.Currency,
 			errorOrTransactions.Value,
 			cancellationToken);
