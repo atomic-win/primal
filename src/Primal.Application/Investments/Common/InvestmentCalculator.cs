@@ -231,23 +231,32 @@ internal sealed class InvestmentCalculator
 		IReadOnlyDictionary<Currency, IReadOnlyDictionary<DateOnly, decimal>> historicalExchangeRatesMap,
 		IEnumerable<Transaction> transactions)
 	{
-		var valuationTransactions = transactions
-			.Select(transaction =>
-			{
-				var asset = assetMap[transaction.AssetId];
-				var instrument = instrumentMap[asset.InstrumentId];
+		decimal investedValue = 0;
+		decimal currentValue = 0;
+		List<(decimal Days, decimal Amount, decimal Balance)> xirrInputs = new List<(decimal Days, decimal Amount, decimal Balance)>();
 
-				var historicalPrices = historicalPricesMap[instrument.Id];
-				var historicalExchangeRates = historicalExchangeRatesMap[instrument.Currency];
+		foreach (var asset in assetMap.Values)
+		{
+			var investmentInstrument = instrumentMap[asset.InstrumentId];
+			var historicalPrices = historicalPricesMap[investmentInstrument.Id];
+			var historicalExchangeRates = historicalExchangeRatesMap[investmentInstrument.Currency];
 
-				return this.CalculateValuationTransaction(historicalPrices, historicalExchangeRates, evaluationDate, transaction);
-			})
-			.ToImmutableArray();
+			var (assetInvestedValue, assetCurrentValue, assetXIRRInputs) = this.CalculateValuationInputs(
+				evaluationDate,
+				investmentInstrument,
+				historicalPrices,
+				historicalExchangeRates,
+				transactions.Where(x => x.AssetId == asset.Id));
+
+			investedValue += assetInvestedValue;
+			currentValue += assetCurrentValue;
+			xirrInputs.AddRange(assetXIRRInputs);
+		}
 
 		return new ValuationResult(
-			valuationTransactions.Sum(x => x.InvestedValue),
-			valuationTransactions.Sum(x => x.CurrentValue),
-			100 * valuationTransactions.Select(x => ((evaluationDate.DayNumber - x.Date.DayNumber) / 365.25M, x.XIRRTransactionAmount, x.XIRRBalanceAmount)).CalculateXIRR());
+			Math.Max(0m, investedValue),
+			currentValue,
+			100 * xirrInputs.CalculateXIRR());
 	}
 
 	private IEnumerable<TransactionResult> CalculateTransactionResults(
@@ -272,20 +281,31 @@ internal sealed class InvestmentCalculator
 		});
 	}
 
-	private ValuationTransaction CalculateValuationTransaction(
-		IReadOnlyDictionary<DateOnly, decimal> historicalPrices,
-		IReadOnlyDictionary<DateOnly, decimal> historicalExchangeRates,
-		DateOnly evaluationDate,
-		Transaction transaction)
+	private (decimal InvestedValue, decimal CurrentValue, IEnumerable<(decimal Days, decimal Amount, decimal Balance)> XIRRInputs) CalculateValuationInputs(
+		  DateOnly evaluationDate,
+		  InvestmentInstrument investmentInstrument,
+		  IReadOnlyDictionary<DateOnly, decimal> historicalPrices,
+		  IReadOnlyDictionary<DateOnly, decimal> historicalExchangeRates,
+		  IEnumerable<Transaction> transactions)
 	{
-		return new ValuationTransaction
+		decimal investedValue = 0;
+		decimal currentValue = 0;
+		List<(decimal Days, decimal Amount, decimal Balance)> xirrInputs = new List<(decimal Days, decimal Amount, decimal Balance)>();
+
+		foreach (var transaction in transactions)
 		{
-			Date = transaction.Date,
-			InvestedValue = transaction.CalculateInitialBalanceAmount(historicalPrices, historicalExchangeRates, evaluationDate),
-			CurrentValue = transaction.CalculateCurrentBalanceAmount(historicalPrices, historicalExchangeRates, evaluationDate),
-			XIRRTransactionAmount = transaction.CalculateXIRRTransactionAmount(historicalPrices, historicalExchangeRates, evaluationDate),
-			XIRRBalanceAmount = transaction.CalculateXIRRBalanceAmount(historicalPrices, historicalExchangeRates, evaluationDate),
-		};
+			var transactionAmount = transaction.CalculateTransactionAmount(historicalPrices, historicalExchangeRates, evaluationDate);
+
+			investedValue += transaction.CalculateInvestedValue(historicalPrices, historicalExchangeRates, evaluationDate);
+			currentValue += transaction.CalculateCurrentValue(historicalPrices, historicalExchangeRates, evaluationDate);
+
+			xirrInputs.Add((
+				(evaluationDate.DayNumber - transaction.Date.DayNumber) / 365.25m,
+				transaction.CalculateXIRRTransactionAmount(historicalPrices, historicalExchangeRates, evaluationDate),
+				transaction.CalculateXIRRBalanceAmount(historicalPrices, historicalExchangeRates, evaluationDate)));
+		}
+
+		return (investedValue, currentValue, xirrInputs);
 	}
 
 	private async Task<ErrorOr<IReadOnlyDictionary<DateOnly, decimal>>> GetHistoricalPrices(
@@ -298,34 +318,6 @@ internal sealed class InvestmentCalculator
 			Stock stock => await this.stockApiClient.GetPriceAsync(stock.Symbol, cancellationToken),
 			_ => ImmutableDictionary<DateOnly, decimal>.Empty,
 		};
-	}
-
-	private IEnumerable<DateOnly> GetEvaluationDates(
-		IEnumerable<Transaction> transactions)
-	{
-		if (!transactions.Any())
-		{
-			return Enumerable.Empty<DateOnly>();
-		}
-
-		DateOnly startDate = transactions.Min(x => x.Date);
-		DateOnly endDate = DateOnly.FromDateTime(DateTime.UtcNow);
-
-		var evaluationDates = new List<DateOnly>();
-		for (DateOnly date = startDate; date < endDate; date = date.AddMonths(1))
-		{
-			date = new DateOnly(date.Year, date.Month, DateTime.DaysInMonth(date.Year, date.Month));
-			if (date >= endDate)
-			{
-				break;
-			}
-
-			evaluationDates.Add(date);
-		}
-
-		evaluationDates.Add(endDate);
-
-		return evaluationDates.Distinct().ToImmutableArray();
 	}
 
 	private sealed class ValuationTransaction

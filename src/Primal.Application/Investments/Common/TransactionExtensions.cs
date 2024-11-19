@@ -13,7 +13,7 @@ internal static class TransactionExtensions
 		return transaction.CalculateInitialAmount(historicalPrices, historicalExchangeRates, evaluationDate);
 	}
 
-	internal static decimal CalculateInitialBalanceAmount(
+	internal static decimal CalculateInvestedValue(
 		this Transaction transaction,
 		IReadOnlyDictionary<DateOnly, decimal> historicalPrices,
 		IReadOnlyDictionary<DateOnly, decimal> historicalExchangeRates,
@@ -24,7 +24,6 @@ internal static class TransactionExtensions
 			case TransactionType.Buy:
 				return transaction.CalculateInitialAmount(historicalPrices, historicalExchangeRates, evaluationDate);
 			case TransactionType.Deposit:
-			case TransactionType.SelfInterest:
 				return transaction.CalculateCurrentAmount(historicalPrices, historicalExchangeRates, evaluationDate);
 			case TransactionType.Sell:
 				return -transaction.CalculateInitialAmount(historicalPrices, historicalExchangeRates, evaluationDate);
@@ -36,7 +35,7 @@ internal static class TransactionExtensions
 		}
 	}
 
-	internal static decimal CalculateCurrentBalanceAmount(
+	internal static decimal CalculateCurrentValue(
 		this Transaction transaction,
 		IReadOnlyDictionary<DateOnly, decimal> historicalPrices,
 		IReadOnlyDictionary<DateOnly, decimal> historicalExchangeRates,
