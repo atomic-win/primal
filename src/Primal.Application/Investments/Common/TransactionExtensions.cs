@@ -7,10 +7,9 @@ internal static class TransactionExtensions
 	internal static decimal CalculateTransactionAmount(
 		this Transaction transaction,
 		IReadOnlyDictionary<DateOnly, decimal> historicalPrices,
-		IReadOnlyDictionary<DateOnly, decimal> historicalExchangeRates,
-		DateOnly evaluationDate)
+		IReadOnlyDictionary<DateOnly, decimal> historicalExchangeRates)
 	{
-		return transaction.CalculateInitialAmount(historicalPrices, historicalExchangeRates, evaluationDate);
+		return transaction.CalculateInitialAmount(historicalPrices, historicalExchangeRates, transaction.Date);
 	}
 
 	internal static decimal CalculateXIRRTransactionAmount(

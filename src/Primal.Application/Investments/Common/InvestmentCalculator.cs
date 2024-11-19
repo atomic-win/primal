@@ -79,27 +79,6 @@ internal sealed class InvestmentCalculator
 			cancellationToken);
 	}
 
-	internal async Task<ErrorOr<IEnumerable<TransactionResult>>> CalculateTransactionResultsAsync(
-		UserId userId,
-		Currency currency,
-		IEnumerable<Transaction> transactions,
-		CancellationToken cancellationToken)
-	{
-		var errorOrAssets = await this.GetAssets(userId, transactions, cancellationToken);
-
-		if (errorOrAssets.IsError)
-		{
-			return errorOrAssets.Errors;
-		}
-
-		return await this.CalculateAsync(
-			currency,
-			transactions,
-			errorOrAssets.Value,
-			this.CalculateTransactionResults,
-			cancellationToken);
-	}
-
 	private async Task<ErrorOr<T>> CalculateAsync<T>(
 		Currency currency,
 		IEnumerable<Transaction> transactions,
@@ -253,28 +232,6 @@ internal sealed class InvestmentCalculator
 			investedValue,
 			currentValue,
 			100 * xirrInputs.CalculateXIRR());
-	}
-
-	private IEnumerable<TransactionResult> CalculateTransactionResults(
-		IReadOnlyDictionary<AssetId, Asset> assetMap,
-		IReadOnlyDictionary<InstrumentId, InvestmentInstrument> instrumentMap,
-		IReadOnlyDictionary<InstrumentId, IReadOnlyDictionary<DateOnly, decimal>> historicalPricesMap,
-		IReadOnlyDictionary<Currency, IReadOnlyDictionary<DateOnly, decimal>> historicalExchangeRatesMap,
-		IEnumerable<Transaction> transactions)
-	{
-		return transactions.Select(transaction =>
-		{
-			var asset = assetMap[transaction.AssetId];
-			var instrument = instrumentMap[asset.InstrumentId];
-
-			return new TransactionResult(
-				transaction.Id,
-				transaction.Date,
-				transaction.Name,
-				transaction.Type,
-				transaction.Units,
-				transaction.CalculateTransactionAmount(historicalPricesMap[asset.InstrumentId], historicalExchangeRatesMap[instrument.Currency], transaction.Date));
-		});
 	}
 
 	private decimal CalculateInvestedValue(
