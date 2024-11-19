@@ -12,6 +12,7 @@ public sealed class ApplicationModule : Autofac.Module
 {
 	protected override void Load(ContainerBuilder builder)
 	{
+		builder.RegisterType<InstrumentPriceProvider>();
 		builder.RegisterType<InvestmentCalculator>();
 
 		this.RegisterMediatR(builder);

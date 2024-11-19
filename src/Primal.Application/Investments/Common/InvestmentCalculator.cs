@@ -15,23 +15,20 @@ internal sealed class InvestmentCalculator
 	private readonly IAssetRepository assetRepository;
 	private readonly IInstrumentRepository instrumentRepository;
 
-	private readonly IMutualFundApiClient mutualFundApiClient;
-	private readonly IStockApiClient stockApiClient;
+	private readonly InstrumentPriceProvider instrumentPriceProvider;
 	private readonly IExchangeRateProvider exchangeRateProvider;
 
 	public InvestmentCalculator(
 		ITransactionRepository transactionRepository,
 		IAssetRepository assetRepository,
 		IInstrumentRepository instrumentRepository,
-		IMutualFundApiClient mutualFundApiClient,
-		IStockApiClient stockApiClient,
+		InstrumentPriceProvider instrumentPriceProvider,
 		IExchangeRateProvider exchangeRateProvider)
 	{
 		this.transactionRepository = transactionRepository;
 		this.assetRepository = assetRepository;
 		this.instrumentRepository = instrumentRepository;
-		this.mutualFundApiClient = mutualFundApiClient;
-		this.stockApiClient = stockApiClient;
+		this.instrumentPriceProvider = instrumentPriceProvider;
 		this.exchangeRateProvider = exchangeRateProvider;
 	}
 
@@ -187,7 +184,7 @@ internal sealed class InvestmentCalculator
 
 		foreach (var investmentInstrument in investmentInstruments)
 		{
-			var errorOrHistoricalPrices = await this.GetHistoricalPrices(investmentInstrument, cancellationToken);
+			var errorOrHistoricalPrices = await this.instrumentPriceProvider.GetHistoricalPrices(investmentInstrument, cancellationToken);
 
 			if (errorOrHistoricalPrices.IsError)
 			{
@@ -354,18 +351,6 @@ internal sealed class InvestmentCalculator
 			default:
 				return 0;
 		}
-	}
-
-	private async Task<ErrorOr<IReadOnlyDictionary<DateOnly, decimal>>> GetHistoricalPrices(
-		InvestmentInstrument investmentInstrument,
-		CancellationToken cancellationToken)
-	{
-		return investmentInstrument switch
-		{
-			MutualFund mutualFund => await this.mutualFundApiClient.GetPriceAsync(mutualFund.SchemeCode, cancellationToken),
-			Stock stock => await this.stockApiClient.GetPriceAsync(stock.Symbol, cancellationToken),
-			_ => ImmutableDictionary<DateOnly, decimal>.Empty,
-		};
 	}
 
 	private sealed class ValuationTransaction
