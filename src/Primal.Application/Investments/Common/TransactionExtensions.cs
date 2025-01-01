@@ -143,6 +143,11 @@ internal static class TransactionExtensions
 	{
 		ArgumentOutOfRangeException.ThrowIfGreaterThan(transaction.Date, evaluationDate);
 
+		if (transaction.Type == TransactionType.Deposit || transaction.Type == TransactionType.Withdrawal)
+		{
+			return transaction.CalculateAmount(historicalPrices.GetHistoricalValue(evaluationDate), historicalExchangeRates.GetHistoricalValue(evaluationDate));
+		}
+
 		return transaction.CalculateAmount(historicalPrices.GetHistoricalValue(transaction.Date), historicalExchangeRates.GetHistoricalValue(transaction.Date));
 	}
 
