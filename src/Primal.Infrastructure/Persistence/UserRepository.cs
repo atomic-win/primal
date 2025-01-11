@@ -50,7 +50,7 @@ internal sealed class UserRepository : IUserRepository
 
 		var userTableEntity = new UserTableEntity
 		{
-			Id = Ulid.NewUlid().ToGuid(),
+			Id = Guid.CreateVersion7(),
 			Email = email.Address,
 			FirstName = firstName,
 			LastName = lastName,

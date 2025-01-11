@@ -60,7 +60,7 @@ internal sealed class AssetRepository : IAssetRepository
 
 		var assetTableEntity = new AssetTableEntity
 		{
-			Id = Ulid.NewUlid().ToGuid(),
+			Id = Guid.CreateVersion7(),
 			UserId = userId.Value,
 			Name = name,
 			InstrumentId = instrumentId.Value,

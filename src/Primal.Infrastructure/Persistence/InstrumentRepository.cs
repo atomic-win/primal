@@ -132,7 +132,7 @@ internal sealed class InstrumentRepository : IInstrumentRepository
 
 		var cashInstrumentTableEntity = new CashInstrumentTableEntity
 		{
-			Id = Ulid.NewUlid().ToGuid(),
+			Id = Guid.CreateVersion7(),
 			InstrumentType = instrumentType,
 			Currency = currency,
 		};
@@ -157,7 +157,7 @@ internal sealed class InstrumentRepository : IInstrumentRepository
 
 		var mutualFundTableEntity = new MutualFundTableEntity
 		{
-			Id = Ulid.NewUlid().ToGuid(),
+			Id = Guid.CreateVersion7(),
 			Name = name,
 			FundHouse = fundHouse,
 			SchemeType = schemeType,
@@ -189,7 +189,7 @@ internal sealed class InstrumentRepository : IInstrumentRepository
 
 		var stockTableEntity = new StockTableEntity
 		{
-			Id = Ulid.NewUlid().ToGuid(),
+			Id = Guid.CreateVersion7(),
 			Name = name,
 			Symbol = symbol,
 			StockType = stockType,

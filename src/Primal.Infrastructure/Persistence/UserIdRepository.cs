@@ -54,7 +54,7 @@ internal sealed class UserIdRepository : IUserIdRepository
 		{
 			Id = identityProviderUserId.Value,
 			IdentityProvider = identityProvider,
-			UserId = Ulid.NewUlid().ToGuid(),
+			UserId = Guid.CreateVersion7(),
 		};
 
 		collection.Insert(userIdTableEntity);
