@@ -13,7 +13,6 @@
 		<PackageReference Include="Microsoft.Extensions.Configuration" />
 		<PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" />
 		<PackageReference Include="System.IdentityModel.Tokens.Jwt" />
-		<PackageReference Include="Ulid" />
 	</ItemGroup>
 
 </Project>

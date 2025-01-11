@@ -70,7 +70,7 @@ internal sealed class TransactionRepository : ITransactionRepository
 
 		var transactionTableEntity = new TransactionTableEntity
 		{
-			Id = Ulid.NewUlid(new DateTimeOffset(date, TimeOnly.MinValue, TimeSpan.Zero)).ToGuid(),
+			Id = Guid.CreateVersion7(new DateTimeOffset(date, TimeOnly.MinValue, TimeSpan.Zero)),
 			UserId = userId.Value,
 			AssetId = assetId.Value,
 			Date = date.ToString(CultureInfo.InvariantCulture),

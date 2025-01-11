@@ -22,6 +22,5 @@
     	<PackageVersion Include="StronglyTypedId" Version="1.0.0-beta06" PrivateAssets="all" ExcludeAssets="runtime" />
 		<PackageVersion Include="StyleCop.Analyzers" Version="1.2.0-beta.435" />
 		<PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="7.3.1" />
-		<PackageVersion Include="Ulid" Version="1.3.3" />
 	</ItemGroup>
 </Project>
