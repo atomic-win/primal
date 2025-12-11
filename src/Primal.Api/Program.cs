@@ -1,7 +1,7 @@
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
+using FastEndpoints;
 using Primal.Api;
-using Primal.Api.Middlewares;
 using Primal.Application;
 using Primal.Infrastructure;
 
@@ -19,6 +19,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 	builder.Services
 		.AddInfrastructure(builder.Configuration);
+
+	builder.Services.AddFastEndpoints();
 
 	builder.Services.AddControllers().AddNewtonsoftJson();
 
@@ -38,9 +40,8 @@ var app = builder.Build();
 {
 	app.UseHttpsRedirection();
 	app.UseAuthentication();
-	app.UseUserMiddleware();
 	app.UseCors();
 	app.UseAuthorization();
-	app.MapControllers();
+	app.UseFastEndpoints();
 	app.Run();
 }

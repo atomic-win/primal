@@ -12,6 +12,8 @@
 
 	<ItemGroup>
 		<PackageReference Include="Autofac.Extensions.DependencyInjection" />
+		<PackageReference Include="FastEndpoints" />
+		<PackageReference Include="FastEndpoints.Security" />
 		<PackageReference Include="Mapster" />
 		<PackageReference Include="Mapster.DependencyInjection" />
 		<PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" />
