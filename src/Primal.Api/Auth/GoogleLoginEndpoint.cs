@@ -1,7 +1,13 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using FastEndpoints;
 using FastEndpoints.Security;
 using Google.Apis.Auth;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.EntityFrameworkCore;
+using Primal.Application.Users;
+using Primal.Domain.Users;
+using Primal.Infrastructure.Persistence;
 
 namespace Primal.Api.Auth;
 
@@ -9,17 +15,50 @@ namespace Primal.Api.Auth;
 [AllowAnonymous]
 public sealed class GoogleLoginEndpoint : Endpoint<LoginRequest, TokenResponse>
 {
+	private readonly AppDbContext appDbContext;
+	private readonly IUserIdRepository userIdRepository;
+	private readonly IUserRepository userRepository;
+
+	public GoogleLoginEndpoint(
+		AppDbContext appDbContext,
+		IUserIdRepository userIdRepository,
+		IUserRepository userRepository)
+	{
+		this.appDbContext = appDbContext;
+		this.userIdRepository = userIdRepository;
+		this.userRepository = userRepository;
+	}
+
 	public override async Task HandleAsync(LoginRequest req, CancellationToken ct)
 	{
 		try
 		{
 			GoogleJsonWebSignature.Payload payload = await GoogleJsonWebSignature.ValidateAsync(req.IdToken);
 
-			var tokenResponse = await this.CreateTokenWith<MyTokenService>(payload.Subject, u =>
+			var userId = await this.userIdRepository.GetUserId(
+				IdentityProvider.Google,
+				new IdentityProviderUserId(payload.Subject),
+				ct);
+
+			if (userId == UserId.Empty)
 			{
-				u.Roles.AddRange(new[] { "Admin", "Manager" });
-				u.Permissions.Add("Update_Something");
-				u.Claims.Add(new("UserId", "user-id-001"));
+				userId = await this.userIdRepository.AddUserId(
+					IdentityProvider.Google,
+					new IdentityProviderUserId(payload.Subject),
+					ct);
+
+				await this.userRepository.AddUserAsync(
+					userId,
+					new System.Net.Mail.MailAddress(payload.Email),
+					payload.Name,
+					ct);
+
+				await this.appDbContext.SaveChangesAsync(ct);
+			}
+
+			var tokenResponse = await this.CreateTokenWith<MyTokenService>(userId.ToString(), u =>
+			{
+				u.Claims.Add(new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()));
 			});
 
 			await this.Send.OkAsync(tokenResponse, cancellation: ct);

@@ -2,13 +2,13 @@ using Autofac;
 using LiteDB;
 using Microsoft.Extensions.Options;
 using Primal.Application.Common.Interfaces;
-using Primal.Application.Common.Interfaces.Authentication;
 using Primal.Application.Common.Interfaces.Investments;
 using Primal.Application.Common.Interfaces.Persistence;
-using Primal.Infrastructure.Authentication;
+using Primal.Application.Users;
 using Primal.Infrastructure.Common;
 using Primal.Infrastructure.Investments;
 using Primal.Infrastructure.Persistence;
+using Primal.Infrastructure.Users;
 
 namespace Primal.Infrastructure;
 
@@ -20,22 +20,8 @@ public sealed class InfrastructureModule : Module
 			.As<TimeProvider>()
 			.SingleInstance();
 
-		this.RegisterAuthentication(builder);
 		this.RegisterInvestments(builder);
 		this.RegisterPersistence(builder);
-	}
-
-	private void RegisterAuthentication(ContainerBuilder builder)
-	{
-		builder.RegisterType<IdTokenValidator>()
-			.As<IIdTokenValidator>()
-			.SingleInstance();
-
-		builder.Register(c => new TokenIssuer(
-			tokenIssuerSettings: c.Resolve<IOptions<TokenIssuerSettings>>(),
-			timeProvider: c.Resolve<TimeProvider>()))
-			.As<ITokenIssuer>()
-			.SingleInstance();
 	}
 
 	private void RegisterInvestments(ContainerBuilder builder)
@@ -69,14 +55,14 @@ public sealed class InfrastructureModule : Module
 			.SingleInstance();
 
 		builder.Register(c => new UserIdRepository(
-			c.Resolve<LiteDatabase>()))
+			c.Resolve<AppDbContext>()))
 			.As<IUserIdRepository>()
-			.SingleInstance();
+			.InstancePerLifetimeScope();
 
 		builder.Register(c => new UserRepository(
-			c.Resolve<LiteDatabase>()))
+			c.Resolve<AppDbContext>()))
 			.As<IUserRepository>()
-			.SingleInstance();
+			.InstancePerLifetimeScope();
 
 		builder.Register(c => new AssetRepository(
 			c.Resolve<LiteDatabase>()))

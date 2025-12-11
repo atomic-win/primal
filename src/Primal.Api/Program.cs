@@ -1,9 +1,11 @@
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using FastEndpoints;
+using Microsoft.EntityFrameworkCore;
 using Primal.Api;
 using Primal.Application;
 using Primal.Infrastructure;
+using Primal.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 {
@@ -16,6 +18,9 @@ var builder = WebApplication.CreateBuilder(args);
 				.RegisterModule<InfrastructureModule>()
 				.RegisterModule<PresentationModule>();
 		});
+
+	builder.Services.AddDbContext<AppDbContext>(options =>
+			options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"), b => b.MigrationsAssembly("Primal.Api")));
 
 	builder.Services
 		.AddInfrastructure(builder.Configuration);
