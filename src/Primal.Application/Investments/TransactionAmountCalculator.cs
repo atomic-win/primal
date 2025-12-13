@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using Primal.Domain.Investments;
 using Primal.Domain.Money;
 using Primal.Domain.Users;
@@ -12,6 +13,9 @@ public sealed class TransactionAmountCalculator
 
 	private readonly IAssetItemRepository assetItemRepository;
 	private readonly IAssetRepository assetRepository;
+
+	private ConcurrentDictionary<(UserId, AssetItemId), Lazy<Task<Asset>>> assetCache =
+		new ConcurrentDictionary<(UserId, AssetItemId), Lazy<Task<Asset>>>();
 
 	public TransactionAmountCalculator(
 		IAssetApiClient<MutualFund> mutualFundApiClient,
@@ -34,14 +38,14 @@ public sealed class TransactionAmountCalculator
 		Currency targetCurrency,
 		CancellationToken cancellationToken)
 	{
-		var assetItem = await this.assetItemRepository.GetByIdAsync(
-			userId,
-			transaction.AssetItemId,
-			cancellationToken);
+		var lazyAsset = this.assetCache.GetOrAdd(
+			(userId, transaction.AssetItemId),
+			_ => new Lazy<Task<Asset>>(() => this.GetAssetAsync(
+				userId,
+				transaction.AssetItemId,
+				cancellationToken)));
 
-		var asset = await this.assetRepository.GetByIdAsync(
-			assetItem.AssetId,
-			cancellationToken);
+		var asset = await lazyAsset.Value;
 
 		var exchangeRate = await this.exchangeRateProvider.GetOnOrBeforeExchangeRateAsync(
 			asset.Currency,
@@ -60,6 +64,21 @@ public sealed class TransactionAmountCalculator
 			cancellationToken);
 
 		return transaction.Units * assetRate * exchangeRate;
+	}
+
+	private async Task<Asset> GetAssetAsync(
+		UserId userId,
+		AssetItemId assetItemId,
+		CancellationToken cancellationToken)
+	{
+		var assetItem = await this.assetItemRepository.GetByIdAsync(
+			userId,
+			assetItemId,
+			cancellationToken);
+
+		return await this.assetRepository.GetByIdAsync(
+			assetItem.AssetId,
+			cancellationToken);
 	}
 
 	private async Task<decimal> GetAssetRateAsync(
