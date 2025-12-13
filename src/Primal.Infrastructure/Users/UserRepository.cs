@@ -1,4 +1,5 @@
 using System.Net.Mail;
+using Microsoft.EntityFrameworkCore;
 using Primal.Application.Users;
 using Primal.Domain.Money;
 using Primal.Domain.Users;
@@ -50,6 +51,22 @@ internal sealed class UserRepository : IUserRepository
 		await this.appDbContext.Users.AddAsync(userTableEntity, cancellationToken);
 
 		return this.MapToUser(userTableEntity);
+	}
+
+	public async Task UpdateUserProfileAsync(
+		UserId userId,
+		Currency preferredCurrency,
+		Locale preferredLocale,
+		CancellationToken cancellationToken)
+	{
+		await this.appDbContext.Users.Where(u => u.Id == userId.Value)
+			.ExecuteUpdateAsync(
+				setters => setters
+				.SetProperty(u => u.PreferredCurrency, preferredCurrency)
+				.SetProperty(u => u.PreferredLocale, preferredLocale),
+				cancellationToken);
+
+		await this.appDbContext.SaveChangesAsync(cancellationToken);
 	}
 
 	private User MapToUser(UserTableEntity userTableEntity)

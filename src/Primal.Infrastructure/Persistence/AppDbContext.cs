@@ -91,12 +91,9 @@ public sealed class AppDbContext : DbContext
 			if (entry.State == EntityState.Added)
 			{
 				entry.Entity.CreatedAt = now;
-				entry.Entity.UpdatedAt = now;
 			}
-			else if (entry.State == EntityState.Modified)
-			{
-				entry.Entity.UpdatedAt = now;
-			}
+
+			entry.Entity.UpdatedAt = now;
 		}
 	}
 }
