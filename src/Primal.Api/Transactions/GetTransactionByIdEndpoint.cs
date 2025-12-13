@@ -5,7 +5,7 @@ using Primal.Domain.Money;
 
 namespace Primal.Api.Transactions;
 
-[HttpGet("/api/assetItems/{assetItemId:guid}/transactions/{transactionId:guid}?currency={currency}")]
+[HttpGet("/api/assetItems/{assetItemId:guid}/transactions/{transactionId:guid}")]
 internal sealed class GetTransactionByIdEndpoint : EndpointWithoutRequest<TransactionResponse>
 {
 	private readonly ITransactionRepository transactionRepository;

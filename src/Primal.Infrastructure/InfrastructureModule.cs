@@ -48,5 +48,10 @@ public sealed class InfrastructureModule : Module
 			c.Resolve<AppDbContext>()))
 			.As<IAssetItemRepository>()
 			.InstancePerLifetimeScope();
+
+		builder.Register(c => new TransactionRepository(
+			c.Resolve<AppDbContext>()))
+			.As<ITransactionRepository>()
+			.InstancePerLifetimeScope();
 	}
 }
