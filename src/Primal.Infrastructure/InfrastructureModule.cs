@@ -1,11 +1,6 @@
 using Autofac;
-using LiteDB;
-using Microsoft.Extensions.Options;
-using Primal.Application.Common.Interfaces;
-using Primal.Application.Common.Interfaces.Investments;
-using Primal.Application.Common.Interfaces.Persistence;
+using Primal.Application.Investments;
 using Primal.Application.Users;
-using Primal.Infrastructure.Common;
 using Primal.Infrastructure.Investments;
 using Primal.Infrastructure.Persistence;
 using Primal.Infrastructure.Users;
@@ -16,44 +11,24 @@ public sealed class InfrastructureModule : Module
 {
 	protected override void Load(ContainerBuilder builder)
 	{
-		builder.RegisterInstance(TimeProvider.System)
-			.As<TimeProvider>()
-			.SingleInstance();
-
 		this.RegisterInvestments(builder);
 		this.RegisterPersistence(builder);
 	}
 
 	private void RegisterInvestments(ContainerBuilder builder)
 	{
-		builder.Register(c => new CachedMutualFundApiClient(
-			c.Resolve<ICache>(),
-			c.Resolve<MutualFundApiClient>()))
-			.As<IMutualFundApiClient>();
+		builder.RegisterType<MutualFundApiClient>()
+			.As<IMutualFundApiClient>()
+			.SingleInstance();
 
-		builder.Register(c => new CachedStockApiClient(
-			c.Resolve<ICache>(),
-			c.Resolve<StockApiClient>()))
-			.As<IStockApiClient>();
-
-		builder.Register(c => new CachedExchangeRateProvider(
-			c.Resolve<ICache>(),
-			c.Resolve<StockApiClient>()))
-			.As<IExchangeRateProvider>();
+		builder.RegisterType<StockApiClient>()
+			.As<IStockApiClient>()
+			.As<IExchangeRateProvider>()
+			.SingleInstance();
 	}
 
 	private void RegisterPersistence(ContainerBuilder builder)
 	{
-		builder.Register(c => new LiteDatabase(
-			c.Resolve<IOptions<PersistenceSettings>>().Value.LiteDB.FilePath))
-			.As<LiteDatabase>()
-			.SingleInstance();
-
-		builder.Register(c => new LiteDbCache(
-			c.Resolve<LiteDatabase>()))
-			.As<ICache>()
-			.SingleInstance();
-
 		builder.Register(c => new UserIdRepository(
 			c.Resolve<AppDbContext>()))
 			.As<IUserIdRepository>()
@@ -65,18 +40,13 @@ public sealed class InfrastructureModule : Module
 			.InstancePerLifetimeScope();
 
 		builder.Register(c => new AssetRepository(
-			c.Resolve<LiteDatabase>()))
+			c.Resolve<AppDbContext>()))
 			.As<IAssetRepository>()
-			.SingleInstance();
+			.InstancePerLifetimeScope();
 
-		builder.Register(c => new InstrumentRepository(
-			c.Resolve<LiteDatabase>()))
-			.As<IInstrumentRepository>()
-			.SingleInstance();
-
-		builder.Register(c => new TransactionRepository(
-			c.Resolve<LiteDatabase>()))
-			.As<ITransactionRepository>()
-			.SingleInstance();
+		builder.Register(c => new AssetItemRepository(
+			c.Resolve<AppDbContext>()))
+			.As<IAssetItemRepository>()
+			.InstancePerLifetimeScope();
 	}
 }

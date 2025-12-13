@@ -6,21 +6,16 @@ namespace Primal.Api;
 internal sealed class EfSaveChangesPostProcessor<TReq, TRes>
 	: IPostProcessor<TReq, TRes>
 {
-	private readonly AppDbContext appDbContext;
-
-	public EfSaveChangesPostProcessor(AppDbContext appDbContext)
-	{
-		this.appDbContext = appDbContext;
-	}
-
 	public async Task PostProcessAsync(
 		IPostProcessorContext<TReq, TRes> ctx,
 		CancellationToken ct)
 	{
+		var appDbContext = ctx.HttpContext.RequestServices.GetRequiredService<AppDbContext>();
+
 		// Only save if handler succeeded
-		if (this.appDbContext.ChangeTracker.HasChanges())
+		if (appDbContext.ChangeTracker.HasChanges())
 		{
-			await this.appDbContext.SaveChangesAsync(ct);
+			await appDbContext.SaveChangesAsync(ct);
 		}
 	}
 }

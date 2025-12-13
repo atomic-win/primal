@@ -4,7 +4,6 @@ using FluentValidation;
 using MediatR.Extensions.Autofac.DependencyInjection;
 using MediatR.Extensions.Autofac.DependencyInjection.Builder;
 using Primal.Application.Common.Behaviors;
-using Primal.Application.Investments;
 
 namespace Primal.Application;
 
@@ -12,9 +11,6 @@ public sealed class ApplicationModule : Autofac.Module
 {
 	protected override void Load(ContainerBuilder builder)
 	{
-		builder.RegisterType<InstrumentPriceProvider>();
-		builder.RegisterType<TransactionResultCalculator>();
-
 		this.RegisterMediatR(builder);
 		this.RegisterValidators(builder);
 	}

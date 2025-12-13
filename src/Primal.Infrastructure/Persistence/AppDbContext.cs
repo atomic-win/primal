@@ -10,6 +10,10 @@ public sealed class AppDbContext : DbContext
 
 	internal DbSet<UserTableEntity> Users { get; set; } = null!;
 
+	internal DbSet<AssetTableEntity> Assets { get; set; } = null!;
+
+	internal DbSet<AssetItemTableEntity> AssetItems { get; set; } = null!;
+
 	[System.Diagnostics.CodeAnalysis.SuppressMessage("StyleCop.CSharp.OrderingRules", "SA1201:Elements should appear in the correct order", Justification = "EF constructor pattern")]
 	public AppDbContext(DbContextOptions<AppDbContext> options)
 		  : base(options)
@@ -32,6 +36,8 @@ public sealed class AppDbContext : DbContext
 	{
 		this.ConfigureUserIdEntity(modelBuilder);
 		this.ConfigureUserEntity(modelBuilder);
+		this.ConfigureAssetEntity(modelBuilder);
+		this.ConfigureAssetItemEntity(modelBuilder);
 	}
 
 	private void ConfigureUserIdEntity(ModelBuilder modelBuilder)
@@ -69,6 +75,48 @@ public sealed class AppDbContext : DbContext
 
 			entity.HasKey(e => e.Id);
 			entity.HasIndex(e => e.Email).IsUnique();
+		});
+	}
+
+	private void ConfigureAssetEntity(ModelBuilder modelBuilder)
+	{
+		this.ConfigureCommonEntities<AssetTableEntity>(modelBuilder);
+
+		modelBuilder.Entity<AssetTableEntity>(entity =>
+		{
+			entity.ToTable("assets");
+
+			entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
+			entity.Property(e => e.AssetClass).IsRequired().HasConversion<string>();
+			entity.Property(e => e.AssetType).IsRequired().HasConversion<string>();
+			entity.Property(e => e.Currency).IsRequired().HasConversion<string>();
+			entity.Property(e => e.ExternalId).IsRequired().HasMaxLength(100);
+
+			entity.HasKey(e => e.Id);
+			entity.HasIndex(e => e.ExternalId).IsUnique();
+		});
+	}
+
+	private void ConfigureAssetItemEntity(ModelBuilder modelBuilder)
+	{
+		this.ConfigureCommonEntities<AssetItemTableEntity>(modelBuilder);
+
+		modelBuilder.Entity<AssetItemTableEntity>(entity =>
+		{
+			entity.ToTable("asset_items");
+
+			entity.HasKey(e => e.Id);
+			entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
+
+			entity.HasOne<AssetTableEntity>()
+				  .WithMany()
+				  .HasForeignKey(e => e.AssetId)
+				  .OnDelete(DeleteBehavior.Restrict);
+
+			entity.HasOne<UserTableEntity>()
+				  .WithMany()
+				  .HasForeignKey(e => e.UserId)
+				  .OnDelete(DeleteBehavior.Cascade);
 		});
 	}
 
