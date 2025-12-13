@@ -1,5 +1,6 @@
 using System.Net.Mail;
 using Primal.Domain.Common.Models;
+using Primal.Domain.Money;
 
 namespace Primal.Domain.Users;
 
@@ -10,13 +11,17 @@ public sealed class User : Entity<UserId>
 		MailAddress email,
 		string firstName,
 		string lastName,
-		string fullName)
+		string fullName,
+		Currency preferredCurrency,
+		Locale preferredLocale)
 		: base(id)
 	{
 		this.Email = email;
 		this.FirstName = firstName;
 		this.LastName = lastName;
 		this.FullName = fullName;
+		this.PreferredCurrency = preferredCurrency;
+		this.PreferredLocale = preferredLocale;
 	}
 
 	public static User Empty { get; } = new User(
@@ -24,7 +29,9 @@ public sealed class User : Entity<UserId>
 		new MailAddress("empty@empty.com"),
 		string.Empty,
 		string.Empty,
-		string.Empty);
+		string.Empty,
+		Currency.Unknown,
+		Locale.Unknown);
 
 	public MailAddress Email { get; init; }
 
@@ -33,4 +40,8 @@ public sealed class User : Entity<UserId>
 	public string LastName { get; init; }
 
 	public string FullName { get; init; }
+
+	public Currency PreferredCurrency { get; init; }
+
+	public Locale PreferredLocale { get; init; }
 }

@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using Primal.Domain.Money;
+using Primal.Domain.Users;
 
 namespace Primal.Infrastructure.Persistence;
 
@@ -62,6 +64,8 @@ public sealed class AppDbContext : DbContext
 			entity.Property(e => e.FirstName).IsRequired().HasMaxLength(100);
 			entity.Property(e => e.LastName).IsRequired().HasMaxLength(100);
 			entity.Property(e => e.FullName).IsRequired().HasMaxLength(256);
+			entity.Property(e => e.PreferredCurrency).IsRequired().HasConversion<string>().HasDefaultValue(Currency.USD);
+			entity.Property(e => e.PreferredLocale).IsRequired().HasConversion<string>().HasDefaultValue(Locale.EN_US);
 
 			entity.HasKey(e => e.Id);
 			entity.HasIndex(e => e.Email).IsUnique();

@@ -1,3 +1,6 @@
+using Primal.Domain.Money;
+using Primal.Domain.Users;
+
 namespace Primal.Infrastructure.Persistence;
 
 internal sealed class UserTableEntity : TableEntity
@@ -11,4 +14,8 @@ internal sealed class UserTableEntity : TableEntity
 	required internal string LastName { get; init; } = null!;
 
 	required internal string FullName { get; init; } = null!;
+
+	required internal Currency PreferredCurrency { get; init; }
+
+	required internal Locale PreferredLocale { get; init; }
 }

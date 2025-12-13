@@ -1,5 +1,6 @@
 using FastEndpoints;
 using Primal.Application.Users;
+using Primal.Domain.Money;
 using Primal.Domain.Users;
 
 namespace Primal.Api.Users;
@@ -31,7 +32,9 @@ public sealed class GetProfileEndpoint : EndpointWithoutRequest<UserProfileRespo
 			user.Email.Address,
 			user.FirstName,
 			user.LastName,
-			user.FullName),
+			user.FullName,
+			user.PreferredCurrency,
+			user.PreferredLocale),
 			ct);
 	}
 }
@@ -42,4 +45,6 @@ public sealed record UserProfileResponse(
 	string Email,
 	string FirstName,
 	string LastName,
-	string FullName);
+	string FullName,
+	Currency PreferredCurrency,
+	Locale PreferredLocale);

@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.Json.Serialization;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using FastEndpoints;
@@ -44,12 +45,17 @@ var builder = WebApplication.CreateBuilder(args);
 				};
 			});
 
+	builder.Services.AddAuthorization();
+
 	builder.Services
 		.AddInfrastructure(builder.Configuration);
 
 	builder.Services.AddFastEndpoints();
 
-	builder.Services.AddControllers().AddNewtonsoftJson();
+	builder.Services.ConfigureHttpJsonOptions(o =>
+	{
+		o.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
+	});
 
 	builder.Services.AddCors(options =>
 	{

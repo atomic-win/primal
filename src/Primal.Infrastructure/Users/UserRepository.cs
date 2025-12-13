@@ -1,5 +1,6 @@
 using System.Net.Mail;
 using Primal.Application.Users;
+using Primal.Domain.Money;
 using Primal.Domain.Users;
 using Primal.Infrastructure.Persistence;
 
@@ -42,6 +43,8 @@ internal sealed class UserRepository : IUserRepository
 			FirstName = firstName,
 			LastName = lastName,
 			FullName = fullName,
+			PreferredCurrency = Currency.USD,
+			PreferredLocale = Locale.EN_US,
 		};
 
 		await this.appDbContext.Users.AddAsync(userTableEntity, cancellationToken);
@@ -56,6 +59,8 @@ internal sealed class UserRepository : IUserRepository
 			new MailAddress(userTableEntity.Email),
 			userTableEntity.FirstName,
 			userTableEntity.LastName,
-			userTableEntity.FullName);
+			userTableEntity.FullName,
+			userTableEntity.PreferredCurrency,
+			userTableEntity.PreferredLocale);
 	}
 }
