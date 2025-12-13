@@ -53,7 +53,7 @@ internal sealed class AddAssetItemEndpoint : Endpoint<AssetItemRequest>
 
 		if (asset.Id == AssetId.Empty)
 		{
-			var mutualFund = await this.mutualFundApiClient.GetBySchemeCodeAsync(req.ExternalId, ct);
+			var mutualFund = await this.mutualFundApiClient.GetByIdAsync(req.ExternalId, ct);
 
 			if (string.IsNullOrWhiteSpace(mutualFund.SchemeCode))
 			{
@@ -81,10 +81,10 @@ internal sealed class AddAssetItemEndpoint : Endpoint<AssetItemRequest>
 
 	private async Task AddStockAsync(AssetItemRequest req, CancellationToken ct)
 	{
-		var asset = await this.assetRepository.GetByExternalIdAsync($"stock-{req.ExternalId}", ct);
+		var asset = await this.assetRepository.GetByExternalIdAsync($"stock-{req.ExternalId.ToLowerInvariant()}", ct);
 		if (asset.Id == AssetId.Empty)
 		{
-			var stock = await this.stockApiClient.GetBySymbolAsync(req.ExternalId, ct);
+			var stock = await this.stockApiClient.GetByIdAsync(req.ExternalId, ct);
 
 			if (string.IsNullOrWhiteSpace(stock.Symbol))
 			{
@@ -96,7 +96,7 @@ internal sealed class AddAssetItemEndpoint : Endpoint<AssetItemRequest>
 				AssetClass.Equity,
 				AssetType.Stock,
 				Currency.USD,
-				$"stock-{stock.Symbol}",
+				$"stock-{stock.Symbol.ToLowerInvariant()}",
 				ct);
 		}
 

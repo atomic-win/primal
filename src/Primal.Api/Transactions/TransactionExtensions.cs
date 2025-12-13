@@ -1,11 +1,26 @@
+using Primal.Application.Investments;
 using Primal.Domain.Investments;
+using Primal.Domain.Money;
+using Primal.Domain.Users;
 
 namespace Primal.Api.Transactions;
 
 internal static class TransactionExtensions
 {
-	internal static TransactionResponse ToResponse(this Transaction transaction)
+	internal static async Task<TransactionResponse> ToResponse(
+		this Transaction transaction,
+		UserId userId,
+		TransactionAmountCalculator transactionAmountCalculator,
+		Currency targetCurrency,
+		CancellationToken cancellationToken)
 	{
+		var amount = await transactionAmountCalculator.CalculateAmount(
+			userId,
+			transaction,
+			transaction.Date,
+			targetCurrency,
+			cancellationToken);
+
 		return new TransactionResponse(
 			transaction.Id.Value,
 			transaction.Date,
@@ -13,7 +28,7 @@ internal static class TransactionExtensions
 			transaction.TransactionType,
 			transaction.AssetItemId.Value,
 			transaction.Units,
-			Amount: 0m);
+			amount);
 	}
 
 	internal static bool IsValidForAssetType(

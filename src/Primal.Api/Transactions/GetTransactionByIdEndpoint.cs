@@ -10,9 +10,14 @@ internal sealed class GetTransactionByIdEndpoint : EndpointWithoutRequest<Transa
 {
 	private readonly ITransactionRepository transactionRepository;
 
-	public GetTransactionByIdEndpoint(ITransactionRepository transactionRepository)
+	private readonly TransactionAmountCalculator transactionAmountCalculator;
+
+	public GetTransactionByIdEndpoint(
+		ITransactionRepository transactionRepository,
+		TransactionAmountCalculator transactionAmountCalculator)
 	{
 		this.transactionRepository = transactionRepository;
+		this.transactionAmountCalculator = transactionAmountCalculator;
 	}
 
 	public override async Task<TransactionResponse> ExecuteAsync(
@@ -28,6 +33,10 @@ internal sealed class GetTransactionByIdEndpoint : EndpointWithoutRequest<Transa
 			new TransactionId(transactionId),
 			cancellationToken);
 
-		return transaction.ToResponse();
+		return await transaction.ToResponse(
+			this.GetUserId(),
+			this.transactionAmountCalculator,
+			currency,
+			cancellationToken);
 	}
 }

@@ -8,4 +8,10 @@ public interface IExchangeRateProvider
 		Currency from,
 		Currency to,
 		CancellationToken cancellationToken);
+
+	Task<decimal> GetOnOrBeforeExchangeRateAsync(
+		Currency from,
+		Currency to,
+		DateOnly date,
+		CancellationToken cancellationToken);
 }

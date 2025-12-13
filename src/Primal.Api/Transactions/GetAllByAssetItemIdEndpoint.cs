@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using FastEndpoints;
 using Primal.Application.Investments;
 using Primal.Domain.Investments;
@@ -11,12 +12,16 @@ internal sealed class GetAllByAssetItemIdEndpoint : EndpointWithoutRequest<IAsyn
 	private readonly ITransactionRepository transactionRepository;
 	private readonly IAssetItemRepository assetItemRepository;
 
+	private readonly TransactionAmountCalculator transactionAmountCalculator;
+
 	public GetAllByAssetItemIdEndpoint(
 		ITransactionRepository transactionRepository,
-		IAssetItemRepository assetItemRepository)
+		IAssetItemRepository assetItemRepository,
+		TransactionAmountCalculator transactionAmountCalculator)
 	{
 		this.transactionRepository = transactionRepository;
 		this.assetItemRepository = assetItemRepository;
+		this.transactionAmountCalculator = transactionAmountCalculator;
 	}
 
 	public override async Task HandleAsync(
@@ -41,6 +46,21 @@ internal sealed class GetAllByAssetItemIdEndpoint : EndpointWithoutRequest<IAsyn
 			new AssetItemId(assetItemId),
 			cancellationToken);
 
-		await this.Send.OkAsync(transactions.ToAsyncEnumerable().Select(t => t.ToResponse()));
+		await this.Send.OkAsync(this.MapToResponses(transactions, currency, cancellationToken), cancellationToken);
+	}
+
+	private async IAsyncEnumerable<TransactionResponse> MapToResponses(
+		IEnumerable<Transaction> transactions,
+		Currency currency,
+		[EnumeratorCancellation] CancellationToken cancellationToken)
+	{
+		foreach (var transaction in transactions)
+		{
+			yield return await transaction.ToResponse(
+				this.GetUserId(),
+				this.transactionAmountCalculator,
+				currency,
+				cancellationToken);
+		}
 	}
 }

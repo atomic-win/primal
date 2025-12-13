@@ -2,11 +2,8 @@ using Primal.Domain.Money;
 
 namespace Primal.Application.Investments;
 
-public interface IMutualFundApiClient
+public interface IMutualFundApiClient : IAssetApiClient<MutualFund>
 {
-	Task<MutualFund> GetBySchemeCodeAsync(string schemeCode, CancellationToken cancellationToken);
-
-	Task<IReadOnlyDictionary<DateOnly, decimal>> GetPriceAsync(string schemeCode, CancellationToken cancellationToken);
 }
 
 [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "MA0048:File name must match type name", Justification = "cohesion")]

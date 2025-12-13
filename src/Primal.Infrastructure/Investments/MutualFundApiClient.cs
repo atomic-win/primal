@@ -18,10 +18,10 @@ internal sealed class MutualFundApiClient : IMutualFundApiClient
 		this.httpClientFactory = httpClientFactory;
 	}
 
-	public async Task<MutualFund> GetBySchemeCodeAsync(string schemeCode, CancellationToken cancellationToken)
+	public async Task<MutualFund> GetByIdAsync(string id, CancellationToken cancellationToken)
 	{
 		var httpClient = this.httpClientFactory.CreateClient(nameof(MutualFundApiClient));
-		var response = await httpClient.GetAsync($"/mf/{schemeCode}/latest", cancellationToken);
+		var response = await httpClient.GetAsync($"/mf/{id}/latest", cancellationToken);
 
 		if (response.StatusCode == HttpStatusCode.NotFound)
 		{
@@ -36,14 +36,14 @@ internal sealed class MutualFundApiClient : IMutualFundApiClient
 		var apiResponse = await response.Content.ReadFromJsonAsync<MutualFundApiResponse>(cancellationToken);
 
 		return new MutualFund(
-			SchemeCode: schemeCode,
+			SchemeCode: id,
 			Name: apiResponse.Meta.SchemeName,
 			SchemeType: apiResponse.Meta.SchemeType,
 			SchemeCategory: apiResponse.Meta.SchemeCategory,
 			Currency: Currency.INR);
 	}
 
-	public async Task<IReadOnlyDictionary<DateOnly, decimal>> GetPriceAsync(string schemeCode, CancellationToken cancellationToken)
+	public async Task<IReadOnlyDictionary<DateOnly, decimal>> GetPricesAsync(string schemeCode, CancellationToken cancellationToken)
 	{
 		var httpClient = this.httpClientFactory.CreateClient(nameof(MutualFundApiClient));
 		var response = await httpClient.GetAsync($"/mf/{schemeCode}", cancellationToken);
@@ -59,6 +59,11 @@ internal sealed class MutualFundApiClient : IMutualFundApiClient
 			.ToFrozenDictionary(
 				keySelector: data => DateOnly.ParseExact(data.Date, "dd-MM-yyyy", CultureInfo.InvariantCulture),
 				elementSelector: data => decimal.Parse(data.Nav, CultureInfo.InvariantCulture));
+	}
+
+	public Task<decimal> GetOnOrBeforePriceAsync(string schemeCode, DateOnly date, CancellationToken cancellationToken)
+	{
+		throw new NotSupportedException();
 	}
 
 	private sealed class MutualFundApiResponse
