@@ -36,8 +36,13 @@ public sealed class InfrastructureModule : Module
 			.As<IAssetApiClient<Stock>>()
 			.SingleInstance();
 
-		builder.Register(c => new CachedExchangeRateProvider(c.Resolve<StockApiClient>()))
-			.As<IExchangeRateProvider>()
+		builder.Register(c => new ExchangeRateApiClient(
+			c.Resolve<IConfiguration>().GetValue<string>("InvestmentSettings:AlphaVantageApiKey"),
+			c.Resolve<IHttpClientFactory>()))
+			.SingleInstance();
+
+		builder.Register(c => new CachedExchangeRateApiClient(c.Resolve<ExchangeRateApiClient>()))
+			.As<IExchangeRateApiClient>()
 			.SingleInstance();
 	}
 

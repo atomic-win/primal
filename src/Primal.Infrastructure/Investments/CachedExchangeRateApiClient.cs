@@ -5,9 +5,9 @@ using Primal.Domain.Money;
 
 namespace Primal.Infrastructure.Investments;
 
-internal sealed class CachedExchangeRateProvider : IExchangeRateProvider
+internal sealed class CachedExchangeRateApiClient : IExchangeRateApiClient
 {
-	private readonly IExchangeRateProvider exchangeRateProvider;
+	private readonly IExchangeRateApiClient exchangeRateProvider;
 
 	private readonly ConcurrentDictionary<(Currency From, Currency To), Lazy<Task<IReadOnlyDictionary<DateOnly, decimal>>>> exchangeRatesCache
 		= new ConcurrentDictionary<(Currency From, Currency To), Lazy<Task<IReadOnlyDictionary<DateOnly, decimal>>>>();
@@ -15,7 +15,7 @@ internal sealed class CachedExchangeRateProvider : IExchangeRateProvider
 	private readonly ConcurrentDictionary<(Currency From, Currency To, DateOnly Date), Lazy<Task<decimal>>> onOrBeforeExchangeRateCache
 		= new ConcurrentDictionary<(Currency From, Currency To, DateOnly Date), Lazy<Task<decimal>>>();
 
-	internal CachedExchangeRateProvider(IExchangeRateProvider exchangeRateProvider)
+	internal CachedExchangeRateApiClient(IExchangeRateApiClient exchangeRateProvider)
 	{
 		this.exchangeRateProvider = exchangeRateProvider;
 	}

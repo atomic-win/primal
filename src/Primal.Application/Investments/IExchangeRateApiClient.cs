@@ -2,7 +2,7 @@ using Primal.Domain.Money;
 
 namespace Primal.Application.Investments;
 
-public interface IExchangeRateProvider
+public interface IExchangeRateApiClient
 {
 	Task<IReadOnlyDictionary<DateOnly, decimal>> GetExchangeRatesAsync(
 		Currency from,

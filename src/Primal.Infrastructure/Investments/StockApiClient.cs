@@ -8,7 +8,7 @@ using Primal.Domain.Money;
 
 namespace Primal.Infrastructure.Investments;
 
-internal sealed class StockApiClient : IAssetApiClient<Stock>, IExchangeRateProvider
+internal sealed class StockApiClient : IAssetApiClient<Stock>
 {
 	private readonly string apiKey;
 	private readonly IHttpClientFactory httpClientFactory;
@@ -65,27 +65,7 @@ internal sealed class StockApiClient : IAssetApiClient<Stock>, IExchangeRateProv
 			Currency: currency);
 	}
 
-	public async Task<IReadOnlyDictionary<DateOnly, decimal>> GetPricesAsync(string id, CancellationToken cancellationToken)
-	{
-		return await this.GetHistoricalAsync(id, cancellationToken);
-	}
-
-	public Task<decimal> GetOnOrBeforePriceAsync(string id, DateOnly date, CancellationToken cancellationToken)
-	{
-		throw new NotSupportedException();
-	}
-
-	public async Task<IReadOnlyDictionary<DateOnly, decimal>> GetExchangeRatesAsync(Currency from, Currency to, CancellationToken cancellationToken)
-	{
-		return await this.GetHistoricalAsync($"{from}{to}", cancellationToken);
-	}
-
-	public Task<decimal> GetOnOrBeforeExchangeRateAsync(Currency from, Currency to, DateOnly date, CancellationToken cancellationToken)
-	{
-		throw new NotSupportedException();
-	}
-
-	private async Task<IReadOnlyDictionary<DateOnly, decimal>> GetHistoricalAsync(string symbol, CancellationToken cancellationToken)
+	public async Task<IReadOnlyDictionary<DateOnly, decimal>> GetPricesAsync(string symbol, CancellationToken cancellationToken)
 	{
 		var httpClient = this.httpClientFactory.CreateClient(nameof(StockApiClient));
 		var response = await httpClient.GetAsync($"/stable/historical-price-eod/light?symbol={symbol}&from=2017-01-01&apikey={this.apiKey}", cancellationToken);
@@ -105,6 +85,11 @@ internal sealed class StockApiClient : IAssetApiClient<Stock>, IExchangeRateProv
 			.ToFrozenDictionary(
 				keySelector: result => DateOnly.ParseExact(result.Date, "yyyy-MM-dd", CultureInfo.InvariantCulture),
 				elementSelector: result => result.Price);
+	}
+
+	public Task<decimal> GetOnOrBeforePriceAsync(string id, DateOnly date, CancellationToken cancellationToken)
+	{
+		throw new NotSupportedException();
 	}
 
 	private sealed class SymbolSearchApiResponse

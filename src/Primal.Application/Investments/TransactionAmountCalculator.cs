@@ -8,7 +8,7 @@ public sealed class TransactionAmountCalculator
 {
 	private readonly IAssetApiClient<MutualFund> mutualFundApiClient;
 	private readonly IAssetApiClient<Stock> stockApiClient;
-	private readonly IExchangeRateProvider exchangeRateProvider;
+	private readonly IExchangeRateApiClient exchangeRateProvider;
 
 	private readonly IAssetItemRepository assetItemRepository;
 	private readonly IAssetRepository assetRepository;
@@ -16,7 +16,7 @@ public sealed class TransactionAmountCalculator
 	public TransactionAmountCalculator(
 		IAssetApiClient<MutualFund> mutualFundApiClient,
 		IAssetApiClient<Stock> stockApiClient,
-		IExchangeRateProvider exchangeRateProvider,
+		IExchangeRateApiClient exchangeRateProvider,
 		IAssetItemRepository assetItemRepository,
 		IAssetRepository assetRepository)
 	{
