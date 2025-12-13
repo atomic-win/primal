@@ -81,7 +81,7 @@ public sealed class TransactionAmountCalculator
 		DateOnly date,
 		CancellationToken cancellationToken)
 	{
-		if (asset.AssetType != AssetType.MutualFund || asset.AssetType != AssetType.Stock)
+		if (asset.AssetType != AssetType.MutualFund && asset.AssetType != AssetType.Stock)
 		{
 			return 1m;
 		}
