@@ -19,13 +19,24 @@ public sealed class InfrastructureModule : Module
 	private void RegisterInvestments(ContainerBuilder builder)
 	{
 		builder.RegisterType<MutualFundApiClient>()
-			.As<IMutualFundApiClient>()
 			.SingleInstance();
 
 		builder.Register(c => new StockApiClient(
 			apiKey: c.Resolve<IConfiguration>().GetValue<string>("InvestmentSettings:FMPApiKey"),
 			httpClientFactory: c.Resolve<IHttpClientFactory>()))
-			.As<IStockApiClient>()
+			.SingleInstance();
+
+		builder.Register(c => new CachedAssetApiClient<MutualFund>(
+			c.Resolve<MutualFundApiClient>()))
+			.As<IAssetApiClient<MutualFund>>()
+			.SingleInstance();
+
+		builder.Register(c => new CachedAssetApiClient<Stock>(
+			c.Resolve<StockApiClient>()))
+			.As<IAssetApiClient<Stock>>()
+			.SingleInstance();
+
+		builder.Register(c => new CachedExchangeRateProvider(c.Resolve<StockApiClient>()))
 			.As<IExchangeRateProvider>()
 			.SingleInstance();
 	}

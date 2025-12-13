@@ -8,7 +8,7 @@ using Primal.Domain.Money;
 
 namespace Primal.Infrastructure.Investments;
 
-internal sealed class StockApiClient : IStockApiClient, IExchangeRateProvider
+internal sealed class StockApiClient : IAssetApiClient<Stock>, IExchangeRateProvider
 {
 	private readonly string apiKey;
 	private readonly IHttpClientFactory httpClientFactory;
@@ -26,7 +26,7 @@ internal sealed class StockApiClient : IStockApiClient, IExchangeRateProvider
 		this.httpClientFactory = httpClientFactory;
 	}
 
-	public async Task<Stock> GetByIdAsync(string id, CancellationToken cancellationToken)
+	public async Task<Stock> GetBySymbolAsync(string id, CancellationToken cancellationToken)
 	{
 		var httpClient = this.httpClientFactory.CreateClient(nameof(StockApiClient));
 		var response = await httpClient.GetAsync($"/stable/search-symbol?query={id}&limit=1&apikey={this.apiKey}", cancellationToken);

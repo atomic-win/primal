@@ -6,16 +6,16 @@ namespace Primal.Application.Investments;
 
 public sealed class TransactionAmountCalculator
 {
-	private readonly IMutualFundApiClient mutualFundApiClient;
-	private readonly IStockApiClient stockApiClient;
+	private readonly IAssetApiClient<MutualFund> mutualFundApiClient;
+	private readonly IAssetApiClient<Stock> stockApiClient;
 	private readonly IExchangeRateProvider exchangeRateProvider;
 
 	private readonly IAssetItemRepository assetItemRepository;
 	private readonly IAssetRepository assetRepository;
 
 	public TransactionAmountCalculator(
-		IMutualFundApiClient mutualFundApiClient,
-		IStockApiClient stockApiClient,
+		IAssetApiClient<MutualFund> mutualFundApiClient,
+		IAssetApiClient<Stock> stockApiClient,
 		IExchangeRateProvider exchangeRateProvider,
 		IAssetItemRepository assetItemRepository,
 		IAssetRepository assetRepository)
@@ -43,7 +43,7 @@ public sealed class TransactionAmountCalculator
 			assetItem.AssetId,
 			cancellationToken);
 
-		var exchangeRate = await this.GetExchangeRateAsync(
+		var exchangeRate = await this.exchangeRateProvider.GetOnOrBeforeExchangeRateAsync(
 			asset.Currency,
 			targetCurrency,
 			date,
@@ -62,20 +62,6 @@ public sealed class TransactionAmountCalculator
 		return transaction.Units * assetRate * exchangeRate;
 	}
 
-	private async Task<decimal> GetExchangeRateAsync(
-		Currency from,
-		Currency to,
-		DateOnly date,
-		CancellationToken cancellationToken)
-	{
-		var rates = await this.exchangeRateProvider.GetExchangeRatesAsync(
-			from,
-			to,
-			cancellationToken);
-
-		return this.GetOnOrBeforeValue(rates, date);
-	}
-
 	private async Task<decimal> GetAssetRateAsync(
 		Asset asset,
 		DateOnly date,
@@ -88,48 +74,17 @@ public sealed class TransactionAmountCalculator
 
 		var symbol = asset.ExternalId.Split('-')[1];
 
-		return asset.AssetType == AssetType.MutualFund
-			? await this.GetMutualFundRateAsync(symbol, date, cancellationToken)
-			: await this.GetStockRateAsync(symbol, date, cancellationToken);
-	}
-
-	private async Task<decimal> GetMutualFundRateAsync(
-		string externalId,
-		DateOnly date,
-		CancellationToken cancellationToken)
-	{
-		var rates = await this.mutualFundApiClient.GetPricesAsync(
-			externalId,
-			cancellationToken);
-
-		return this.GetOnOrBeforeValue(rates, date);
-	}
-
-	private async Task<decimal> GetStockRateAsync(
-		string externalId,
-		DateOnly date,
-		CancellationToken cancellationToken)
-	{
-		var rates = await this.stockApiClient.GetPricesAsync(
-			externalId,
-			cancellationToken);
-
-		return this.GetOnOrBeforeValue(rates, date);
-	}
-
-	private decimal GetOnOrBeforeValue(
-		IReadOnlyDictionary<DateOnly, decimal> rates,
-		DateOnly date)
-	{
-		for (int lookback = 0; lookback < 7; ++lookback)
+		if (asset.AssetType == AssetType.MutualFund)
 		{
-			if (rates.TryGetValue(date.AddDays(-lookback), out var rate))
-			{
-				return rate;
-			}
+			return await this.mutualFundApiClient.GetOnOrBeforePriceAsync(
+				symbol,
+				date,
+				cancellationToken);
 		}
 
-		throw new InvalidOperationException(
-			$"No rate found for date {date} or within the lookback period.");
+		return await this.stockApiClient.GetOnOrBeforePriceAsync(
+			symbol,
+			date,
+			cancellationToken);
 	}
 }

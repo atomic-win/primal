@@ -9,7 +9,7 @@ using Primal.Domain.Money;
 
 namespace Primal.Infrastructure.Investments;
 
-internal sealed class MutualFundApiClient : IMutualFundApiClient
+internal sealed class MutualFundApiClient : IAssetApiClient<MutualFund>
 {
 	private readonly IHttpClientFactory httpClientFactory;
 
@@ -18,7 +18,7 @@ internal sealed class MutualFundApiClient : IMutualFundApiClient
 		this.httpClientFactory = httpClientFactory;
 	}
 
-	public async Task<MutualFund> GetByIdAsync(string id, CancellationToken cancellationToken)
+	public async Task<MutualFund> GetBySymbolAsync(string id, CancellationToken cancellationToken)
 	{
 		var httpClient = this.httpClientFactory.CreateClient(nameof(MutualFundApiClient));
 		var response = await httpClient.GetAsync($"/mf/{id}/latest", cancellationToken);

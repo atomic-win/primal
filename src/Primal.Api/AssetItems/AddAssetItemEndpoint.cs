@@ -8,15 +8,15 @@ namespace Primal.Api.AssetItems;
 [HttpPost("/api/assetItems")]
 internal sealed class AddAssetItemEndpoint : Endpoint<AssetItemRequest>
 {
-	private readonly IMutualFundApiClient mutualFundApiClient;
-	private readonly IStockApiClient stockApiClient;
+	private readonly IAssetApiClient<MutualFund> mutualFundApiClient;
+	private readonly IAssetApiClient<Stock> stockApiClient;
 
 	private readonly IAssetRepository assetRepository;
 	private readonly IAssetItemRepository assetItemRepository;
 
 	public AddAssetItemEndpoint(
-		IMutualFundApiClient mutualFundApiClient,
-		IStockApiClient stockApiClient,
+		IAssetApiClient<MutualFund> mutualFundApiClient,
+		IAssetApiClient<Stock> stockApiClient,
 		IAssetRepository assetRepository,
 		IAssetItemRepository assetItemRepository)
 	{
@@ -53,7 +53,7 @@ internal sealed class AddAssetItemEndpoint : Endpoint<AssetItemRequest>
 
 		if (asset.Id == AssetId.Empty)
 		{
-			var mutualFund = await this.mutualFundApiClient.GetByIdAsync(req.ExternalId, ct);
+			var mutualFund = await this.mutualFundApiClient.GetBySymbolAsync(req.ExternalId, ct);
 
 			if (string.IsNullOrWhiteSpace(mutualFund.SchemeCode))
 			{
@@ -84,7 +84,7 @@ internal sealed class AddAssetItemEndpoint : Endpoint<AssetItemRequest>
 		var asset = await this.assetRepository.GetByExternalIdAsync($"stock-{req.ExternalId.ToLowerInvariant()}", ct);
 		if (asset.Id == AssetId.Empty)
 		{
-			var stock = await this.stockApiClient.GetByIdAsync(req.ExternalId, ct);
+			var stock = await this.stockApiClient.GetBySymbolAsync(req.ExternalId, ct);
 
 			if (string.IsNullOrWhiteSpace(stock.Symbol))
 			{
