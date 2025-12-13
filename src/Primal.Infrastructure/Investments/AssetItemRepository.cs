@@ -26,6 +26,22 @@ internal sealed class AssetItemRepository : IAssetItemRepository
 		return assetItemTableEntities.Select(this.MapToAssetItem);
 	}
 
+	public async Task<AssetItem> GetByIdAsync(
+		UserId userId,
+		Guid assetItemId,
+		CancellationToken cancellationToken)
+	{
+		var assetItemTableEntity = await this.appDbContext.AssetItems
+			.FirstOrDefaultAsync(ai => ai.UserId == userId.Value && ai.Id == assetItemId, cancellationToken);
+
+		if (assetItemTableEntity is null)
+		{
+			return AssetItem.Empty;
+		}
+
+		return this.MapToAssetItem(assetItemTableEntity);
+	}
+
 	public async Task<AssetItem> AddAsync(
 		UserId userId,
 		AssetId assetId,
@@ -43,6 +59,16 @@ internal sealed class AssetItemRepository : IAssetItemRepository
 		await this.appDbContext.AssetItems.AddAsync(assetItemTableEntity, cancellationToken);
 
 		return this.MapToAssetItem(assetItemTableEntity);
+	}
+
+	public async Task DeleteAsync(
+		UserId userId,
+		AssetItemId assetItemId,
+		CancellationToken cancellationToken)
+	{
+		await this.appDbContext.AssetItems
+			.Where(ai => ai.UserId == userId.Value && ai.Id == assetItemId.Value)
+			.ExecuteDeleteAsync(cancellationToken);
 	}
 
 	private AssetItem MapToAssetItem(AssetItemTableEntity assetItemTableEntity)

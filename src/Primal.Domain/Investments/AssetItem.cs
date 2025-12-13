@@ -14,6 +14,11 @@ public sealed class AssetItem : Entity<AssetItemId>
 		this.Name = name;
 	}
 
+	public static AssetItem Empty { get; } = new AssetItem(
+		AssetItemId.Empty,
+		AssetId.Empty,
+		string.Empty);
+
 	public AssetId AssetId { get; init; }
 
 	public string Name { get; init; }

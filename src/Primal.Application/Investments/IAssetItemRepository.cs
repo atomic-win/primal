@@ -9,9 +9,19 @@ public interface IAssetItemRepository
 		UserId userId,
 		CancellationToken cancellationToken);
 
+	Task<AssetItem> GetByIdAsync(
+		UserId userId,
+		Guid assetItemId,
+		CancellationToken cancellationToken);
+
 	Task<AssetItem> AddAsync(
 		UserId userId,
 		AssetId assetId,
 		string name,
+		CancellationToken cancellationToken);
+
+	Task DeleteAsync(
+		UserId userId,
+		AssetItemId assetItemId,
 		CancellationToken cancellationToken);
 }
