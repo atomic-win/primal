@@ -31,7 +31,7 @@ public sealed class TransactionAmountCalculator
 		this.assetRepository = assetRepository;
 	}
 
-	public async Task<decimal> CalculateAmount(
+	public async Task<decimal> CalculateAmountAsync(
 		UserId userId,
 		Transaction transaction,
 		DateOnly date,

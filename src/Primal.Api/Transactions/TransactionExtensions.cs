@@ -14,7 +14,7 @@ internal static class TransactionExtensions
 		Currency targetCurrency,
 		CancellationToken cancellationToken)
 	{
-		var amount = await transactionAmountCalculator.CalculateAmount(
+		var amount = await transactionAmountCalculator.CalculateAmountAsync(
 			userId,
 			transaction,
 			transaction.Date,

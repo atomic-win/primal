@@ -44,6 +44,7 @@ internal sealed class GetAllByAssetItemIdEndpoint : EndpointWithoutRequest<IAsyn
 		var transactions = await this.transactionRepository.GetByAssetItemIdAsync(
 			this.GetUserId(),
 			new AssetItemId(assetItemId),
+			DateOnly.MaxValue,
 			cancellationToken);
 
 		await this.Send.OkAsync(this.MapToResponses(transactions, currency, cancellationToken), cancellationToken);
