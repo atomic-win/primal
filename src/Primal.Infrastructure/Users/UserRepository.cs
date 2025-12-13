@@ -65,8 +65,6 @@ internal sealed class UserRepository : IUserRepository
 				.SetProperty(u => u.PreferredCurrency, preferredCurrency)
 				.SetProperty(u => u.PreferredLocale, preferredLocale),
 				cancellationToken);
-
-		await this.appDbContext.SaveChangesAsync(cancellationToken);
 	}
 
 	private User MapToUser(UserTableEntity userTableEntity)

@@ -52,11 +52,6 @@ var builder = WebApplication.CreateBuilder(args);
 
 	builder.Services.AddFastEndpoints();
 
-	builder.Services.ConfigureHttpJsonOptions(o =>
-	{
-		o.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
-	});
-
 	builder.Services.AddCors(options =>
 	{
 		options.AddDefaultPolicy(
@@ -75,6 +70,15 @@ var app = builder.Build();
 	app.UseAuthentication();
 	app.UseCors();
 	app.UseAuthorization();
-	app.UseFastEndpoints();
+	app.UseFastEndpoints(c =>
+	{
+		c.Endpoints.Configurator = epc =>
+		{
+			epc.PostProcessors(Order.After, typeof(EfSaveChangesPostProcessor<,>));
+		};
+
+		c.Serializer.Options.Converters.Add(new JsonStringEnumConverter());
+	});
+
 	app.Run();
 }

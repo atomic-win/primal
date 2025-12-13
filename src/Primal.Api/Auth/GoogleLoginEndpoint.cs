@@ -54,8 +54,6 @@ public sealed class GoogleLoginEndpoint : Endpoint<LoginRequest, TokenResponse>
 					lastName: payload.FamilyName,
 					fullName: payload.Name,
 					ct);
-
-				await this.appDbContext.SaveChangesAsync(ct);
 			}
 
 			var tokenResponse = await this.CreateTokenWith<MyTokenService>(userId.ToString(), u =>
