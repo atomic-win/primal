@@ -14,6 +14,8 @@ public sealed class AppDbContext : DbContext
 
 	internal DbSet<AssetItemTableEntity> AssetItems { get; set; } = null!;
 
+	internal DbSet<TransactionTableEntity> Transactions { get; set; } = null!;
+
 	[System.Diagnostics.CodeAnalysis.SuppressMessage("StyleCop.CSharp.OrderingRules", "SA1201:Elements should appear in the correct order", Justification = "EF constructor pattern")]
 	public AppDbContext(DbContextOptions<AppDbContext> options)
 		  : base(options)
@@ -38,6 +40,7 @@ public sealed class AppDbContext : DbContext
 		this.ConfigureUserEntity(modelBuilder);
 		this.ConfigureAssetEntity(modelBuilder);
 		this.ConfigureAssetItemEntity(modelBuilder);
+		this.ConfigureTransactionEntity(modelBuilder);
 	}
 
 	private void ConfigureUserIdEntity(ModelBuilder modelBuilder)
@@ -112,6 +115,32 @@ public sealed class AppDbContext : DbContext
 				  .WithMany()
 				  .HasForeignKey(e => e.AssetId)
 				  .OnDelete(DeleteBehavior.Restrict);
+
+			entity.HasOne<UserTableEntity>()
+				  .WithMany()
+				  .HasForeignKey(e => e.UserId)
+				  .OnDelete(DeleteBehavior.Cascade);
+		});
+	}
+
+	private void ConfigureTransactionEntity(ModelBuilder modelBuilder)
+	{
+		this.ConfigureCommonEntities<TransactionTableEntity>(modelBuilder);
+
+		modelBuilder.Entity<TransactionTableEntity>(entity =>
+		{
+			entity.ToTable("transactions");
+
+			entity.HasKey(e => e.Id);
+			entity.Property(e => e.Date).IsRequired();
+			entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
+			entity.Property(e => e.TransactionType).IsRequired().HasConversion<string>();
+			entity.Property(e => e.Units).IsRequired();
+
+			entity.HasOne<AssetItemTableEntity>()
+				  .WithMany()
+				  .HasForeignKey(e => e.AssetItemId)
+				  .OnDelete(DeleteBehavior.Cascade);
 
 			entity.HasOne<UserTableEntity>()
 				  .WithMany()

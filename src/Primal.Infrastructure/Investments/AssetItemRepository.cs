@@ -28,12 +28,11 @@ internal sealed class AssetItemRepository : IAssetItemRepository
 
 	public async Task<AssetItem> GetByIdAsync(
 		UserId userId,
-		Guid assetItemId,
+		AssetItemId assetItemId,
 		CancellationToken cancellationToken)
 	{
 		var assetItemTableEntity = await this.appDbContext.AssetItems
-			.FirstOrDefaultAsync(ai => ai.UserId == userId.Value && ai.Id == assetItemId, cancellationToken);
-
+			.FirstOrDefaultAsync(ai => ai.UserId == userId.Value && ai.Id == assetItemId.Value, cancellationToken);
 		if (assetItemTableEntity is null)
 		{
 			return AssetItem.Empty;

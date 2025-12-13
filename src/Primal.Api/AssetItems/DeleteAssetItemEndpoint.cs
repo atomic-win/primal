@@ -16,8 +16,10 @@ internal sealed class DeleteAssetItemEndpoint : EndpointWithoutRequest
 
 	public override async Task HandleAsync(CancellationToken ct)
 	{
-		var id = this.Route<Guid>("id");
-		var assetItem = await this.assetItemRepository.GetByIdAsync(this.GetUserId(), id, ct);
+		var assetItem = await this.assetItemRepository.GetByIdAsync(
+			this.GetUserId(),
+			new AssetItemId(this.Route<Guid>("id")),
+			ct);
 
 		if (assetItem.Id == AssetItemId.Empty)
 		{

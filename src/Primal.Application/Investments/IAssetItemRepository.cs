@@ -11,7 +11,7 @@ public interface IAssetItemRepository
 
 	Task<AssetItem> GetByIdAsync(
 		UserId userId,
-		Guid assetItemId,
+		AssetItemId assetItemId,
 		CancellationToken cancellationToken);
 
 	Task<AssetItem> AddAsync(

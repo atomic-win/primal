@@ -1,34 +1,38 @@
-using ErrorOr;
 using Primal.Domain.Investments;
 using Primal.Domain.Users;
 
-namespace Primal.Application.Common.Interfaces.Persistence;
+namespace Primal.Application.Investments;
 
 public interface ITransactionRepository
 {
-	Task<ErrorOr<Transaction>> GetByIdAsync(
+	Task<IEnumerable<Transaction>> GetByAssetItemIdAsync(
 		UserId userId,
-		AssetId assetId,
+		AssetItemId assetItemId,
+		CancellationToken cancellationToken);
+
+	Task<Transaction> GetByIdAsync(
+		UserId userId,
+		AssetItemId assetItemId,
 		TransactionId transactionId,
 		CancellationToken cancellationToken);
 
-	Task<ErrorOr<IEnumerable<Transaction>>> GetByAssetIdAsync(
+	Task<Transaction> AddAsync(
 		UserId userId,
-		AssetId assetId,
-		CancellationToken cancellationToken);
-
-	Task<ErrorOr<Transaction>> AddAsync(
-		UserId userId,
-		AssetId assetId,
+		AssetItemId assetItemId,
 		DateOnly date,
 		string name,
 		TransactionType type,
 		decimal units,
 		CancellationToken cancellationToken);
 
-	Task<ErrorOr<Success>> DeleteAsync(
+	Task UpdateAsync(
 		UserId userId,
-		AssetId assetId,
+		Transaction transaction,
+		CancellationToken cancellationToken);
+
+	Task DeleteAsync(
+		UserId userId,
+		AssetItemId assetItemId,
 		TransactionId transactionId,
 		CancellationToken cancellationToken);
 }

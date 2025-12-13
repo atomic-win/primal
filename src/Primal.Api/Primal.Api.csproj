@@ -7,7 +7,6 @@
 	<ItemGroup>
 		<ProjectReference Include="..\Primal.Application\Primal.Application.csproj" />
 		<ProjectReference Include="..\Primal.Infrastructure\Primal.Infrastructure.csproj" />
-		<ProjectReference Include="..\Primal.Contracts\Primal.Contracts.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>

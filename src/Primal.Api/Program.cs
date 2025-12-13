@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Primal.Api;
-using Primal.Application;
 using Primal.Infrastructure;
 using Primal.Infrastructure.Persistence;
 
@@ -18,7 +17,6 @@ var builder = WebApplication.CreateBuilder(args);
 		.ConfigureContainer<ContainerBuilder>(builder =>
 		{
 			builder
-				.RegisterModule<ApplicationModule>()
 				.RegisterModule<InfrastructureModule>()
 				.RegisterModule<PresentationModule>();
 		});

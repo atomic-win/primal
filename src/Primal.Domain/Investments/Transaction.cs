@@ -8,25 +8,33 @@ public sealed class Transaction : Entity<TransactionId>
 		TransactionId id,
 		DateOnly date,
 		string name,
-		TransactionType type,
-		AssetId assetId,
+		TransactionType transactionType,
+		AssetItemId assetItemId,
 		decimal units)
 		: base(id)
 	{
 		this.Date = date;
 		this.Name = name;
-		this.Type = type;
-		this.AssetId = assetId;
+		this.TransactionType = transactionType;
+		this.AssetItemId = assetItemId;
 		this.Units = units;
 	}
+
+	public static Transaction Empty { get; } = new Transaction(
+		TransactionId.Empty,
+		DateOnly.MinValue,
+		string.Empty,
+		TransactionType.Buy,
+		AssetItemId.Empty,
+		0m);
 
 	public DateOnly Date { get; init; }
 
 	public string Name { get; init; }
 
-	public TransactionType Type { get; init; }
+	public TransactionType TransactionType { get; init; }
 
-	public AssetId AssetId { get; init; }
+	public AssetItemId AssetItemId { get; init; }
 
 	public decimal Units { get; init; }
 }
