@@ -50,7 +50,9 @@ public sealed class GoogleLoginEndpoint : Endpoint<LoginRequest, TokenResponse>
 				await this.userRepository.AddUserAsync(
 					userId,
 					new System.Net.Mail.MailAddress(payload.Email),
-					payload.Name,
+					firstName: payload.GivenName,
+					lastName: payload.FamilyName,
+					fullName: payload.Name,
 					ct);
 
 				await this.appDbContext.SaveChangesAsync(ct);

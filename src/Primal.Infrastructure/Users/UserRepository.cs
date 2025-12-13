@@ -30,6 +30,8 @@ internal sealed class UserRepository : IUserRepository
 	public async Task<User> AddUserAsync(
 		UserId userId,
 		MailAddress email,
+		string firstName,
+		string lastName,
 		string fullName,
 		CancellationToken cancellationToken)
 	{
@@ -37,6 +39,8 @@ internal sealed class UserRepository : IUserRepository
 		{
 			Id = userId.Value,
 			Email = email.Address,
+			FirstName = firstName,
+			LastName = lastName,
 			FullName = fullName,
 		};
 
@@ -50,6 +54,8 @@ internal sealed class UserRepository : IUserRepository
 		return new User(
 			new UserId(userTableEntity.Id),
 			new MailAddress(userTableEntity.Email),
+			userTableEntity.FirstName,
+			userTableEntity.LastName,
 			userTableEntity.FullName);
 	}
 }

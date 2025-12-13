@@ -12,6 +12,8 @@ public interface IUserRepository
 	Task<User> AddUserAsync(
 		UserId userId,
 		MailAddress email,
+		string firstName,
+		string lastName,
 		string fullName,
 		CancellationToken cancellationToken);
 }
