@@ -1,4 +1,5 @@
 using Autofac;
+using Microsoft.Extensions.Configuration;
 using Primal.Application.Investments;
 using Primal.Application.Users;
 using Primal.Infrastructure.Investments;
@@ -21,7 +22,9 @@ public sealed class InfrastructureModule : Module
 			.As<IMutualFundApiClient>()
 			.SingleInstance();
 
-		builder.RegisterType<StockApiClient>()
+		builder.Register(c => new StockApiClient(
+			apiKey: c.Resolve<IConfiguration>().GetValue<string>("InvestmentSettings:FMPApiKey"),
+			httpClientFactory: c.Resolve<IHttpClientFactory>()))
 			.As<IStockApiClient>()
 			.As<IExchangeRateProvider>()
 			.SingleInstance();

@@ -86,9 +86,11 @@ public sealed class TransactionAmountCalculator
 			return 1m;
 		}
 
+		var symbol = asset.ExternalId.Split('-')[1];
+
 		return asset.AssetType == AssetType.MutualFund
-			? await this.GetMutualFundRateAsync(asset.ExternalId, date, cancellationToken)
-			: await this.GetStockRateAsync(asset.ExternalId, date, cancellationToken);
+			? await this.GetMutualFundRateAsync(symbol, date, cancellationToken)
+			: await this.GetStockRateAsync(symbol, date, cancellationToken);
 	}
 
 	private async Task<decimal> GetMutualFundRateAsync(

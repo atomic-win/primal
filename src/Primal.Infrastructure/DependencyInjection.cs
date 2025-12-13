@@ -27,6 +27,19 @@ public static class DependencyInjection
 		})
 		.SetHandlerLifetime(Timeout.InfiniteTimeSpan);
 
+		services.AddHttpClient<StockApiClient>(client =>
+		{
+			client.BaseAddress = new Uri("https://financialmodelingprep.com");
+		})
+		.ConfigurePrimaryHttpMessageHandler(() =>
+		{
+			return new SocketsHttpHandler()
+			{
+				PooledConnectionLifetime = TimeSpan.FromMinutes(15),
+			};
+		})
+		.SetHandlerLifetime(Timeout.InfiniteTimeSpan);
+
 		return services;
 	}
 }
