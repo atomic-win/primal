@@ -4,9 +4,4 @@
 		<ProjectReference Include="..\Primal.Domain\Primal.Domain.csproj" />
 	</ItemGroup>
 
-	<ItemGroup>
-		<PackageReference Include="MediatR" />
-		<PackageReference Include="MediatR.Extensions.Autofac.DependencyInjection" />
-	</ItemGroup>
-
 </Project>
