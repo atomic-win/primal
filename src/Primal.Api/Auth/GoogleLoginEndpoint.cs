@@ -4,10 +4,8 @@ using FastEndpoints;
 using FastEndpoints.Security;
 using Google.Apis.Auth;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.EntityFrameworkCore;
 using Primal.Application.Users;
 using Primal.Domain.Users;
-using Primal.Infrastructure.Persistence;
 
 namespace Primal.Api.Auth;
 
@@ -15,16 +13,13 @@ namespace Primal.Api.Auth;
 [AllowAnonymous]
 public sealed class GoogleLoginEndpoint : Endpoint<LoginRequest, TokenResponse>
 {
-	private readonly AppDbContext appDbContext;
 	private readonly IUserIdRepository userIdRepository;
 	private readonly IUserRepository userRepository;
 
 	public GoogleLoginEndpoint(
-		AppDbContext appDbContext,
 		IUserIdRepository userIdRepository,
 		IUserRepository userRepository)
 	{
-		this.appDbContext = appDbContext;
 		this.userIdRepository = userIdRepository;
 		this.userRepository = userRepository;
 	}
