@@ -2,7 +2,7 @@ using StronglyTypedIds;
 
 namespace Primal.Domain.Investments;
 
-[StronglyTypedId(converters: StronglyTypedIdConverter.SystemTextJson)]
+[StronglyTypedId]
 public partial struct AssetItemId
 {
 }

@@ -4,9 +4,9 @@ namespace Primal.Infrastructure.Persistence;
 
 internal sealed class UserIdTableEntity : TableEntity
 {
-	required internal string Id { get; init; } = null!;
+	internal required string Id { get; init; } = null!;
 
-	required internal IdentityProvider IdentityProvider { get; init; }
+	internal required IdentityProvider IdentityProvider { get; init; }
 
-	required internal Guid UserId { get; init; }
+	internal required Guid UserId { get; init; }
 }

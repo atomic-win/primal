@@ -5,15 +5,15 @@ namespace Primal.Infrastructure.Persistence;
 
 internal sealed class AssetTableEntity : TableEntity
 {
-	required internal Guid Id { get; set; }
+	internal required Guid Id { get; set; }
 
-	required internal string Name { get; set; }
+	internal required string Name { get; set; }
 
-	required internal AssetClass AssetClass { get; set; }
+	internal required AssetClass AssetClass { get; set; }
 
-	required internal AssetType AssetType { get; set; }
+	internal required AssetType AssetType { get; set; }
 
-	required internal Currency Currency { get; set; }
+	internal required Currency Currency { get; set; }
 
-	required internal string ExternalId { get; set; }
+	internal required string ExternalId { get; set; }
 }

@@ -198,11 +198,11 @@ internal sealed class GetValuationEndpoint : EndpointWithoutRequest<ValuationRes
 
 	[System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "MA0051:Method is too long", Justification = "Refactoring would reduce readability")]
 	private async Task<decimal> CalculateInvestedValueAsync(
-		  UserId userId,
-		  IEnumerable<Transaction> transactions,
-		  DateOnly valuationDate,
-		  Currency currency,
-		  CancellationToken ct)
+			UserId userId,
+			IEnumerable<Transaction> transactions,
+			DateOnly valuationDate,
+			Currency currency,
+			CancellationToken ct)
 	{
 		decimal withdrawnCashUnits = transactions
 			.Where(t => t.TransactionType == TransactionType.Withdrawal ||
@@ -394,24 +394,25 @@ internal sealed class GetValuationEndpoint : EndpointWithoutRequest<ValuationRes
 
 	private sealed class ValuationInput
 	{
-		required public decimal InvestedValue { get; init; }
+		public required decimal InvestedValue { get; init; }
 
-		required public decimal CurrentValue { get; init; }
+		public required decimal CurrentValue { get; init; }
 
-		required public IReadOnlyCollection<XirrInput> XirrInputs { get; init; }
+		public required IReadOnlyCollection<XirrInput> XirrInputs { get; init; }
 	}
 
 	private sealed class XirrInput
 	{
-		required public double YearDiff { get; init; }
+		public required double YearDiff { get; init; }
 
-		required public decimal TransactionAmount { get; init; }
+		public required decimal TransactionAmount { get; init; }
 
-		required public decimal BalanceAmount { get; init; }
+		public required decimal BalanceAmount { get; init; }
 	}
 }
 
 [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "MA0048:File name must match type name", Justification = "used only in this file")]
+[System.Diagnostics.CodeAnalysis.SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1402:File may only contain a single type", Justification = "used only in this file")]
 internal sealed record ValuationResponse(
 	decimal InvestedValue,
 	decimal CurrentValue,

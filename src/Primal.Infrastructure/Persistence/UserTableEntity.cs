@@ -5,17 +5,17 @@ namespace Primal.Infrastructure.Persistence;
 
 internal sealed class UserTableEntity : TableEntity
 {
-	required internal Guid Id { get; init; }
+	internal required Guid Id { get; init; }
 
-	required internal string Email { get; init; } = null!;
+	internal required string Email { get; init; } = null!;
 
-	required internal string FirstName { get; init; } = null!;
+	internal required string FirstName { get; init; } = null!;
 
-	required internal string LastName { get; init; } = null!;
+	internal required string LastName { get; init; } = null!;
 
-	required internal string FullName { get; init; } = null!;
+	internal required string FullName { get; init; } = null!;
 
-	required internal Currency PreferredCurrency { get; init; }
+	internal required Currency PreferredCurrency { get; init; }
 
-	required internal Locale PreferredLocale { get; init; }
+	internal required Locale PreferredLocale { get; init; }
 }

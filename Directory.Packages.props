@@ -4,12 +4,12 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageVersion Include="Autofac" Version="9.0.0" />
-    <PackageVersion Include="Autofac.Extensions.DependencyInjection" Version="9.0.0" />
-    <PackageVersion Include="CsvHelper" Version="32.0.3" />
+    <PackageVersion Include="Autofac.Extensions.DependencyInjection" Version="10.0.0" />
+    <PackageVersion Include="CsvHelper" Version="33.1.0" />
     <PackageVersion Include="FastEndpoints" Version="7.1.1" />
     <PackageVersion Include="FastEndpoints.Security" Version="7.1.1" />
-    <PackageVersion Include="Google.Apis.Auth" Version="1.63.0" />
-    <PackageVersion Include="Meziantou.Analyzer" Version="2.0.103" />
+    <PackageVersion Include="Google.Apis.Auth" Version="1.73.0" />
+    <PackageVersion Include="Meziantou.Analyzer" Version="2.0.260" />
     <PackageVersion Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.11" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="9.0.11" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.11">
@@ -18,10 +18,10 @@
     </PackageVersion>
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.11" />
     <PackageVersion Include="Microsoft.Extensions.Caching.Hybrid" Version="10.1.0" />
-    <PackageVersion Include="Microsoft.Extensions.Configuration" Version="9.0.11" />
-    <PackageVersion Include="Microsoft.Extensions.Http" Version="9.0.11" />
-    <PackageVersion Include="StronglyTypedId" Version="1.0.0-beta06" PrivateAssets="all" ExcludeAssets="runtime" />
-    <PackageVersion Include="StyleCop.Analyzers" Version="1.2.0-beta.435" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration" Version="10.0.1" />
+    <PackageVersion Include="Microsoft.Extensions.Http" Version="10.0.1" />
+    <PackageVersion Include="StronglyTypedId" Version="1.0.0-beta08" PrivateAssets="all" ExcludeAssets="runtime" />
+    <PackageVersion Include="StyleCop.Analyzers" Version="1.2.0-beta.556" />
     <PackageVersion Include="System.Linq.AsyncEnumerable" Version="10.0.1" />
   </ItemGroup>
 </Project>
