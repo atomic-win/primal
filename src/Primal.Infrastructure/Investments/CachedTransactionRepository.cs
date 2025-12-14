@@ -1,0 +1,136 @@
+using Microsoft.Extensions.Caching.Hybrid;
+using Primal.Application.Investments;
+using Primal.Domain.Investments;
+using Primal.Domain.Users;
+
+namespace Primal.Infrastructure.Investments;
+
+internal sealed class CachedTransactionRepository : ITransactionRepository
+{
+	private readonly HybridCache hybridCache;
+	private readonly ITransactionRepository transactionRepository;
+
+	public CachedTransactionRepository(
+		HybridCache hybridCache,
+		ITransactionRepository transactionRepository)
+	{
+		this.hybridCache = hybridCache;
+		this.transactionRepository = transactionRepository;
+	}
+
+	public async Task<IEnumerable<Transaction>> GetByAssetItemIdAsync(
+		UserId userId,
+		AssetItemId assetItemId,
+		DateOnly maxDate,
+		CancellationToken cancellationToken)
+	{
+		return await this.transactionRepository.GetByAssetItemIdAsync(
+			userId,
+			assetItemId,
+			maxDate,
+			cancellationToken);
+	}
+
+	public async Task<Transaction> GetByIdAsync(
+		UserId userId,
+		AssetItemId assetItemId,
+		TransactionId transactionId,
+		CancellationToken cancellationToken)
+	{
+		return await this.hybridCache.GetOrCreateAsync(
+			$"users/{userId.Value}/assetItems/{assetItemId.Value}/transactions/{transactionId.Value}",
+			async entry => await this.transactionRepository.GetByIdAsync(
+				userId,
+				assetItemId,
+				transactionId,
+				cancellationToken),
+			cancellationToken: cancellationToken);
+	}
+
+	public async Task<DateOnly> GetEarliestTransactionDateAsync(
+		UserId userId,
+		AssetItemId assetItemId,
+		CancellationToken cancellationToken)
+	{
+		return await this.hybridCache.GetOrCreateAsync(
+			$"users/{userId.Value}/assetItems/{assetItemId.Value}/transactions/earliestDate",
+			async entry => await this.transactionRepository.GetEarliestTransactionDateAsync(
+				userId,
+				assetItemId,
+				cancellationToken),
+			cancellationToken: cancellationToken);
+	}
+
+	public async Task<Transaction> AddAsync(
+		UserId userId,
+		AssetItemId assetItemId,
+		DateOnly date,
+		string name,
+		TransactionType type,
+		decimal units,
+		CancellationToken cancellationToken)
+	{
+		var transaction = await this.transactionRepository.AddAsync(
+			userId,
+			assetItemId,
+			date,
+			name,
+			type,
+			units,
+			cancellationToken);
+
+		await this.hybridCache.RemoveAsync(
+			$"users/{userId.Value}/assetItems/{assetItemId.Value}/transactions",
+			cancellationToken: cancellationToken);
+
+		return transaction;
+	}
+
+	public async Task UpdateAsync(
+		UserId userId,
+		Transaction transaction,
+		CancellationToken cancellationToken)
+	{
+		await this.transactionRepository.UpdateAsync(
+			userId,
+			transaction,
+			cancellationToken);
+
+		await this.hybridCache.RemoveAsync(
+			$"users/{userId.Value}/assetItems/{transaction.AssetItemId.Value}/transactions",
+			cancellationToken: cancellationToken);
+
+		await this.hybridCache.RemoveAsync(
+			$"users/{userId.Value}/assetItems/{transaction.AssetItemId.Value}/transactions/{transaction.Id.Value}",
+			cancellationToken: cancellationToken);
+
+		await this.hybridCache.RemoveAsync(
+			$"users/{userId.Value}/assetItems/{transaction.AssetItemId.Value}/transactions/earliestDate",
+			cancellationToken: cancellationToken);
+	}
+
+	public async Task DeleteAsync(
+		UserId userId,
+		AssetItemId assetItemId,
+		TransactionId transactionId,
+		CancellationToken cancellationToken)
+	{
+		await this.transactionRepository.DeleteAsync(
+			userId,
+			assetItemId,
+			transactionId,
+			cancellationToken);
+
+		await this.hybridCache.RemoveAsync(
+			$"users/{userId.Value}/assetItems/{assetItemId.Value}/transactions",
+			cancellationToken: cancellationToken);
+
+		await this.hybridCache.RemoveAsync(
+			$"users/{userId.Value}/assetItems/{assetItemId.Value}/transactions/{transactionId.Value}",
+			cancellationToken: cancellationToken);
+
+		await this.hybridCache.RemoveAsync(
+			$"users/{userId.Value}/assetItems/{assetItemId.Value}/transactions/earliestDate",
+			cancellationToken: cancellationToken);
+	}
+}

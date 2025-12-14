@@ -1,5 +1,5 @@
-using System.Collections.Concurrent;
 using System.Collections.Immutable;
+using Microsoft.Extensions.Caching.Hybrid;
 using Primal.Application.Investments;
 using Primal.Domain.Money;
 
@@ -7,17 +7,15 @@ namespace Primal.Infrastructure.Investments;
 
 internal sealed class CachedExchangeRateApiClient : IExchangeRateApiClient
 {
-	private readonly IExchangeRateApiClient exchangeRateProvider;
+	private readonly HybridCache hybridCache;
+	private readonly IExchangeRateApiClient exchangeRateApiClient;
 
-	private readonly ConcurrentDictionary<(Currency From, Currency To), Lazy<Task<IReadOnlyDictionary<DateOnly, decimal>>>> exchangeRatesCache
-		= new ConcurrentDictionary<(Currency From, Currency To), Lazy<Task<IReadOnlyDictionary<DateOnly, decimal>>>>();
-
-	private readonly ConcurrentDictionary<(Currency From, Currency To, DateOnly Date), Lazy<Task<decimal>>> onOrBeforeExchangeRateCache
-		= new ConcurrentDictionary<(Currency From, Currency To, DateOnly Date), Lazy<Task<decimal>>>();
-
-	internal CachedExchangeRateApiClient(IExchangeRateApiClient exchangeRateProvider)
+	internal CachedExchangeRateApiClient(
+		HybridCache hybridCache,
+		IExchangeRateApiClient exchangeRateApiClient)
 	{
-		this.exchangeRateProvider = exchangeRateProvider;
+		this.hybridCache = hybridCache;
+		this.exchangeRateApiClient = exchangeRateApiClient;
 	}
 
 	public async Task<IReadOnlyDictionary<DateOnly, decimal>> GetExchangeRatesAsync(
@@ -30,9 +28,10 @@ internal sealed class CachedExchangeRateApiClient : IExchangeRateApiClient
 			return ImmutableDictionary<DateOnly, decimal>.Empty;
 		}
 
-		var key = (From: fromCurrency, To: toCurrency);
-		var lazyResult = this.exchangeRatesCache.GetOrAdd(key, k => new Lazy<Task<IReadOnlyDictionary<DateOnly, decimal>>>(() => this.exchangeRateProvider.GetExchangeRatesAsync(k.From, k.To, cancellationToken)));
-		return await lazyResult.Value;
+		return await this.hybridCache.GetOrCreateAsync(
+			$"exchange-rate/{fromCurrency}/{toCurrency}/rates",
+			async entry => await this.exchangeRateApiClient.GetExchangeRatesAsync(fromCurrency, toCurrency, cancellationToken),
+			cancellationToken: cancellationToken);
 	}
 
 	public async Task<decimal> GetOnOrBeforeExchangeRateAsync(
@@ -46,9 +45,10 @@ internal sealed class CachedExchangeRateApiClient : IExchangeRateApiClient
 			return 1m;
 		}
 
-		var key = (From: fromCurrency, To: toCurrency, Date: date);
-		var lazyResult = this.onOrBeforeExchangeRateCache.GetOrAdd(key, k => new Lazy<Task<decimal>>(() => this.GetOnOrBeforeExchangeRateInternalAsync(k.From, k.To, k.Date, cancellationToken)));
-		return await lazyResult.Value;
+		return await this.hybridCache.GetOrCreateAsync(
+			$"exchange-rate/{fromCurrency}/{toCurrency}/rates/{date:yyyy-MM-dd}/on-or-before",
+			async entry => await this.GetOnOrBeforeExchangeRateInternalAsync(fromCurrency, toCurrency, date, cancellationToken),
+			cancellationToken: cancellationToken);
 	}
 
 	private async Task<decimal> GetOnOrBeforeExchangeRateInternalAsync(

@@ -10,8 +10,7 @@ internal sealed class PresentationModule : Autofac.Module
 {
 	protected override void Load(ContainerBuilder builder)
 	{
-		builder.RegisterType<TransactionAmountCalculator>()
-			.InstancePerLifetimeScope();
+		builder.RegisterType<TransactionAmountCalculator>();
 
 		builder.RegisterType<HttpContextAccessor>()
 			.As<IHttpContextAccessor>()
