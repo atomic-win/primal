@@ -2,11 +2,11 @@ namespace Primal.Infrastructure.Persistence;
 
 internal sealed class AssetItemTableEntity : TableEntity
 {
-	required internal Guid Id { get; set; }
+	internal required Guid Id { get; set; }
 
-	required internal string Name { get; set; }
+	internal required string Name { get; set; }
 
-	required internal Guid UserId { get; set; }
+	internal required Guid UserId { get; set; }
 
-	required internal Guid AssetId { get; set; }
+	internal required Guid AssetId { get; set; }
 }

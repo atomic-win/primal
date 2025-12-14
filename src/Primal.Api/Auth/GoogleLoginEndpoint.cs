@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using FastEndpoints;
@@ -11,7 +12,7 @@ namespace Primal.Api.Auth;
 
 [HttpPost("/api/auth/login/google")]
 [AllowAnonymous]
-public sealed class GoogleLoginEndpoint : Endpoint<LoginRequest, TokenResponse>
+internal sealed class GoogleLoginEndpoint : Endpoint<LoginRequest, TokenResponse>
 {
 	private readonly IUserIdRepository userIdRepository;
 	private readonly IUserRepository userRepository;
@@ -51,9 +52,9 @@ public sealed class GoogleLoginEndpoint : Endpoint<LoginRequest, TokenResponse>
 					ct);
 			}
 
-			var tokenResponse = await this.CreateTokenWith<MyTokenService>(userId.ToString(), u =>
+			var tokenResponse = await this.CreateTokenWith<MyTokenService>(userId.ToString("D", CultureInfo.InvariantCulture), u =>
 			{
-				u.Claims.Add(new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()));
+				u.Claims.Add(new Claim(JwtRegisteredClaimNames.Sub, userId.ToString("D", CultureInfo.InvariantCulture)));
 			});
 
 			await this.Send.OkAsync(tokenResponse, cancellation: ct);
@@ -78,4 +79,5 @@ public sealed class GoogleLoginEndpoint : Endpoint<LoginRequest, TokenResponse>
 }
 
 [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "MA0048:File name must match type name", Justification = "used only in this file")]
-public sealed record LoginRequest(string IdToken);
+[System.Diagnostics.CodeAnalysis.SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1402:File may only contain a single type", Justification = "used only in this file")]
+internal sealed record LoginRequest(string IdToken);

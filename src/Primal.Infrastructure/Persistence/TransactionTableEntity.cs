@@ -4,17 +4,17 @@ namespace Primal.Infrastructure.Persistence;
 
 internal sealed class TransactionTableEntity : TableEntity
 {
-	required internal Guid Id { get; init; }
+	internal required Guid Id { get; init; }
 
-	required internal DateOnly Date { get; init; }
+	internal required DateOnly Date { get; init; }
 
-	required internal string Name { get; init; }
+	internal required string Name { get; init; }
 
-	required internal TransactionType TransactionType { get; init; }
+	internal required TransactionType TransactionType { get; init; }
 
-	required internal Guid AssetItemId { get; init; }
+	internal required Guid AssetItemId { get; init; }
 
-	required internal Guid UserId { get; init; }
+	internal required Guid UserId { get; init; }
 
-	required internal decimal Units { get; init; }
+	internal required decimal Units { get; init; }
 }

@@ -6,7 +6,7 @@ using Primal.Domain.Users;
 namespace Primal.Api.Users;
 
 [HttpPatch("/api/users/profile")]
-public sealed class UpdateProfileEndpoint : Endpoint<UpdateProfileRequest>
+internal sealed class UpdateProfileEndpoint : Endpoint<UpdateProfileRequest>
 {
 	private readonly IUserRepository userRepository;
 
@@ -44,6 +44,7 @@ public sealed class UpdateProfileEndpoint : Endpoint<UpdateProfileRequest>
 }
 
 [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "MA0048:File name must match type name", Justification = "used only in this file")]
-public sealed record UpdateProfileRequest(
+[System.Diagnostics.CodeAnalysis.SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1402:File may only contain a single type", Justification = "used only in this file")]
+internal sealed record UpdateProfileRequest(
 	Currency PreferredCurrency,
 	Locale PreferredLocale);

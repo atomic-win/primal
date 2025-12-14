@@ -6,7 +6,7 @@ using Primal.Domain.Users;
 namespace Primal.Api.Users;
 
 [HttpGet("/api/users/profile")]
-public sealed class GetProfileEndpoint : EndpointWithoutRequest<UserProfileResponse>
+internal sealed class GetProfileEndpoint : EndpointWithoutRequest<UserProfileResponse>
 {
 	private readonly IUserRepository userRepository;
 
@@ -40,7 +40,8 @@ public sealed class GetProfileEndpoint : EndpointWithoutRequest<UserProfileRespo
 }
 
 [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "MA0048:File name must match type name", Justification = "used only in this file")]
-public sealed record UserProfileResponse(
+[System.Diagnostics.CodeAnalysis.SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1402:File may only contain a single type", Justification = "used only in this file")]
+internal sealed record UserProfileResponse(
 	Guid Id,
 	string Email,
 	string FirstName,

@@ -2,7 +2,7 @@ using StronglyTypedIds;
 
 namespace Primal.Domain.Users;
 
-[StronglyTypedId(converters: StronglyTypedIdConverter.SystemTextJson)]
+[StronglyTypedId]
 public partial struct UserId
 {
 }
