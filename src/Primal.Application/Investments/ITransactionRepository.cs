@@ -17,6 +17,11 @@ public interface ITransactionRepository
 		TransactionId transactionId,
 		CancellationToken cancellationToken);
 
+	Task<DateOnly> GetEarliestTransactionDateAsync(
+		UserId userId,
+		AssetItemId assetItemId,
+		CancellationToken cancellationToken);
+
 	Task<Transaction> AddAsync(
 		UserId userId,
 		AssetItemId assetItemId,
