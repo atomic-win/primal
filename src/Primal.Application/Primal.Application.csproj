@@ -4,4 +4,8 @@
 		<ProjectReference Include="..\Primal.Domain\Primal.Domain.csproj" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <PackageReference Include="Autofac" />
+	</ItemGroup>
+
 </Project>
