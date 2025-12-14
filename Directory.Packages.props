@@ -31,6 +31,5 @@
     <PackageVersion Include="StyleCop.Analyzers" Version="1.2.0-beta.435" />
     <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="7.3.1" />
     <PackageVersion Include="System.Linq.AsyncEnumerable" Version="10.0.1" />
-    <PackageVersion Include="YahooFinanceApi" Version="2.3.3" />
   </ItemGroup>
 </Project>
