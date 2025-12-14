@@ -1,164 +1,110 @@
 using System.Collections.Frozen;
 using System.Collections.Immutable;
 using System.Globalization;
-using CsvHelper;
-using CsvHelper.Configuration.Attributes;
-using ErrorOr;
-using Microsoft.Extensions.Options;
-using Primal.Application.Common.Interfaces.Investments;
-using Primal.Domain.Investments;
+using System.Net.Http.Json;
+using System.Text.Json;
+using Primal.Application.Investments;
 using Primal.Domain.Money;
 
 namespace Primal.Infrastructure.Investments;
 
-internal sealed class StockApiClient : IStockApiClient, IExchangeRateProvider
+internal sealed class StockApiClient : IAssetApiClient<Stock>
 {
-	private readonly InvestmentSettings investmentSettings;
-	private readonly HttpClient httpClient;
+	private readonly string apiKey;
+	private readonly IHttpClientFactory httpClientFactory;
 
-	public StockApiClient(IOptions<InvestmentSettings> investmentSettings, HttpClient httpClient)
+	private readonly JsonSerializerOptions jsonSerializerOptions = new JsonSerializerOptions
 	{
-		this.investmentSettings = investmentSettings.Value;
-		this.httpClient = httpClient;
+		PropertyNameCaseInsensitive = true,
+	};
+
+	public StockApiClient(
+		string apiKey,
+		IHttpClientFactory httpClientFactory)
+	{
+		this.apiKey = apiKey;
+		this.httpClientFactory = httpClientFactory;
 	}
 
-	public async Task<ErrorOr<Stock>> GetBySymbolAsync(string symbol, CancellationToken cancellationToken)
+	public async Task<Stock> GetBySymbolAsync(string id, CancellationToken cancellationToken)
 	{
-		var requestUri = $"query?&apikey={this.investmentSettings.AlphaVantageApiKey}&datatype=csv&function=SYMBOL_SEARCH&keywords={symbol}";
+		var httpClient = this.httpClientFactory.CreateClient(nameof(StockApiClient));
+		var response = await httpClient.GetAsync($"/stable/search-symbol?query={id}&limit=1&apikey={this.apiKey}", cancellationToken);
 
-		using (var reader = new StreamReader(await this.httpClient.GetStreamAsync(requestUri, cancellationToken)))
+		if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
 		{
-			var csvReader = new CsvReader(reader, CultureInfo.InvariantCulture);
-			var records = csvReader.GetRecords<SymbolSearch>().ToList();
-
-			var symbolSearch = records.OrderByDescending(x => x.MatchScore).FirstOrDefault();
-
-			if (symbolSearch == null)
-			{
-				return Error.NotFound();
-			}
-
-			if (!Enum.TryParse<Currency>(symbolSearch.Currency, out var currency))
-			{
-				return Error.Validation($"Invalid currency '{symbolSearch.Currency}'");
-			}
-
 			return new Stock(
-				new InstrumentId(Guid.Empty),
-				symbolSearch.Name,
-				symbolSearch.Symbol,
-				symbolSearch.Type,
-				symbolSearch.Region,
-				symbolSearch.MarketOpen,
-				symbolSearch.MarketClose,
-				symbolSearch.Timezone,
-				currency);
+				Symbol: string.Empty,
+				Name: string.Empty,
+				Currency: Currency.Unknown);
 		}
-	}
 
-	public async Task<ErrorOr<IReadOnlyDictionary<DateOnly, decimal>>> GetPriceAsync(string symbol, CancellationToken cancellationToken)
-	{
-		var requestUri = $"query?&apikey={this.investmentSettings.AlphaVantageApiKey}&datatype=csv&function=TIME_SERIES_DAILY&symbol={symbol}&outputsize=full";
+		var apiResponse = await response.Content.ReadFromJsonAsync<IReadOnlyList<SymbolSearchApiResponse>>(this.jsonSerializerOptions, cancellationToken);
 
-		using (var reader = new StreamReader(await this.httpClient.GetStreamAsync(requestUri, cancellationToken)))
+		if (apiResponse.Count == 0)
 		{
-			var csvReader = new CsvReader(reader, CultureInfo.InvariantCulture);
-			var records = csvReader.GetRecords<StockPriceValue>().ToList();
-
-			return records
-				.ToFrozenDictionary(
-					keySelector: x => DateOnly.Parse(x.Date, CultureInfo.InvariantCulture),
-					elementSelector: x => x.Close);
+			return new Stock(
+				Symbol: string.Empty,
+				Name: string.Empty,
+				Currency: Currency.Unknown);
 		}
+
+		var symbolInfo = apiResponse[0];
+
+		if (!Enum.TryParse<Currency>(symbolInfo.Currency, out var currency))
+		{
+			return new Stock(
+				Symbol: string.Empty,
+				Name: string.Empty,
+				Currency: Currency.Unknown);
+		}
+
+		return new Stock(
+			Symbol: symbolInfo.Symbol,
+			Name: symbolInfo.Name,
+			Currency: currency);
 	}
 
-	public async Task<ErrorOr<IReadOnlyDictionary<DateOnly, decimal>>> GetExchangeRatesAsync(Currency from, Currency to, CancellationToken cancellationToken)
+	public async Task<IReadOnlyDictionary<DateOnly, decimal>> GetPricesAsync(string symbol, CancellationToken cancellationToken)
 	{
-		if (from == to)
+		var httpClient = this.httpClientFactory.CreateClient(nameof(StockApiClient));
+		var response = await httpClient.GetAsync($"/stable/historical-price-eod/light?symbol={symbol}&from=2017-01-01&apikey={this.apiKey}", cancellationToken);
+
+		if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
 		{
 			return ImmutableDictionary<DateOnly, decimal>.Empty;
 		}
 
-		var requestUri = $"query?&apikey={this.investmentSettings.AlphaVantageApiKey}&datatype=csv&function=FX_DAILY&from_symbol={from}&to_symbol={to}&outputsize=full";
-
-		using (var reader = new StreamReader(await this.httpClient.GetStreamAsync(requestUri, cancellationToken)))
+		var apiResponse = await response.Content.ReadFromJsonAsync<List<PriceResult>>(this.jsonSerializerOptions, cancellationToken);
+		if (apiResponse.Count == 0)
 		{
-			var csvReader = new CsvReader(reader, CultureInfo.InvariantCulture);
-			var records = csvReader.GetRecords<ExchangeRate>().ToList();
-
-			return records
-				.ToFrozenDictionary(
-					keySelector: x => DateOnly.Parse(x.Date, CultureInfo.InvariantCulture),
-					elementSelector: x => x.Close);
+			return ImmutableDictionary<DateOnly, decimal>.Empty;
 		}
+
+		return apiResponse
+			.ToFrozenDictionary(
+				keySelector: result => DateOnly.ParseExact(result.Date, "yyyy-MM-dd", CultureInfo.InvariantCulture),
+				elementSelector: result => result.Price);
 	}
 
-	private sealed class SymbolSearch
+	public Task<decimal> GetOnOrBeforePriceAsync(string id, DateOnly date, CancellationToken cancellationToken)
 	{
-		[Name("symbol")]
-		public string Symbol { get; init; }
-
-		[Name("name")]
-		public string Name { get; init; }
-
-		[Name("type")]
-		public string Type { get; init; }
-
-		[Name("region")]
-		public string Region { get; init; }
-
-		[Name("marketOpen")]
-		public string MarketOpen { get; init; }
-
-		[Name("marketClose")]
-		public string MarketClose { get; init; }
-
-		[Name("timezone")]
-		public string Timezone { get; init; }
-
-		[Name("currency")]
-		public string Currency { get; init; }
-
-		[Name("matchScore")]
-		public double MatchScore { get; init; }
+		throw new NotSupportedException();
 	}
 
-	private sealed class StockPriceValue
+	private sealed class SymbolSearchApiResponse
 	{
-		[Name("timestamp")]
-		public string Date { get; init; }
+		public string Symbol { get; set; }
 
-		[Name("open")]
-		public decimal Open { get; init; }
+		public string Name { get; set; }
 
-		[Name("high")]
-		public decimal High { get; init; }
-
-		[Name("low")]
-		public decimal Low { get; init; }
-
-		[Name("close")]
-		public decimal Close { get; init; }
-
-		[Name("volume")]
-		public long Volume { get; init; }
+		public string Currency { get; set; }
 	}
 
-	private sealed class ExchangeRate
+	private sealed class PriceResult
 	{
-		[Name("timestamp")]
-		public string Date { get; init; }
+		public string Date { get; set; }
 
-		[Name("open")]
-		public decimal Open { get; init; }
-
-		[Name("high")]
-		public decimal High { get; init; }
-
-		[Name("low")]
-		public decimal Low { get; init; }
-
-		[Name("close")]
-		public decimal Close { get; init; }
+		public decimal Price { get; set; }
 	}
 }

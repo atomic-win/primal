@@ -1,14 +1,10 @@
 using Autofac;
-using LiteDB;
-using Microsoft.Extensions.Options;
-using Primal.Application.Common.Interfaces;
-using Primal.Application.Common.Interfaces.Authentication;
-using Primal.Application.Common.Interfaces.Investments;
-using Primal.Application.Common.Interfaces.Persistence;
-using Primal.Infrastructure.Authentication;
-using Primal.Infrastructure.Common;
+using Microsoft.Extensions.Configuration;
+using Primal.Application.Investments;
+using Primal.Application.Users;
 using Primal.Infrastructure.Investments;
 using Primal.Infrastructure.Persistence;
+using Primal.Infrastructure.Users;
 
 namespace Primal.Infrastructure;
 
@@ -16,81 +12,65 @@ public sealed class InfrastructureModule : Module
 {
 	protected override void Load(ContainerBuilder builder)
 	{
-		builder.RegisterInstance(TimeProvider.System)
-			.As<TimeProvider>()
-			.SingleInstance();
-
-		this.RegisterAuthentication(builder);
 		this.RegisterInvestments(builder);
 		this.RegisterPersistence(builder);
 	}
 
-	private void RegisterAuthentication(ContainerBuilder builder)
-	{
-		builder.RegisterType<IdTokenValidator>()
-			.As<IIdTokenValidator>()
-			.SingleInstance();
-
-		builder.Register(c => new TokenIssuer(
-			tokenIssuerSettings: c.Resolve<IOptions<TokenIssuerSettings>>(),
-			timeProvider: c.Resolve<TimeProvider>()))
-			.As<ITokenIssuer>()
-			.SingleInstance();
-	}
-
 	private void RegisterInvestments(ContainerBuilder builder)
 	{
-		builder.Register(c => new CachedMutualFundApiClient(
-			c.Resolve<ICache>(),
+		builder.RegisterType<MutualFundApiClient>()
+			.SingleInstance();
+
+		builder.Register(c => new StockApiClient(
+			apiKey: c.Resolve<IConfiguration>().GetValue<string>("InvestmentSettings:FMPApiKey"),
+			httpClientFactory: c.Resolve<IHttpClientFactory>()))
+			.SingleInstance();
+
+		builder.Register(c => new CachedAssetApiClient<MutualFund>(
 			c.Resolve<MutualFundApiClient>()))
-			.As<IMutualFundApiClient>();
+			.As<IAssetApiClient<MutualFund>>()
+			.SingleInstance();
 
-		builder.Register(c => new CachedStockApiClient(
-			c.Resolve<ICache>(),
+		builder.Register(c => new CachedAssetApiClient<Stock>(
 			c.Resolve<StockApiClient>()))
-			.As<IStockApiClient>();
+			.As<IAssetApiClient<Stock>>()
+			.SingleInstance();
 
-		builder.Register(c => new CachedExchangeRateProvider(
-			c.Resolve<ICache>(),
-			c.Resolve<StockApiClient>()))
-			.As<IExchangeRateProvider>();
+		builder.Register(c => new ExchangeRateApiClient(
+			c.Resolve<IConfiguration>().GetValue<string>("InvestmentSettings:AlphaVantageApiKey"),
+			c.Resolve<IHttpClientFactory>()))
+			.SingleInstance();
+
+		builder.Register(c => new CachedExchangeRateApiClient(c.Resolve<ExchangeRateApiClient>()))
+			.As<IExchangeRateApiClient>()
+			.SingleInstance();
 	}
 
 	private void RegisterPersistence(ContainerBuilder builder)
 	{
-		builder.Register(c => new LiteDatabase(
-			c.Resolve<IOptions<PersistenceSettings>>().Value.LiteDB.FilePath))
-			.As<LiteDatabase>()
-			.SingleInstance();
-
-		builder.Register(c => new LiteDbCache(
-			c.Resolve<LiteDatabase>()))
-			.As<ICache>()
-			.SingleInstance();
-
 		builder.Register(c => new UserIdRepository(
-			c.Resolve<LiteDatabase>()))
+			c.Resolve<AppDbContext>()))
 			.As<IUserIdRepository>()
-			.SingleInstance();
+			.InstancePerLifetimeScope();
 
 		builder.Register(c => new UserRepository(
-			c.Resolve<LiteDatabase>()))
+			c.Resolve<AppDbContext>()))
 			.As<IUserRepository>()
-			.SingleInstance();
+			.InstancePerLifetimeScope();
 
 		builder.Register(c => new AssetRepository(
-			c.Resolve<LiteDatabase>()))
+			c.Resolve<AppDbContext>()))
 			.As<IAssetRepository>()
-			.SingleInstance();
+			.InstancePerLifetimeScope();
 
-		builder.Register(c => new InstrumentRepository(
-			c.Resolve<LiteDatabase>()))
-			.As<IInstrumentRepository>()
-			.SingleInstance();
+		builder.Register(c => new AssetItemRepository(
+			c.Resolve<AppDbContext>()))
+			.As<IAssetItemRepository>()
+			.InstancePerLifetimeScope();
 
 		builder.Register(c => new TransactionRepository(
-			c.Resolve<LiteDatabase>()))
+			c.Resolve<AppDbContext>()))
 			.As<ITransactionRepository>()
-			.SingleInstance();
+			.InstancePerLifetimeScope();
 	}
 }

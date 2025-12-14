@@ -1,90 +1,69 @@
 using System.Collections.Frozen;
+using System.Collections.Immutable;
 using System.Globalization;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json.Serialization;
-using ErrorOr;
-using Primal.Application.Common.Interfaces.Investments;
-using Primal.Domain.Investments;
+using Primal.Application.Investments;
 using Primal.Domain.Money;
 
 namespace Primal.Infrastructure.Investments;
 
-internal sealed class MutualFundApiClient : IMutualFundApiClient
+internal sealed class MutualFundApiClient : IAssetApiClient<MutualFund>
 {
-	private readonly HttpClient httpClient;
+	private readonly IHttpClientFactory httpClientFactory;
 
-	public MutualFundApiClient(HttpClient httpClient)
+	public MutualFundApiClient(IHttpClientFactory httpClientFactory)
 	{
-		this.httpClient = httpClient;
+		this.httpClientFactory = httpClientFactory;
 	}
 
-	public async Task<ErrorOr<MutualFund>> GetBySchemeCodeAsync(int schemeCode, CancellationToken cancellationToken)
+	public async Task<MutualFund> GetBySymbolAsync(string id, CancellationToken cancellationToken)
 	{
-		var response = await this.httpClient.GetAsync($"/mf/{schemeCode}/latest", cancellationToken);
+		var httpClient = this.httpClientFactory.CreateClient(nameof(MutualFundApiClient));
+		var response = await httpClient.GetAsync($"/mf/{id}/latest", cancellationToken);
 
 		if (response.StatusCode == HttpStatusCode.NotFound)
 		{
-			return Error.NotFound();
-		}
-
-		if (response.StatusCode != HttpStatusCode.OK)
-		{
-			return Error.Failure();
+			return new MutualFund(
+				SchemeCode: string.Empty,
+				Name: string.Empty,
+				SchemeType: string.Empty,
+				SchemeCategory: string.Empty,
+				Currency: Currency.Unknown);
 		}
 
 		var apiResponse = await response.Content.ReadFromJsonAsync<MutualFundApiResponse>(cancellationToken);
-
-		if (!string.Equals(apiResponse.Status, "SUCCESS", StringComparison.OrdinalIgnoreCase))
-		{
-			return Error.Unexpected();
-		}
-
-		if (apiResponse.Data.Count == 0)
-		{
-			return Error.NotFound();
-		}
 
 		return new MutualFund(
-			new InstrumentId(Guid.Empty),
-			apiResponse.Meta.SchemeName,
-			apiResponse.Meta.FundHouse,
-			apiResponse.Meta.SchemeType,
-			apiResponse.Meta.SchemeCategory,
-			apiResponse.Meta.SchemeCode,
-			Currency.INR);
+			SchemeCode: id,
+			Name: apiResponse.Meta.SchemeName,
+			SchemeType: apiResponse.Meta.SchemeType,
+			SchemeCategory: apiResponse.Meta.SchemeCategory,
+			Currency: Currency.INR);
 	}
 
-	public async Task<ErrorOr<IReadOnlyDictionary<DateOnly, decimal>>> GetPriceAsync(int schemeCode, CancellationToken cancellationToken)
+	public async Task<IReadOnlyDictionary<DateOnly, decimal>> GetPricesAsync(string schemeCode, CancellationToken cancellationToken)
 	{
-		var response = await this.httpClient.GetAsync($"/mf/{schemeCode}", cancellationToken);
+		var httpClient = this.httpClientFactory.CreateClient(nameof(MutualFundApiClient));
+		var response = await httpClient.GetAsync($"/mf/{schemeCode}", cancellationToken);
 
 		if (response.StatusCode == HttpStatusCode.NotFound)
 		{
-			return Error.NotFound();
-		}
-
-		if (response.StatusCode != HttpStatusCode.OK)
-		{
-			return Error.Failure();
+			return ImmutableDictionary<DateOnly, decimal>.Empty;
 		}
 
 		var apiResponse = await response.Content.ReadFromJsonAsync<MutualFundApiResponse>(cancellationToken);
-
-		if (!string.Equals(apiResponse.Status, "SUCCESS", StringComparison.OrdinalIgnoreCase))
-		{
-			return Error.Unexpected();
-		}
-
-		if (apiResponse.Data.Count == 0)
-		{
-			return Error.NotFound();
-		}
 
 		return apiResponse.Data
 			.ToFrozenDictionary(
 				keySelector: data => DateOnly.ParseExact(data.Date, "dd-MM-yyyy", CultureInfo.InvariantCulture),
 				elementSelector: data => decimal.Parse(data.Nav, CultureInfo.InvariantCulture));
+	}
+
+	public Task<decimal> GetOnOrBeforePriceAsync(string schemeCode, DateOnly date, CancellationToken cancellationToken)
+	{
+		throw new NotSupportedException();
 	}
 
 	private sealed class MutualFundApiResponse

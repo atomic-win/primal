@@ -7,14 +7,20 @@
 	<ItemGroup>
 		<ProjectReference Include="..\Primal.Application\Primal.Application.csproj" />
 		<ProjectReference Include="..\Primal.Infrastructure\Primal.Infrastructure.csproj" />
-		<ProjectReference Include="..\Primal.Contracts\Primal.Contracts.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="Autofac.Extensions.DependencyInjection" />
+		<PackageReference Include="FastEndpoints" />
+		<PackageReference Include="FastEndpoints.Security" />
 		<PackageReference Include="Mapster" />
 		<PackageReference Include="Mapster.DependencyInjection" />
 		<PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		  <PrivateAssets>all</PrivateAssets>
+		</PackageReference>
+		<PackageReference Include="System.Linq.AsyncEnumerable" />
 	</ItemGroup>
 
 </Project>

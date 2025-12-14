@@ -3,6 +3,10 @@
 # top-most EditorConfig file
 root = true
 
+[**/Migrations/*.cs]
+generated_code = true
+dotnet_analyzer_diagnostic.severity = none
+
 [*]
 indent_style = tab
 tab_width = 4
