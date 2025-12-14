@@ -19,7 +19,8 @@ public sealed class InfrastructureModule : Module
 
 	private void RegisterInvestments(ContainerBuilder builder)
 	{
-		builder.RegisterType<MutualFundApiClient>()
+		builder.Register(c => new MutualFundApiClient(
+			c.Resolve<IHttpClientFactory>()))
 			.SingleInstance();
 
 		builder.Register(c => new StockApiClient(

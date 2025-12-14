@@ -13,7 +13,7 @@ internal sealed class ExchangeRateApiClient : IExchangeRateApiClient
 	private readonly string apiKey;
 	private readonly IHttpClientFactory httpClientFactory;
 
-	public ExchangeRateApiClient(
+	internal ExchangeRateApiClient(
 		string apiKey,
 		IHttpClientFactory httpClientFactory)
 	{
