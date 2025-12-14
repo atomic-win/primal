@@ -12,7 +12,7 @@ public interface IUserRepository
 
 	Task<User> AddUserAsync(
 		UserId userId,
-		MailAddress email,
+		string email,
 		string firstName,
 		string lastName,
 		string fullName,

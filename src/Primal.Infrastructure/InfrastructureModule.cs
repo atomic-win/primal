@@ -1,7 +1,9 @@
 using Autofac;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Configuration;
 using Primal.Application.Investments;
 using Primal.Application.Users;
+using Primal.Domain.Users;
 using Primal.Infrastructure.Investments;
 using Primal.Infrastructure.Persistence;
 using Primal.Infrastructure.Users;
@@ -27,11 +29,13 @@ public sealed class InfrastructureModule : Module
 			.SingleInstance();
 
 		builder.Register(c => new CachedAssetApiClient<MutualFund>(
+			c.Resolve<HybridCache>(),
 			c.Resolve<MutualFundApiClient>()))
 			.As<IAssetApiClient<MutualFund>>()
 			.SingleInstance();
 
 		builder.Register(c => new CachedAssetApiClient<Stock>(
+			c.Resolve<HybridCache>(),
 			c.Resolve<StockApiClient>()))
 			.As<IAssetApiClient<Stock>>()
 			.SingleInstance();
@@ -41,7 +45,9 @@ public sealed class InfrastructureModule : Module
 			c.Resolve<IHttpClientFactory>()))
 			.SingleInstance();
 
-		builder.Register(c => new CachedExchangeRateApiClient(c.Resolve<ExchangeRateApiClient>()))
+		builder.Register(c => new CachedExchangeRateApiClient(
+			c.Resolve<HybridCache>(),
+			c.Resolve<ExchangeRateApiClient>()))
 			.As<IExchangeRateApiClient>()
 			.SingleInstance();
 	}
@@ -50,27 +56,42 @@ public sealed class InfrastructureModule : Module
 	{
 		builder.Register(c => new UserIdRepository(
 			c.Resolve<AppDbContext>()))
-			.As<IUserIdRepository>()
-			.InstancePerLifetimeScope();
+			.As<IUserIdRepository>();
 
 		builder.Register(c => new UserRepository(
 			c.Resolve<AppDbContext>()))
-			.As<IUserRepository>()
-			.InstancePerLifetimeScope();
+			.As<UserRepository>();
+
+		builder.Register(c => new CachedUserRepository(
+			c.Resolve<HybridCache>(),
+			c.Resolve<UserRepository>()))
+			.As<IUserRepository>();
 
 		builder.Register(c => new AssetRepository(
 			c.Resolve<AppDbContext>()))
-			.As<IAssetRepository>()
-			.InstancePerLifetimeScope();
+			.As<AssetRepository>();
+
+		builder.Register(c => new CachedAssetRepository(
+			c.Resolve<HybridCache>(),
+			c.Resolve<AssetRepository>()))
+			.As<IAssetRepository>();
 
 		builder.Register(c => new AssetItemRepository(
 			c.Resolve<AppDbContext>()))
-			.As<IAssetItemRepository>()
-			.InstancePerLifetimeScope();
+			.As<AssetItemRepository>();
+
+		builder.Register(c => new CachedAssetItemRepository(
+			c.Resolve<HybridCache>(),
+			c.Resolve<AssetItemRepository>()))
+			.As<IAssetItemRepository>();
 
 		builder.Register(c => new TransactionRepository(
 			c.Resolve<AppDbContext>()))
-			.As<ITransactionRepository>()
-			.InstancePerLifetimeScope();
+			.As<TransactionRepository>();
+
+		builder.Register(c => new CachedTransactionRepository(
+			c.Resolve<HybridCache>(),
+			c.Resolve<TransactionRepository>()))
+			.As<ITransactionRepository>();
 	}
 }

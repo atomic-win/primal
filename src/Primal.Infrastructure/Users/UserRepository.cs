@@ -31,7 +31,7 @@ internal sealed class UserRepository : IUserRepository
 
 	public async Task<User> AddUserAsync(
 		UserId userId,
-		MailAddress email,
+		string email,
 		string firstName,
 		string lastName,
 		string fullName,
@@ -40,7 +40,7 @@ internal sealed class UserRepository : IUserRepository
 		var userTableEntity = new UserTableEntity
 		{
 			Id = userId.Value,
-			Email = email.Address,
+			Email = email,
 			FirstName = firstName,
 			LastName = lastName,
 			FullName = fullName,
@@ -71,7 +71,7 @@ internal sealed class UserRepository : IUserRepository
 	{
 		return new User(
 			new UserId(userTableEntity.Id),
-			new MailAddress(userTableEntity.Email),
+			userTableEntity.Email,
 			userTableEntity.FirstName,
 			userTableEntity.LastName,
 			userTableEntity.FullName,

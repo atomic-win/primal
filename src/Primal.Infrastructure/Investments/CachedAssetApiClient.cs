@@ -1,43 +1,43 @@
-using System.Collections.Concurrent;
+using Microsoft.Extensions.Caching.Hybrid;
 using Primal.Application.Investments;
 
 namespace Primal.Infrastructure.Investments;
 
 internal sealed class CachedAssetApiClient<T> : IAssetApiClient<T>
 {
+	private readonly HybridCache hybridCache;
 	private readonly IAssetApiClient<T> assetApiClient;
 
-	private readonly ConcurrentDictionary<string, Lazy<Task<T>>> symbolCache
-		= new ConcurrentDictionary<string, Lazy<Task<T>>>(StringComparer.OrdinalIgnoreCase);
-
-	private readonly ConcurrentDictionary<string, Lazy<Task<IReadOnlyDictionary<DateOnly, decimal>>>> pricesCache
-		= new ConcurrentDictionary<string, Lazy<Task<IReadOnlyDictionary<DateOnly, decimal>>>>(StringComparer.OrdinalIgnoreCase);
-
-	private readonly ConcurrentDictionary<(string Symbol, DateOnly Date), Lazy<Task<decimal>>> onOrBeforePriceCache
-		= new ConcurrentDictionary<(string Symbol, DateOnly Date), Lazy<Task<decimal>>>();
-
-	internal CachedAssetApiClient(IAssetApiClient<T> assetApiClient)
+	internal CachedAssetApiClient(
+		HybridCache hybridCache,
+		IAssetApiClient<T> assetApiClient)
 	{
+		this.hybridCache = hybridCache;
 		this.assetApiClient = assetApiClient;
 	}
 
 	public async Task<T> GetBySymbolAsync(string symbol, CancellationToken cancellationToken)
 	{
-		var lazyResult = this.symbolCache.GetOrAdd(symbol, s => new Lazy<Task<T>>(() => this.assetApiClient.GetBySymbolAsync(s, cancellationToken)));
-		return await lazyResult.Value;
+		return await this.hybridCache.GetOrCreateAsync(
+			$"asset/{typeof(T).Name}/{symbol}",
+			async entry => await this.assetApiClient.GetBySymbolAsync(symbol, cancellationToken),
+			cancellationToken: cancellationToken);
 	}
 
 	public async Task<IReadOnlyDictionary<DateOnly, decimal>> GetPricesAsync(string symbol, CancellationToken cancellationToken)
 	{
-		var lazyResult = this.pricesCache.GetOrAdd(symbol, s => new Lazy<Task<IReadOnlyDictionary<DateOnly, decimal>>>(() => this.assetApiClient.GetPricesAsync(s, cancellationToken)));
-		return await lazyResult.Value;
+		return await this.hybridCache.GetOrCreateAsync(
+			$"asset/{typeof(T).Name}/{symbol}/prices",
+			async entry => await this.assetApiClient.GetPricesAsync(symbol, cancellationToken),
+			cancellationToken: cancellationToken);
 	}
 
 	public async Task<decimal> GetOnOrBeforePriceAsync(string symbol, DateOnly date, CancellationToken cancellationToken)
 	{
-		var key = (Symbol: symbol, Date: date);
-		var lazyResult = this.onOrBeforePriceCache.GetOrAdd(key, k => new Lazy<Task<decimal>>(() => this.GetOnOrBeforeValueAsyncInternal(k.Symbol, k.Date, cancellationToken)));
-		return await lazyResult.Value;
+		return await this.hybridCache.GetOrCreateAsync(
+			$"asset/{typeof(T).Name}/{symbol}/prices/{date:yyyy-MM-dd}/on-or-before",
+			async entry => await this.GetOnOrBeforeValueAsyncInternal(symbol, date, cancellationToken),
+			cancellationToken: cancellationToken);
 	}
 
 	private async Task<decimal> GetOnOrBeforeValueAsyncInternal(

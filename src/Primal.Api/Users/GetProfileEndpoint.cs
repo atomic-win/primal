@@ -29,7 +29,7 @@ public sealed class GetProfileEndpoint : EndpointWithoutRequest<UserProfileRespo
 		await this.Send.OkAsync(
 			new UserProfileResponse(
 			user.Id.Value,
-			user.Email.Address,
+			user.Email,
 			user.FirstName,
 			user.LastName,
 			user.FullName,

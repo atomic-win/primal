@@ -16,7 +16,7 @@ public sealed class IdentityProviderUser : Entity<IdentityProviderUserId>
 		: base(id)
 	{
 		this.IdentityProvider = identityProvider;
-		this.Email = new MailAddress(email);
+		this.Email = email;
 		this.FirstName = firstName;
 		this.LastName = lastName;
 		this.FullName = fullName;
@@ -25,7 +25,7 @@ public sealed class IdentityProviderUser : Entity<IdentityProviderUserId>
 
 	public IdentityProvider IdentityProvider { get; init; }
 
-	public MailAddress Email { get; init; }
+	public string Email { get; init; }
 
 	public string FirstName { get; init; }
 
