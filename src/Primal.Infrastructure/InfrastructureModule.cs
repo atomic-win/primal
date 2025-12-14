@@ -3,7 +3,6 @@ using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Configuration;
 using Primal.Application.Investments;
 using Primal.Application.Users;
-using Primal.Domain.Users;
 using Primal.Infrastructure.Investments;
 using Primal.Infrastructure.Persistence;
 using Primal.Infrastructure.Users;
@@ -56,42 +55,51 @@ public sealed class InfrastructureModule : Module
 	{
 		builder.Register(c => new UserIdRepository(
 			c.Resolve<AppDbContext>()))
-			.As<IUserIdRepository>();
+			.As<IUserIdRepository>()
+			.InstancePerLifetimeScope();
 
 		builder.Register(c => new UserRepository(
 			c.Resolve<AppDbContext>()))
-			.As<UserRepository>();
+			.As<UserRepository>()
+			.InstancePerLifetimeScope();
 
 		builder.Register(c => new CachedUserRepository(
 			c.Resolve<HybridCache>(),
 			c.Resolve<UserRepository>()))
-			.As<IUserRepository>();
+			.As<IUserRepository>()
+			.InstancePerLifetimeScope();
 
 		builder.Register(c => new AssetRepository(
 			c.Resolve<AppDbContext>()))
-			.As<AssetRepository>();
+			.As<AssetRepository>()
+			.InstancePerLifetimeScope();
 
 		builder.Register(c => new CachedAssetRepository(
 			c.Resolve<HybridCache>(),
 			c.Resolve<AssetRepository>()))
-			.As<IAssetRepository>();
+			.As<IAssetRepository>()
+			.InstancePerLifetimeScope();
 
 		builder.Register(c => new AssetItemRepository(
 			c.Resolve<AppDbContext>()))
-			.As<AssetItemRepository>();
+			.As<AssetItemRepository>()
+			.InstancePerLifetimeScope();
 
 		builder.Register(c => new CachedAssetItemRepository(
 			c.Resolve<HybridCache>(),
 			c.Resolve<AssetItemRepository>()))
-			.As<IAssetItemRepository>();
+			.As<IAssetItemRepository>()
+			.InstancePerLifetimeScope();
 
 		builder.Register(c => new TransactionRepository(
 			c.Resolve<AppDbContext>()))
-			.As<TransactionRepository>();
+			.As<TransactionRepository>()
+			.InstancePerLifetimeScope();
 
 		builder.Register(c => new CachedTransactionRepository(
 			c.Resolve<HybridCache>(),
 			c.Resolve<TransactionRepository>()))
-			.As<ITransactionRepository>();
+			.As<ITransactionRepository>()
+			.InstancePerLifetimeScope();
 	}
 }
