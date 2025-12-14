@@ -5,7 +5,6 @@
   <ItemGroup>
     <PackageVersion Include="Autofac.Extensions.DependencyInjection" Version="9.0.0" />
     <PackageVersion Include="CsvHelper" Version="32.0.3" />
-    <PackageVersion Include="ErrorOr" Version="1.10.0" />
     <PackageVersion Include="FastEndpoints" Version="7.1.1" />
     <PackageVersion Include="FastEndpoints.Security" Version="7.1.1" />
     <PackageVersion Include="FluentValidation" Version="11.9.0" />
