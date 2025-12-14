@@ -5,7 +5,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Autofac.Extensions.DependencyInjection" />
 		<PackageReference Include="ErrorOr" />
 		<PackageReference Include="FluentValidation" />
 		<PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
