@@ -10,7 +10,7 @@ internal sealed class CachedTransactionRepository : ITransactionRepository
 	private readonly HybridCache hybridCache;
 	private readonly ITransactionRepository transactionRepository;
 
-	public CachedTransactionRepository(
+	internal CachedTransactionRepository(
 		HybridCache hybridCache,
 		ITransactionRepository transactionRepository)
 	{

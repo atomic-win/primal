@@ -18,7 +18,7 @@ internal sealed class StockApiClient : IAssetApiClient<Stock>
 		PropertyNameCaseInsensitive = true,
 	};
 
-	public StockApiClient(
+	internal StockApiClient(
 		string apiKey,
 		IHttpClientFactory httpClientFactory)
 	{

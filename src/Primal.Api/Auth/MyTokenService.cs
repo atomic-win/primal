@@ -3,7 +3,7 @@ using FastEndpoints.Security;
 
 namespace Primal.Api.Auth;
 
-public sealed class MyTokenService : RefreshTokenService<TokenRequest, TokenResponse>
+internal sealed class MyTokenService : RefreshTokenService<TokenRequest, TokenResponse>
 {
 	public MyTokenService(IConfiguration config)
 	{

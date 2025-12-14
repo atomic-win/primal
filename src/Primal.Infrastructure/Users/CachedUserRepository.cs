@@ -11,7 +11,7 @@ internal sealed class CachedUserRepository : IUserRepository
 	private readonly HybridCache hybridCache;
 	private readonly IUserRepository userRepository;
 
-	public CachedUserRepository(
+	internal CachedUserRepository(
 		HybridCache hybridCache,
 		IUserRepository userRepository)
 	{

@@ -10,7 +10,7 @@ internal sealed class CachedAssetRepository : IAssetRepository
 	private readonly HybridCache hybridCache;
 	private readonly IAssetRepository assetRepository;
 
-	public CachedAssetRepository(
+	internal CachedAssetRepository(
 		HybridCache hybridCache,
 		IAssetRepository assetRepository)
 	{

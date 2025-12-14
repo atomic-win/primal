@@ -13,7 +13,7 @@ internal sealed class MutualFundApiClient : IAssetApiClient<MutualFund>
 {
 	private readonly IHttpClientFactory httpClientFactory;
 
-	public MutualFundApiClient(IHttpClientFactory httpClientFactory)
+	internal MutualFundApiClient(IHttpClientFactory httpClientFactory)
 	{
 		this.httpClientFactory = httpClientFactory;
 	}
