@@ -44,6 +44,12 @@ internal sealed class AddAssetItemEndpoint : Endpoint<AssetItemRequest>
 			return;
 		}
 
+		if (req.AssetType == AssetType.Bond)
+		{
+			await this.AddOtherAssetItemTypeAsync(req with { AssetClass = AssetClass.Debt }, ct);
+			return;
+		}
+
 		await this.AddOtherAssetItemTypeAsync(req, ct);
 	}
 
