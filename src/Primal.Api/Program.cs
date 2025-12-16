@@ -23,6 +23,8 @@ var builder = WebApplication.CreateBuilder(args);
 		});
 
 	builder.Services.AddDbContext<AppDbContext>(options =>
+			options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"), b => b.MigrationsAssembly("Primal.Api")))
+		.AddDbContextFactory<AppDbContext>(options =>
 			options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"), b => b.MigrationsAssembly("Primal.Api")));
 
 	builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
