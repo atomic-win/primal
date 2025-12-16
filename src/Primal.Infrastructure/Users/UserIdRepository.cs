@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Primal.Application.Users;
 using Primal.Domain.Users;
 using Primal.Infrastructure.Persistence;
@@ -18,7 +19,12 @@ internal sealed class UserIdRepository : IUserIdRepository
 		IdentityProviderUserId identityProviderUserId,
 		CancellationToken cancellationToken)
 	{
-		var userIdTableEntity = await this.appDbContext.UserIds.FindAsync(identityProviderUserId.Value, identityProvider, cancellationToken);
+		var userIdTableEntity = await this.appDbContext.UserIds
+			.AsNoTracking()
+			.FirstOrDefaultAsync(
+				x => x.IdentityProvider == identityProvider && x.Id == identityProviderUserId.Value,
+				cancellationToken);
+
 		return userIdTableEntity is null ? UserId.Empty : new UserId(userIdTableEntity.UserId);
 	}
 

@@ -17,7 +17,9 @@ internal sealed class AssetRepository : IAssetRepository
 
 	public async Task<Asset> GetByIdAsync(AssetId assetId, CancellationToken cancellationToken)
 	{
-		var assetTableEntity = await this.appDbContext.Assets.FindAsync(assetId.Value, cancellationToken);
+		var assetTableEntity = await this.appDbContext.Assets
+			.AsNoTracking()
+			.FirstOrDefaultAsync(a => a.Id == assetId.Value, cancellationToken);
 
 		if (assetTableEntity is null)
 		{
@@ -30,6 +32,7 @@ internal sealed class AssetRepository : IAssetRepository
 	public async Task<Asset> GetByExternalIdAsync(string externalId, CancellationToken cancellationToken)
 	{
 		var assetTableEntity = await this.appDbContext.Assets
+			.AsNoTracking()
 			.FirstOrDefaultAsync(a => a.ExternalId == externalId, cancellationToken);
 
 		if (assetTableEntity is null)

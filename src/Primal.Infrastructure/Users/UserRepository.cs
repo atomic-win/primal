@@ -19,7 +19,10 @@ internal sealed class UserRepository : IUserRepository
 		UserId userId,
 		CancellationToken cancellationToken)
 	{
-		var userTableEntity = await this.appDbContext.Users.FindAsync(userId.Value, cancellationToken);
+		var userTableEntity = await this.appDbContext.Users
+			.AsNoTracking()
+			.FirstOrDefaultAsync(u => u.Id == userId.Value, cancellationToken);
+
 		if (userTableEntity is null)
 		{
 			return User.Empty;
