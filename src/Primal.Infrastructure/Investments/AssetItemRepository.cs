@@ -20,6 +20,7 @@ internal sealed class AssetItemRepository : IAssetItemRepository
 		CancellationToken cancellationToken)
 	{
 		var assetItemTableEntities = await this.appDbContext.AssetItems
+			.AsNoTracking()
 			.Where(ai => ai.UserId == userId.Value)
 			.ToListAsync(cancellationToken);
 
@@ -32,7 +33,9 @@ internal sealed class AssetItemRepository : IAssetItemRepository
 		CancellationToken cancellationToken)
 	{
 		var assetItemTableEntity = await this.appDbContext.AssetItems
+			.AsNoTracking()
 			.FirstOrDefaultAsync(ai => ai.UserId == userId.Value && ai.Id == assetItemId.Value, cancellationToken);
+
 		if (assetItemTableEntity is null)
 		{
 			return AssetItem.Empty;

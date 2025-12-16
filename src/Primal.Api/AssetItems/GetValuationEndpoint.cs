@@ -33,6 +33,25 @@ internal sealed class GetValuationEndpoint : EndpointWithoutRequest<ValuationRes
 		var assetItemIds = assetItemGuids.Select(id => new AssetItemId(id)).ToImmutableArray();
 
 		await this.ValidateRequestParameters(userId, assetItemIds, valuationDate, currency, ct);
+		this.ThrowIfAnyErrors();
+
+		var valuationInputs = new List<ValuationInput>(capacity: assetItemIds.Length);
+		foreach (var assetItemId in assetItemIds)
+		{
+			valuationInputs.Add(await this.GetValuationInputAsync(
+				userId,
+				assetItemId,
+				valuationDate,
+				currency,
+				ct));
+		}
+
+		await this.Send.OkAsync(
+			new ValuationResponse(
+			InvestedValue: valuationInputs.Sum(i => i.InvestedValue),
+			CurrentValue: valuationInputs.Sum(i => i.CurrentValue),
+			XirrPercent: 100 * this.CalculateXirr(valuationInputs.SelectMany(i => i.XirrInputs).ToImmutableArray())),
+			ct);
 	}
 
 	private async Task ValidateRequestParameters(
@@ -65,21 +84,6 @@ internal sealed class GetValuationEndpoint : EndpointWithoutRequest<ValuationRes
 				this.AddError($"Asset item with ID '{assetItemId.Value}' not found.");
 			}
 		}
-
-		this.ThrowIfAnyErrors();
-
-		var valuationInputTasks = assetItemIds
-			.Select(assetItemId => this.GetValuationInputAsync(userId, assetItemId, valuationDate, currency, ct))
-			.ToImmutableArray();
-
-		var valuationInputs = await Task.WhenAll(valuationInputTasks);
-
-		await this.Send.OkAsync(
-			new ValuationResponse(
-			InvestedValue: valuationInputs.Sum(i => i.InvestedValue),
-			CurrentValue: valuationInputs.Sum(i => i.CurrentValue),
-			XirrPercent: 100 * this.CalculateXirr(valuationInputs.SelectMany(i => i.XirrInputs).ToImmutableArray())),
-			ct);
 	}
 
 	private async Task<ValuationInput> GetValuationInputAsync(
@@ -95,10 +99,6 @@ internal sealed class GetValuationEndpoint : EndpointWithoutRequest<ValuationRes
 			valuationDate,
 			ct)).ToImmutableArray();
 
-		var xirrInputTasks = transactions
-			.Select(t => this.MapToXirrInputAsync(userId, t, valuationDate, currency, ct))
-			.ToImmutableArray();
-
 		var investedValue = await this.CalculateInvestedValueAsync(
 			userId,
 			transactions,
@@ -113,11 +113,23 @@ internal sealed class GetValuationEndpoint : EndpointWithoutRequest<ValuationRes
 			currency,
 			ct);
 
+		var xirrInputs = new List<XirrInput>(capacity: transactions.Length);
+		foreach (var transaction in transactions)
+		{
+			xirrInputs.Add(
+				await this.MapToXirrInputAsync(
+				userId,
+				transaction,
+				valuationDate,
+				currency,
+				ct));
+		}
+
 		return new ValuationInput
 		{
 			InvestedValue = investedValue,
 			CurrentValue = currentValue,
-			XirrInputs = await Task.WhenAll(xirrInputTasks),
+			XirrInputs = xirrInputs,
 		};
 	}
 

@@ -22,6 +22,7 @@ internal sealed class TransactionRepository : ITransactionRepository
 		CancellationToken cancellationToken)
 	{
 		var transactionTableEntities = await this.appDbContext.Transactions
+			.AsNoTracking()
 			.Where(t => t.UserId == userId.Value && t.AssetItemId == assetItemId.Value && t.Date <= maxDate)
 			.ToListAsync(cancellationToken);
 
@@ -37,6 +38,7 @@ internal sealed class TransactionRepository : ITransactionRepository
 		CancellationToken cancellationToken)
 	{
 		var transactionTableEntity = await this.appDbContext.Transactions
+			.AsNoTracking()
 			.FirstOrDefaultAsync(
 				t =>
 				t.UserId == userId.Value &&
@@ -58,6 +60,7 @@ internal sealed class TransactionRepository : ITransactionRepository
 		CancellationToken cancellationToken)
 	{
 		var earliestDate = await this.appDbContext.Transactions
+			.AsNoTracking()
 			.Where(t => t.UserId == userId.Value && t.AssetItemId == assetItemId.Value)
 			.MinAsync(t => (DateOnly?)t.Date, cancellationToken);
 
