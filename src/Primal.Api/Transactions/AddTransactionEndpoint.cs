@@ -55,6 +55,13 @@ internal sealed class AddTransactionEndpoint : Endpoint<TransactionRequest>
 			this.AddError("Transaction date must be provided.");
 		}
 
+		var todayDate = DateOnly.FromDateTime(DateTime.Today);
+
+		if (req.Date > todayDate.AddDays(-todayDate.Day))
+		{
+			this.AddError("Transaction date must be before the current month.");
+		}
+
 		if (string.IsNullOrWhiteSpace(req.Name))
 		{
 			this.AddError("Transaction name must be provided.");
