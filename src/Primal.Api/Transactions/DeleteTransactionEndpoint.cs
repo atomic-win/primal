@@ -5,7 +5,7 @@ using Primal.Domain.Investments;
 namespace Primal.Api.Transactions;
 
 [HttpDelete("/api/assetItems/{assetItemId:guid}/transactions/{transactionId:guid}")]
-internal sealed class DeleteTransactionEndpoint : Endpoint<TransactionRequest>
+internal sealed class DeleteTransactionEndpoint : EndpointWithoutRequest
 {
 	private readonly ITransactionRepository transactionRepository;
 
@@ -14,9 +14,7 @@ internal sealed class DeleteTransactionEndpoint : Endpoint<TransactionRequest>
 		this.transactionRepository = transactionRepository;
 	}
 
-	public override async Task HandleAsync(
-		TransactionRequest req,
-		CancellationToken cancellationToken)
+	public override async Task HandleAsync(CancellationToken cancellationToken)
 	{
 		Guid assetItemId = this.Route<Guid>("assetItemId");
 		Guid transactionId = this.Route<Guid>("transactionId");

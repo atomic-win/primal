@@ -5,7 +5,7 @@ using Primal.Domain.Investments;
 namespace Primal.Api.Transactions;
 
 [HttpPost("/api/assetItems/{assetItemId:guid}/transactions")]
-internal sealed class AddTransactionEndpoint : Endpoint<TransactionRequest>
+internal sealed class AddTransactionEndpoint : Endpoint<AddTransactionRequest>
 {
 	private readonly ITransactionRepository transactionRepository;
 	private readonly IAssetItemRepository assetItemRepository;
@@ -22,18 +22,16 @@ internal sealed class AddTransactionEndpoint : Endpoint<TransactionRequest>
 	}
 
 	public override async Task HandleAsync(
-		TransactionRequest req,
+		AddTransactionRequest req,
 		CancellationToken cancellationToken)
 	{
-		Guid assetItemId = this.Route<Guid>("assetItemId");
 		await this.ValidateRequestAsync(
-			assetItemId,
 			req,
 			cancellationToken);
 
 		var transaction = await this.transactionRepository.AddAsync(
 			this.GetUserId(),
-			new AssetItemId(assetItemId),
+			new AssetItemId(req.AssetItemId),
 			req.Date,
 			req.Name,
 			req.TransactionType,
@@ -41,18 +39,24 @@ internal sealed class AddTransactionEndpoint : Endpoint<TransactionRequest>
 			cancellationToken);
 
 		await this.Send.CreatedAtAsync(
-			$"/api/assetItems/{assetItemId}/transactions/{transaction.Id.Value}",
+			$"/api/assetItems/{req.AssetItemId}/transactions/{transaction.Id.Value}",
 			cancellation: cancellationToken);
 	}
 
 	private async Task ValidateRequestAsync(
-		Guid assetItemId,
-		TransactionRequest req,
+		AddTransactionRequest req,
 		CancellationToken cancellationToken)
 	{
 		if (req.Date == default)
 		{
 			this.AddError("Transaction date must be provided.");
+		}
+
+		var todayDate = DateOnly.FromDateTime(DateTime.Today);
+
+		if (req.Date > todayDate.AddDays(-todayDate.Day))
+		{
+			this.AddError("Transaction date must be before the current month.");
 		}
 
 		if (string.IsNullOrWhiteSpace(req.Name))
@@ -84,7 +88,7 @@ internal sealed class AddTransactionEndpoint : Endpoint<TransactionRequest>
 
 		var assetItem = await this.assetItemRepository.GetByIdAsync(
 			this.GetUserId(),
-			new AssetItemId(assetItemId),
+			new AssetItemId(req.AssetItemId),
 			cancellationToken);
 
 		if (assetItem.Id == AssetItemId.Empty)
@@ -104,3 +108,12 @@ internal sealed class AddTransactionEndpoint : Endpoint<TransactionRequest>
 		}
 	}
 }
+
+[System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "MA0048:File name must match type name", Justification = "Record used only by this endpoint.")]
+[System.Diagnostics.CodeAnalysis.SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1402:File may only contain a single type", Justification = "Record used only by this endpoint.")]
+internal sealed record AddTransactionRequest(
+	DateOnly Date,
+	string Name,
+	TransactionType TransactionType,
+	Guid AssetItemId,
+	decimal Units);

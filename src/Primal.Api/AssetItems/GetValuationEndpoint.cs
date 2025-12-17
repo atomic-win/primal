@@ -66,6 +66,13 @@ internal sealed class GetValuationEndpoint : EndpointWithoutRequest<ValuationRes
 			this.AddError("Date query parameter is required.");
 		}
 
+		var todayDate = DateOnly.FromDateTime(DateTime.Today);
+
+		if (valuationDate > todayDate.AddDays(-todayDate.Day))
+		{
+			this.AddError("Valuation date must be before the current month.");
+		}
+
 		if (currency == Currency.Unknown)
 		{
 			this.AddError("Currency query parameter is required.");
