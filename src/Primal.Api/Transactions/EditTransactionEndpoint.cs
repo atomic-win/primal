@@ -5,7 +5,7 @@ using Primal.Domain.Investments;
 namespace Primal.Api.Transactions;
 
 [HttpPatch("/api/assetItems/{assetItemId:guid}/transactions/{transactionId:guid}")]
-internal sealed class EditTransactionEndpoint : Endpoint<TransactionRequest>
+internal sealed class EditTransactionEndpoint : Endpoint<EditTransactionRequest>
 {
 	private readonly ITransactionRepository transactionRepository;
 	private readonly IAssetItemRepository assetItemRepository;
@@ -22,94 +22,25 @@ internal sealed class EditTransactionEndpoint : Endpoint<TransactionRequest>
 	}
 
 	public override async Task HandleAsync(
-		TransactionRequest req,
+		EditTransactionRequest req,
 		CancellationToken cancellationToken)
 	{
-		Guid assetItemId = this.Route<Guid>("assetItemId");
-		Guid transactionId = this.Route<Guid>("transactionId");
+		this.ValidateRequest(req);
 
-		var transaction = await this.transactionRepository.GetByIdAsync(
+		var existingTransaction = await this.transactionRepository.GetByIdAsync(
 			this.GetUserId(),
-			new AssetItemId(assetItemId),
-			new TransactionId(transactionId),
+			new AssetItemId(req.AssetItemId),
+			new TransactionId(req.TransactionId),
 			cancellationToken);
 
-		if (transaction.Id == TransactionId.Empty)
+		if (existingTransaction.Id == TransactionId.Empty)
 		{
 			this.ThrowError("Transaction does not exist.", StatusCodes.Status404NotFound);
 		}
 
-		var updatedRequest = this.GetRequestWithDefaults(req, transaction);
-
-		await this.ValidateRequestAsync(
-			assetItemId,
-			updatedRequest,
-			cancellationToken);
-
-		await this.transactionRepository.UpdateAsync(
-			this.GetUserId(),
-			new Transaction(
-				transaction.Id,
-				updatedRequest.Date,
-				updatedRequest.Name,
-				updatedRequest.TransactionType,
-				new AssetItemId(assetItemId),
-				updatedRequest.Units),
-			cancellationToken);
-
-		await this.Send.NoContentAsync(cancellation: cancellationToken);
-	}
-
-	private TransactionRequest GetRequestWithDefaults(TransactionRequest req, Transaction existingTransaction)
-	{
-		return new TransactionRequest(
-			Date: req.Date == default ? existingTransaction.Date : req.Date,
-			Name: string.IsNullOrWhiteSpace(req.Name) ? existingTransaction.Name : req.Name,
-			TransactionType: req.TransactionType == TransactionType.Unknown ? existingTransaction.TransactionType : req.TransactionType,
-			AssetItemId: existingTransaction.AssetItemId.Value,
-			Units: req.Units <= 0 ? existingTransaction.Units : req.Units);
-	}
-
-	private async Task ValidateRequestAsync(
-		Guid assetItemId,
-		TransactionRequest req,
-		CancellationToken cancellationToken)
-	{
-		if (req.Date == default)
-		{
-			this.AddError("Transaction date must be provided.");
-		}
-
-		if (string.IsNullOrWhiteSpace(req.Name))
-		{
-			this.AddError("Transaction name must be provided.");
-		}
-
-		if (req.Name.Length < 3)
-		{
-			this.AddError("Transaction name must be at least 3 characters long.");
-		}
-
-		if (req.Name.Length > 1000)
-		{
-			this.AddError("Transaction name must not exceed 1000 characters.");
-		}
-
-		if (req.TransactionType == TransactionType.Unknown)
-		{
-			this.AddError("Transaction type must be provided.");
-		}
-
-		if (req.Units <= 0)
-		{
-			this.AddError("Transaction units must be greater than zero.");
-		}
-
-		this.ThrowIfAnyErrors(StatusCodes.Status400BadRequest);
-
 		var assetItem = await this.assetItemRepository.GetByIdAsync(
 			this.GetUserId(),
-			new AssetItemId(assetItemId),
+			new AssetItemId(req.AssetItemId),
 			cancellationToken);
 
 		if (assetItem.Id == AssetItemId.Empty)
@@ -121,11 +52,64 @@ internal sealed class EditTransactionEndpoint : Endpoint<TransactionRequest>
 			assetItem.AssetId,
 			cancellationToken);
 
-		if (!req.TransactionType.IsValidForAssetType(asset.AssetType))
+		if (req.TransactionType != TransactionType.Unknown
+			&& !req.TransactionType.IsValidForAssetType(asset.AssetType))
 		{
 			this.ThrowError(
 				$"Transaction type '{req.TransactionType}' is not valid for asset type '{asset.AssetType}'.",
 				StatusCodes.Status400BadRequest);
 		}
+
+		await this.transactionRepository.UpdateAsync(
+			this.GetUserId(),
+			new Transaction(
+				existingTransaction.Id,
+				existingTransaction.Date,
+				name: string.IsNullOrWhiteSpace(req.Name) ? existingTransaction.Name : req.Name,
+				transactionType: req.TransactionType == TransactionType.Unknown ? existingTransaction.TransactionType : req.TransactionType,
+				assetItemId: new AssetItemId(req.AssetItemId),
+				units: req.Units == 0 ? existingTransaction.Units : req.Units),
+			cancellationToken);
+
+		await this.Send.NoContentAsync(cancellation: cancellationToken);
+	}
+
+	private void ValidateRequest(EditTransactionRequest req)
+	{
+		if (req.Units < 0)
+		{
+			this.AddError("Transaction units must be greater than zero.");
+		}
+
+		if (string.IsNullOrWhiteSpace(req.Name)
+			&& req.TransactionType == TransactionType.Unknown
+			&& req.Units == 0)
+		{
+			this.AddError("At least one of name, transaction type, or units must be provided to update the transaction.");
+		}
+
+		if (!string.IsNullOrWhiteSpace(req.Name))
+		{
+			if (req.Name.Length < 3)
+			{
+				this.AddError("Transaction name must be at least 3 characters long.");
+			}
+
+			if (req.Name.Length > 1000)
+			{
+				this.AddError("Transaction name must not exceed 1000 characters.");
+			}
+		}
+
+		this.ThrowIfAnyErrors(StatusCodes.Status400BadRequest);
 	}
 }
+
+[System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "MA0048:File name must match type name", Justification = "Record used only by this endpoint.")]
+[System.Diagnostics.CodeAnalysis.SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1402:File may only contain a single type", Justification = "Record used only by this endpoint.")]
+internal sealed record EditTransactionRequest(
+	Guid TransactionId,
+	string Name,
+	TransactionType TransactionType,
+	Guid AssetItemId,
+	decimal Units);
