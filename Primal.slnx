@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Primal.Api/Primal.Api.csproj" />
+    <Project Path="src/Primal.Application/Primal.Application.csproj" />
+    <Project Path="src/Primal.Domain/Primal.Domain.csproj" />
+    <Project Path="src/Primal.Infrastructure/Primal.Infrastructure.csproj" />
+  </Folder>
+</Solution>
