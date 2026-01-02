@@ -46,8 +46,8 @@ internal sealed class UpdateUserEndpoint : Endpoint<UpdateUserRequest>
 
 	private void ValidateRequest(UpdateUserRequest req)
 	{
-		if (req.PreferredCurrency == Currency.Unknown &&
-			req.PreferredLocale == Locale.Unknown)
+		if (req.PreferredCurrency == Currency.Unknown
+			&& req.PreferredLocale == Locale.Unknown)
 		{
 			this.ThrowError("At least one field of preferred currency or preferred locale must be provided", 400);
 		}
