@@ -24,15 +24,17 @@ internal sealed class CachedTransactionRepository : ITransactionRepository
 		DateOnly maxDate,
 		CancellationToken cancellationToken)
 	{
-		return await this.hybridCache.GetOrCreateAsync(
-			$"users/{userId.Value}/assetItems/{assetItemId.Value}/transactions?maxDate={maxDate}",
+		var transactions = await this.hybridCache.GetOrCreateAsync(
+			$"users/{userId.Value}/assetItems/{assetItemId.Value}/transactions",
 			async entry => await this.transactionRepository.GetByAssetItemIdAsync(
 				userId,
 				assetItemId,
-				maxDate,
+				DateOnly.MaxValue,
 				cancellationToken),
 			tags: new[] { $"users/{userId.Value}/assetItems/{assetItemId.Value}/transactions" },
 			cancellationToken: cancellationToken);
+
+		return transactions.Where(t => t.Date <= maxDate);
 	}
 
 	public async Task<Transaction> GetByIdAsync(
