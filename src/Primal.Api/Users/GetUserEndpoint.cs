@@ -5,12 +5,12 @@ using Primal.Domain.Users;
 
 namespace Primal.Api.Users;
 
-[HttpGet("/api/users/profile")]
-internal sealed class GetProfileEndpoint : EndpointWithoutRequest<UserProfileResponse>
+[HttpGet("/api/users/me")]
+internal sealed class GetUserEndpoint : EndpointWithoutRequest<UserResponse>
 {
 	private readonly IUserRepository userRepository;
 
-	public GetProfileEndpoint(IUserRepository userRepository)
+	public GetUserEndpoint(IUserRepository userRepository)
 	{
 		this.userRepository = userRepository;
 	}
@@ -27,7 +27,7 @@ internal sealed class GetProfileEndpoint : EndpointWithoutRequest<UserProfileRes
 		}
 
 		await this.Send.OkAsync(
-			new UserProfileResponse(
+			new UserResponse(
 			user.Id.Value,
 			user.Email,
 			user.FirstName,
@@ -41,7 +41,7 @@ internal sealed class GetProfileEndpoint : EndpointWithoutRequest<UserProfileRes
 
 [System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "MA0048:File name must match type name", Justification = "used only in this file")]
 [System.Diagnostics.CodeAnalysis.SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1402:File may only contain a single type", Justification = "used only in this file")]
-internal sealed record UserProfileResponse(
+internal sealed record UserResponse(
 	Guid Id,
 	string Email,
 	string FirstName,
