@@ -86,9 +86,10 @@ internal sealed class CachedTransactionRepository : ITransactionRepository
 			units,
 			cancellationToken);
 
-		await this.hybridCache.RemoveByTagAsync(
-			$"users/{userId.Value}/assetItems/{assetItemId.Value}/transactions",
-			cancellationToken: cancellationToken);
+		await this.InvalidateCacheAsync(
+			userId,
+			assetItemId,
+			cancellationToken);
 
 		return transaction;
 	}
@@ -103,13 +104,10 @@ internal sealed class CachedTransactionRepository : ITransactionRepository
 			transaction,
 			cancellationToken);
 
-		await this.hybridCache.RemoveByTagAsync(
-			$"users/{userId.Value}/assetItems/{transaction.AssetItemId.Value}/transactions",
-			cancellationToken: cancellationToken);
-
-		await this.hybridCache.RemoveAsync(
-			$"users/{userId.Value}/assetItems/{transaction.AssetItemId.Value}/transactions/{transaction.Id.Value}",
-			cancellationToken: cancellationToken);
+		await this.InvalidateCacheAsync(
+			userId,
+			transaction.AssetItemId,
+			cancellationToken);
 	}
 
 	public async Task DeleteAsync(
@@ -124,12 +122,23 @@ internal sealed class CachedTransactionRepository : ITransactionRepository
 			transactionId,
 			cancellationToken);
 
+		await this.InvalidateCacheAsync(
+			userId,
+			assetItemId,
+			cancellationToken);
+	}
+
+	private async Task InvalidateCacheAsync(
+		UserId userId,
+		AssetItemId assetItemId,
+		CancellationToken cancellationToken)
+	{
 		await this.hybridCache.RemoveByTagAsync(
 			$"users/{userId.Value}/assetItems/{assetItemId.Value}/transactions",
 			cancellationToken: cancellationToken);
 
-		await this.hybridCache.RemoveAsync(
-			$"users/{userId.Value}/assetItems/{assetItemId.Value}/transactions/{transactionId.Value}",
+		await this.hybridCache.RemoveByTagAsync(
+			$"users/{userId.Value}/assetItems/{assetItemId.Value}/valuation",
 			cancellationToken: cancellationToken);
 	}
 }
