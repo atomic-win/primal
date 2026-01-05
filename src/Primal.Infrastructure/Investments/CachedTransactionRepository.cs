@@ -49,21 +49,6 @@ internal sealed class CachedTransactionRepository : ITransactionRepository
 			cancellationToken: cancellationToken);
 	}
 
-	public async Task<DateOnly> GetEarliestTransactionDateAsync(
-		UserId userId,
-		AssetItemId assetItemId,
-		CancellationToken cancellationToken)
-	{
-		return await this.hybridCache.GetOrCreateAsync(
-			$"users/{userId.Value}/assetItems/{assetItemId.Value}/transactions/earliestDate",
-			async entry => await this.transactionRepository.GetEarliestTransactionDateAsync(
-				userId,
-				assetItemId,
-				cancellationToken),
-			tags: new[] { $"users/{userId.Value}/assetItems/{assetItemId.Value}/transactions" },
-			cancellationToken: cancellationToken);
-	}
-
 	public async Task<Transaction> AddAsync(
 		UserId userId,
 		AssetItemId assetItemId,
