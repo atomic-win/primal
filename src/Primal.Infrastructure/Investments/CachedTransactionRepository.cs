@@ -134,7 +134,7 @@ internal sealed class CachedTransactionRepository : ITransactionRepository
 			cancellationToken: cancellationToken);
 
 		await this.hybridCache.RemoveByTagAsync(
-			$"users/{userId.Value}/assetItems/{assetItemId.Value}/valuation",
+			$"users/{userId.Value}/assetItems/{assetItemId.Value}/valuations",
 			cancellationToken: cancellationToken);
 	}
 }
