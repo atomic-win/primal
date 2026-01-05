@@ -423,8 +423,6 @@ internal sealed class GetValuationsEndpoint : EndpointWithoutRequest<IReadOnlyLi
 
 	private IEnumerable<DateOnly> GetValuationDates(DateOnly earliestTransactionDate)
 	{
-		yield return earliestTransactionDate;
-
 		// End of each month until today
 		var endOfMonth = new DateOnly(
 			earliestTransactionDate.Year,
