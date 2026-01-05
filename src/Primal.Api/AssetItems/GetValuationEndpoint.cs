@@ -1,5 +1,6 @@
 using System.Collections.Immutable;
 using FastEndpoints;
+using Microsoft.Extensions.Caching.Hybrid;
 using Primal.Application.Investments;
 using Primal.Domain.Investments;
 using Primal.Domain.Money;
@@ -10,15 +11,19 @@ namespace Primal.Api.AssetItems;
 [HttpGet("/api/assetItems/valuation")]
 internal sealed class GetValuationEndpoint : EndpointWithoutRequest<ValuationResponse>
 {
+	private readonly HybridCache cache;
+
 	private readonly IAssetItemRepository assetItemRepository;
 	private readonly ITransactionRepository transactionRepository;
 	private readonly TransactionAmountCalculator transactionAmountCalculator;
 
 	public GetValuationEndpoint(
+		HybridCache cache,
 		IAssetItemRepository assetItemRepository,
 		ITransactionRepository transactionRepository,
 		TransactionAmountCalculator transactionAmountCalculator)
 	{
+		this.cache = cache;
 		this.assetItemRepository = assetItemRepository;
 		this.transactionRepository = transactionRepository;
 		this.transactionAmountCalculator = transactionAmountCalculator;
@@ -30,28 +35,26 @@ internal sealed class GetValuationEndpoint : EndpointWithoutRequest<ValuationRes
 		var assetItemGuids = this.Query<IEnumerable<Guid>>("assetItemIds") ?? Array.Empty<Guid>();
 		var valuationDate = this.Query<DateOnly>("date");
 		var currency = this.Query<Currency>("currency");
-		var assetItemIds = assetItemGuids.Select(id => new AssetItemId(id)).ToImmutableArray();
+		var assetItemIds = assetItemGuids
+			.Distinct()
+			.Order()
+			.Select(id => new AssetItemId(id)).ToImmutableArray();
 
 		await this.ValidateRequestParameters(userId, assetItemIds, valuationDate, currency, ct);
 		this.ThrowIfAnyErrors();
 
-		var valuationInputs = new List<ValuationInput>(capacity: assetItemIds.Length);
-		foreach (var assetItemId in assetItemIds)
-		{
-			valuationInputs.Add(await this.GetValuationInputAsync(
-				userId,
-				assetItemId,
-				valuationDate,
-				currency,
-				ct));
-		}
+		string cacheKey = $"users/{userId.Value}/assetItems/valuation?assetItemIds={string.Join(",", assetItemIds.Select(id => id.Value))}&date={valuationDate}&currency={currency}";
+		var tags = assetItemIds
+			.Select(id => $"users/{userId.Value}/assetItems/{id.Value}/valuation")
+			.ToImmutableArray();
 
-		await this.Send.OkAsync(
-			new ValuationResponse(
-			InvestedValue: valuationInputs.Sum(i => i.InvestedValue),
-			CurrentValue: valuationInputs.Sum(i => i.CurrentValue),
-			XirrPercent: 100 * this.CalculateXirr(valuationInputs.SelectMany(i => i.XirrInputs).ToImmutableArray())),
-			ct);
+		var valuationResponse = await this.cache.GetOrCreateAsync(
+			cacheKey,
+			async _ => await this.CalculateValuationAsync(userId, assetItemIds, valuationDate, currency, ct),
+			tags: tags,
+			cancellationToken: ct);
+
+		await this.Send.OkAsync(valuationResponse, ct);
 	}
 
 	private async Task ValidateRequestParameters(
@@ -89,6 +92,30 @@ internal sealed class GetValuationEndpoint : EndpointWithoutRequest<ValuationRes
 				this.AddError($"Asset item with ID '{assetItemId.Value}' not found.");
 			}
 		}
+	}
+
+	private async Task<ValuationResponse> CalculateValuationAsync(
+		UserId userId,
+		IReadOnlyList<AssetItemId> assetItemIds,
+		DateOnly valuationDate,
+		Currency currency,
+		CancellationToken ct)
+	{
+		var valuationInputs = new List<ValuationInput>(capacity: assetItemIds.Count);
+		foreach (var assetItemId in assetItemIds)
+		{
+			valuationInputs.Add(await this.GetValuationInputAsync(
+				userId,
+				assetItemId,
+				valuationDate,
+				currency,
+				ct));
+		}
+
+		return new ValuationResponse(
+			InvestedValue: valuationInputs.Sum(i => i.InvestedValue),
+			CurrentValue: valuationInputs.Sum(i => i.CurrentValue),
+			XirrPercent: 100 * this.CalculateXirr(valuationInputs.SelectMany(i => i.XirrInputs).ToImmutableArray()));
 	}
 
 	private async Task<ValuationInput> GetValuationInputAsync(
