@@ -50,6 +50,10 @@ internal sealed class GetValuationsEndpoint : EndpointWithoutRequest<IReadOnlyLi
 		var valuationResponse = await this.cache.GetOrCreateAsync(
 			cacheKey,
 			async _ => await this.CalculateValuationsAsync(userId, assetItemIds, currency, ct),
+			new HybridCacheEntryOptions
+			{
+				Expiration = TimeSpan.FromHours(1),
+			},
 			tags: tags,
 			cancellationToken: ct);
 
