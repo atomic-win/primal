@@ -11,16 +11,13 @@ internal sealed class GetAllAssetItemsEndpoint : EndpointWithoutRequest<IAsyncEn
 {
 	private readonly IAssetItemRepository assetItemRepository;
 	private readonly IAssetRepository assetRepository;
-	private readonly ITransactionRepository transactionRepository;
 
 	public GetAllAssetItemsEndpoint(
 		IAssetItemRepository assetItemRepository,
-		IAssetRepository assetRepository,
-		ITransactionRepository transactionRepository)
+		IAssetRepository assetRepository)
 	{
 		this.assetItemRepository = assetItemRepository;
 		this.assetRepository = assetRepository;
-		this.transactionRepository = transactionRepository;
 	}
 
 	public override async Task<IAsyncEnumerable<AssetItemResponse>> ExecuteAsync(CancellationToken ct)
@@ -46,15 +43,12 @@ internal sealed class GetAllAssetItemsEndpoint : EndpointWithoutRequest<IAsyncEn
 	{
 		var asset = await this.assetRepository.GetByIdAsync(assetItem.AssetId, ct);
 
-		var earliestDate = await this.transactionRepository.GetEarliestTransactionDateAsync(this.GetUserId(), assetItem.Id, ct);
-
 		return new AssetItemResponse(
 			assetItem.Id.Value,
 			assetItem.Name,
 			asset.AssetType,
 			asset.AssetClass,
-			asset.Currency,
-			ActivityStartDate: earliestDate == default ? DateOnly.FromDateTime(DateTime.Today) : earliestDate);
+			asset.Currency);
 	}
 }
 
@@ -65,5 +59,4 @@ internal sealed record AssetItemResponse(
 	string Name,
 	AssetType AssetType,
 	AssetClass AssetClass,
-	Currency Currency,
-	DateOnly ActivityStartDate);
+	Currency Currency);

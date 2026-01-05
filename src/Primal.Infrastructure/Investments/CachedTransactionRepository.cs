@@ -21,20 +21,16 @@ internal sealed class CachedTransactionRepository : ITransactionRepository
 	public async Task<IEnumerable<Transaction>> GetByAssetItemIdAsync(
 		UserId userId,
 		AssetItemId assetItemId,
-		DateOnly maxDate,
 		CancellationToken cancellationToken)
 	{
-		var transactions = await this.hybridCache.GetOrCreateAsync(
+		return await this.hybridCache.GetOrCreateAsync(
 			$"users/{userId.Value}/assetItems/{assetItemId.Value}/transactions",
 			async entry => await this.transactionRepository.GetByAssetItemIdAsync(
 				userId,
 				assetItemId,
-				DateOnly.MaxValue,
 				cancellationToken),
 			tags: new[] { $"users/{userId.Value}/assetItems/{assetItemId.Value}/transactions" },
 			cancellationToken: cancellationToken);
-
-		return transactions.Where(t => t.Date <= maxDate);
 	}
 
 	public async Task<Transaction> GetByIdAsync(
@@ -50,21 +46,6 @@ internal sealed class CachedTransactionRepository : ITransactionRepository
 				assetItemId,
 				transactionId,
 				cancellationToken),
-			cancellationToken: cancellationToken);
-	}
-
-	public async Task<DateOnly> GetEarliestTransactionDateAsync(
-		UserId userId,
-		AssetItemId assetItemId,
-		CancellationToken cancellationToken)
-	{
-		return await this.hybridCache.GetOrCreateAsync(
-			$"users/{userId.Value}/assetItems/{assetItemId.Value}/transactions/earliestDate",
-			async entry => await this.transactionRepository.GetEarliestTransactionDateAsync(
-				userId,
-				assetItemId,
-				cancellationToken),
-			tags: new[] { $"users/{userId.Value}/assetItems/{assetItemId.Value}/transactions" },
 			cancellationToken: cancellationToken);
 	}
 
@@ -86,9 +67,10 @@ internal sealed class CachedTransactionRepository : ITransactionRepository
 			units,
 			cancellationToken);
 
-		await this.hybridCache.RemoveByTagAsync(
-			$"users/{userId.Value}/assetItems/{assetItemId.Value}/transactions",
-			cancellationToken: cancellationToken);
+		await this.InvalidateCacheAsync(
+			userId,
+			assetItemId,
+			cancellationToken);
 
 		return transaction;
 	}
@@ -103,13 +85,10 @@ internal sealed class CachedTransactionRepository : ITransactionRepository
 			transaction,
 			cancellationToken);
 
-		await this.hybridCache.RemoveByTagAsync(
-			$"users/{userId.Value}/assetItems/{transaction.AssetItemId.Value}/transactions",
-			cancellationToken: cancellationToken);
-
-		await this.hybridCache.RemoveAsync(
-			$"users/{userId.Value}/assetItems/{transaction.AssetItemId.Value}/transactions/{transaction.Id.Value}",
-			cancellationToken: cancellationToken);
+		await this.InvalidateCacheAsync(
+			userId,
+			transaction.AssetItemId,
+			cancellationToken);
 	}
 
 	public async Task DeleteAsync(
@@ -124,12 +103,23 @@ internal sealed class CachedTransactionRepository : ITransactionRepository
 			transactionId,
 			cancellationToken);
 
+		await this.InvalidateCacheAsync(
+			userId,
+			assetItemId,
+			cancellationToken);
+	}
+
+	private async Task InvalidateCacheAsync(
+		UserId userId,
+		AssetItemId assetItemId,
+		CancellationToken cancellationToken)
+	{
 		await this.hybridCache.RemoveByTagAsync(
 			$"users/{userId.Value}/assetItems/{assetItemId.Value}/transactions",
 			cancellationToken: cancellationToken);
 
-		await this.hybridCache.RemoveAsync(
-			$"users/{userId.Value}/assetItems/{assetItemId.Value}/transactions/{transactionId.Value}",
+		await this.hybridCache.RemoveByTagAsync(
+			$"users/{userId.Value}/assetItems/{assetItemId.Value}/valuations",
 			cancellationToken: cancellationToken);
 	}
 }

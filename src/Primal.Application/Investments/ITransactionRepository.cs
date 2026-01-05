@@ -8,18 +8,12 @@ public interface ITransactionRepository
 	Task<IEnumerable<Transaction>> GetByAssetItemIdAsync(
 		UserId userId,
 		AssetItemId assetItemId,
-		DateOnly maxDate,
 		CancellationToken cancellationToken);
 
 	Task<Transaction> GetByIdAsync(
 		UserId userId,
 		AssetItemId assetItemId,
 		TransactionId transactionId,
-		CancellationToken cancellationToken);
-
-	Task<DateOnly> GetEarliestTransactionDateAsync(
-		UserId userId,
-		AssetItemId assetItemId,
 		CancellationToken cancellationToken);
 
 	Task<Transaction> AddAsync(

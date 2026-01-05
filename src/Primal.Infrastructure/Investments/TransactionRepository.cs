@@ -18,12 +18,11 @@ internal sealed class TransactionRepository : ITransactionRepository
 	public async Task<IEnumerable<Transaction>> GetByAssetItemIdAsync(
 		UserId userId,
 		AssetItemId assetItemId,
-		DateOnly maxDate,
 		CancellationToken cancellationToken)
 	{
 		var transactionTableEntities = await this.appDbContext.Transactions
 			.AsNoTracking()
-			.Where(t => t.UserId == userId.Value && t.AssetItemId == assetItemId.Value && t.Date <= maxDate)
+			.Where(t => t.UserId == userId.Value && t.AssetItemId == assetItemId.Value)
 			.ToListAsync(cancellationToken);
 
 		return transactionTableEntities
@@ -52,19 +51,6 @@ internal sealed class TransactionRepository : ITransactionRepository
 		}
 
 		return this.MapToTransaction(transactionTableEntity);
-	}
-
-	public async Task<DateOnly> GetEarliestTransactionDateAsync(
-		UserId userId,
-		AssetItemId assetItemId,
-		CancellationToken cancellationToken)
-	{
-		var earliestDate = await this.appDbContext.Transactions
-			.AsNoTracking()
-			.Where(t => t.UserId == userId.Value && t.AssetItemId == assetItemId.Value)
-			.MinAsync(t => (DateOnly?)t.Date, cancellationToken);
-
-		return earliestDate ?? default;
 	}
 
 	public async Task<Transaction> AddAsync(
