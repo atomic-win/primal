@@ -18,12 +18,11 @@ internal sealed class TransactionRepository : ITransactionRepository
 	public async Task<IEnumerable<Transaction>> GetByAssetItemIdAsync(
 		UserId userId,
 		AssetItemId assetItemId,
-		DateOnly maxDate,
 		CancellationToken cancellationToken)
 	{
 		var transactionTableEntities = await this.appDbContext.Transactions
 			.AsNoTracking()
-			.Where(t => t.UserId == userId.Value && t.AssetItemId == assetItemId.Value && t.Date <= maxDate)
+			.Where(t => t.UserId == userId.Value && t.AssetItemId == assetItemId.Value)
 			.ToListAsync(cancellationToken);
 
 		return transactionTableEntities

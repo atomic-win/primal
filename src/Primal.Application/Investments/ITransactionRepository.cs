@@ -8,7 +8,6 @@ public interface ITransactionRepository
 	Task<IEnumerable<Transaction>> GetByAssetItemIdAsync(
 		UserId userId,
 		AssetItemId assetItemId,
-		DateOnly maxDate,
 		CancellationToken cancellationToken);
 
 	Task<Transaction> GetByIdAsync(
