@@ -45,11 +45,6 @@ public sealed class TransactionAmountCalculator
 			date,
 			cancellationToken);
 
-		if (transaction.TransactionType == TransactionType.Dividend)
-		{
-			return transaction.Units * exchangeRate;
-		}
-
 		return exchangeRate * (await this.GetAmountAsync(
 			asset,
 			transaction,
@@ -91,7 +86,7 @@ public sealed class TransactionAmountCalculator
 
 		var assetRate = await this.GetAssetRateAsync(
 			asset,
-			transaction.Date,
+			date,
 			cancellationToken);
 
 		return transaction.Units * assetRate;
