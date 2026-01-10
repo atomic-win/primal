@@ -59,8 +59,8 @@ internal static class TransactionExtensions
 				transactionType == TransactionType.Deposit ||
 				transactionType == TransactionType.Withdrawal,
 			AssetType.Bond =>
-				transactionType == TransactionType.Buy ||
-				transactionType == TransactionType.Sell ||
+				transactionType == TransactionType.Deposit ||
+				transactionType == TransactionType.Withdrawal ||
 				transactionType == TransactionType.Interest,
 			_ => throw new InvalidOperationException(
 					$"Unsupported asset type: {asset.AssetType}"),
