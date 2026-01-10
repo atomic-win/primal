@@ -28,6 +28,7 @@ internal static class TransactionExtensions
 			transaction.TransactionType,
 			transaction.AssetItemId.Value,
 			transaction.Units,
+			transaction.Price,
 			amount);
 	}
 

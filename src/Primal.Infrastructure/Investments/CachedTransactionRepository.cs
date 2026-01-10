@@ -46,6 +46,7 @@ internal sealed class CachedTransactionRepository : ITransactionRepository
 				assetItemId,
 				transactionId,
 				cancellationToken),
+			tags: new[] { $"users/{userId.Value}/assetItems/{assetItemId.Value}/transactions" },
 			cancellationToken: cancellationToken);
 	}
 

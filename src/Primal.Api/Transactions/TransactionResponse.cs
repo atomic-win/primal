@@ -9,4 +9,5 @@ internal sealed record TransactionResponse(
 	TransactionType TransactionType,
 	Guid AssetItemId,
 	decimal Units,
+	decimal Price,
 	decimal Amount);

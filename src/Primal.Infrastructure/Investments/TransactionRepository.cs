@@ -94,7 +94,9 @@ internal sealed class TransactionRepository : ITransactionRepository
 					.SetProperty(t => t.Date, transaction.Date)
 					.SetProperty(t => t.Name, transaction.Name)
 					.SetProperty(t => t.TransactionType, transaction.TransactionType)
-					.SetProperty(t => t.Units, transaction.Units),
+					.SetProperty(t => t.Units, transaction.Units)
+					.SetProperty(t => t.Price, transaction.Price)
+					.SetProperty(t => t.Amount, transaction.Amount),
 				cancellationToken);
 	}
 
