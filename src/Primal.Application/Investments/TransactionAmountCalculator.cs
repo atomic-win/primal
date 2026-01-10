@@ -53,6 +53,7 @@ public sealed class TransactionAmountCalculator
 		return exchangeRate * (await this.GetAmountAsync(
 			asset,
 			transaction,
+			date,
 			cancellationToken));
 	}
 
@@ -74,12 +75,18 @@ public sealed class TransactionAmountCalculator
 	private async Task<decimal> GetAmountAsync(
 		Asset asset,
 		Transaction transaction,
+		DateOnly date,
 		CancellationToken cancellationToken)
 	{
 		if (transaction.TransactionType != TransactionType.Buy
 			&& transaction.TransactionType != TransactionType.Sell)
 		{
 			return transaction.Amount;
+		}
+
+		if (date == transaction.Date)
+		{
+			return transaction.Units * transaction.Price;
 		}
 
 		var assetRate = await this.GetAssetRateAsync(
