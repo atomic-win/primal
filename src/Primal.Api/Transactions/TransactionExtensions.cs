@@ -28,14 +28,17 @@ internal static class TransactionExtensions
 			transaction.TransactionType,
 			transaction.AssetItemId.Value,
 			transaction.Units,
+			transaction.Price,
 			amount);
 	}
 
 	internal static bool IsValidForAssetType(
-		this TransactionType transactionType,
-		AssetType assetType)
+		this TransactionRequest req,
+		Asset asset)
 	{
-		return assetType switch
+		var transactionType = req.TransactionType;
+
+		return asset.AssetType switch
 		{
 			AssetType.BankAccount or
 			AssetType.FixedDeposit or
@@ -57,11 +60,20 @@ internal static class TransactionExtensions
 				transactionType == TransactionType.Deposit ||
 				transactionType == TransactionType.Withdrawal,
 			AssetType.Bond =>
-				transactionType == TransactionType.Buy ||
-				transactionType == TransactionType.Sell ||
+				transactionType == TransactionType.Deposit ||
+				transactionType == TransactionType.Withdrawal ||
 				transactionType == TransactionType.Interest,
 			_ => throw new InvalidOperationException(
-					$"Unsupported asset type: {assetType}"),
+					$"Unsupported asset type: {asset.AssetType}"),
+		};
+	}
+
+	internal static bool IsUnitsRequired(this TransactionRequest req)
+	{
+		return req.TransactionType switch
+		{
+			TransactionType.Buy or TransactionType.Sell => true,
+			_ => false,
 		};
 	}
 }

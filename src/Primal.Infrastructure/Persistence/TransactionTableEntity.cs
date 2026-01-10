@@ -17,4 +17,8 @@ internal sealed class TransactionTableEntity : TableEntity
 	internal required Guid UserId { get; init; }
 
 	internal required decimal Units { get; init; }
+
+	internal required decimal Price { get; init; }
+
+	internal required decimal Amount { get; init; }
 }

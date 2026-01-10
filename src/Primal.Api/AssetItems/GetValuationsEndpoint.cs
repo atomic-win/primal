@@ -102,7 +102,7 @@ internal sealed class GetValuationsEndpoint : EndpointWithoutRequest<IReadOnlyLi
 
 		var valuations = new List<ValuationResponse>();
 
-		foreach (var valuationDate in this.GetValuationDates(earliestTransactionDate: transactions.Min(t => t.Date)))
+		foreach (var valuationDate in this.GetValuationDates(earliestTransactionDate: transactions.Length == 0 ? DateOnly.FromDateTime(DateTime.UtcNow) : transactions.Min(t => t.Date)))
 		{
 			valuations.Add(await this.CalculateValuationAsync(
 				userId,
@@ -237,12 +237,12 @@ internal sealed class GetValuationsEndpoint : EndpointWithoutRequest<IReadOnlyLi
 			Currency currency,
 			CancellationToken ct)
 	{
-		decimal withdrawnCashUnits = transactions
+		decimal withdrawnAmount = transactions
 			.Where(t => t.TransactionType == TransactionType.Withdrawal ||
 						t.TransactionType == TransactionType.InterestPenalty)
-			.Sum(t => t.Units);
+			.Sum(t => t.Amount);
 
-		decimal withdrawnNonCashUnits = transactions
+		decimal withdrawnUnits = transactions
 			.Where(t => t.TransactionType == TransactionType.Sell)
 			.Sum(t => t.Units);
 
@@ -252,8 +252,8 @@ internal sealed class GetValuationsEndpoint : EndpointWithoutRequest<IReadOnlyLi
 		{
 			if (transaction.TransactionType == TransactionType.Deposit)
 			{
-				var units = transaction.Units - Math.Min(withdrawnCashUnits, transaction.Units);
-				withdrawnCashUnits -= transaction.Units - units;
+				var amount = transaction.Amount - Math.Min(withdrawnAmount, transaction.Amount);
+				withdrawnAmount -= transaction.Amount - amount;
 
 				var newTransaction = new Transaction(
 					transaction.Id,
@@ -261,7 +261,9 @@ internal sealed class GetValuationsEndpoint : EndpointWithoutRequest<IReadOnlyLi
 					transaction.Name,
 					transaction.TransactionType,
 					transaction.AssetItemId,
-					units);
+					transaction.Units,
+					transaction.Price,
+					amount);
 
 				investedValue += await this.CalculateInitialAmountAsync(
 					userId,
@@ -275,8 +277,8 @@ internal sealed class GetValuationsEndpoint : EndpointWithoutRequest<IReadOnlyLi
 
 			if (transaction.TransactionType == TransactionType.Buy)
 			{
-				var units = transaction.Units - Math.Min(withdrawnNonCashUnits, transaction.Units);
-				withdrawnNonCashUnits -= transaction.Units - units;
+				var units = transaction.Units - Math.Min(withdrawnUnits, transaction.Units);
+				withdrawnUnits -= transaction.Units - units;
 
 				var newTransaction = new Transaction(
 					transaction.Id,
@@ -284,7 +286,9 @@ internal sealed class GetValuationsEndpoint : EndpointWithoutRequest<IReadOnlyLi
 					transaction.Name,
 					transaction.TransactionType,
 					transaction.AssetItemId,
-					units);
+					units,
+					transaction.Price,
+					transaction.Amount);
 
 				investedValue += await this.CalculateInitialAmountAsync(
 					userId,

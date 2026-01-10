@@ -2,12 +2,12 @@ using Primal.Domain.Investments;
 
 namespace Primal.Api.Transactions;
 
-internal sealed record TransactionResponse(
-	Guid Id,
+internal sealed record TransactionRequest(
+	Guid AssetItemId,
+	Guid TransactionId,
 	DateOnly Date,
 	string Name,
 	TransactionType TransactionType,
-	Guid AssetItemId,
 	decimal Units,
 	decimal Price,
 	decimal Amount);

@@ -5,7 +5,7 @@ using Primal.Domain.Investments;
 namespace Primal.Api.Transactions;
 
 [HttpPost("/api/assetItems/{assetItemId:guid}/transactions")]
-internal sealed class AddTransactionEndpoint : Endpoint<AddTransactionRequest>
+internal sealed class AddTransactionEndpoint : Endpoint<TransactionRequest>
 {
 	private readonly ITransactionRepository transactionRepository;
 	private readonly IAssetItemRepository assetItemRepository;
@@ -22,10 +22,10 @@ internal sealed class AddTransactionEndpoint : Endpoint<AddTransactionRequest>
 	}
 
 	public override async Task HandleAsync(
-		AddTransactionRequest req,
+		TransactionRequest req,
 		CancellationToken cancellationToken)
 	{
-		await this.ValidateRequestAsync(
+		req = await this.ValidateRequestAsync(
 			req,
 			cancellationToken);
 
@@ -36,6 +36,8 @@ internal sealed class AddTransactionEndpoint : Endpoint<AddTransactionRequest>
 			req.Name,
 			req.TransactionType,
 			req.Units,
+			req.Price,
+			req.Amount,
 			cancellationToken);
 
 		await this.Send.CreatedAtAsync(
@@ -43,9 +45,54 @@ internal sealed class AddTransactionEndpoint : Endpoint<AddTransactionRequest>
 			cancellation: cancellationToken);
 	}
 
-	private async Task ValidateRequestAsync(
-		AddTransactionRequest req,
+	private async Task<TransactionRequest> ValidateRequestAsync(
+		TransactionRequest req,
 		CancellationToken cancellationToken)
+	{
+		var asset = await this.ValidateAssetItemIdAsync(
+			req.AssetItemId,
+			cancellationToken);
+
+		this.ValidateDate(req);
+		this.ValidateName(req);
+		this.ValidateTransactionType(req, asset);
+
+		req = this.ValidateUnits(req);
+		req = this.ValidatePrice(req);
+		req = this.ValidateAmount(req);
+
+		this.ThrowIfAnyErrors(StatusCodes.Status400BadRequest);
+
+		return req;
+	}
+
+	private async Task<Asset> ValidateAssetItemIdAsync(
+		Guid assetItemId,
+		CancellationToken cancellationToken)
+	{
+		if (assetItemId == Guid.Empty)
+		{
+			this.ThrowError("Asset item ID must be provided.", StatusCodes.Status400BadRequest);
+		}
+
+		var assetItem = await this.assetItemRepository.GetByIdAsync(
+			this.GetUserId(),
+			new AssetItemId(assetItemId),
+			cancellationToken);
+
+		if (assetItem.Id == AssetItemId.Empty)
+		{
+			this.ThrowError("Asset item does not exist.", StatusCodes.Status404NotFound);
+		}
+
+		var asset = await this.assetRepository.GetByIdAsync(
+			assetItem.AssetId,
+			cancellationToken);
+
+		return asset;
+	}
+
+	private void ValidateDate(TransactionRequest req)
 	{
 		if (req.Date == default)
 		{
@@ -56,7 +103,10 @@ internal sealed class AddTransactionEndpoint : Endpoint<AddTransactionRequest>
 		{
 			this.AddError("Transaction date cannot be in the future.");
 		}
+	}
 
+	private void ValidateName(TransactionRequest req)
+	{
 		if (string.IsNullOrWhiteSpace(req.Name))
 		{
 			this.AddError("Transaction name must be provided.");
@@ -71,10 +121,30 @@ internal sealed class AddTransactionEndpoint : Endpoint<AddTransactionRequest>
 		{
 			this.AddError("Transaction name must not exceed 1000 characters.");
 		}
+	}
 
+	private void ValidateTransactionType(TransactionRequest req, Asset asset)
+	{
 		if (req.TransactionType == TransactionType.Unknown)
 		{
 			this.AddError("Transaction type must be provided.");
+			return;
+		}
+
+		if (!req.IsValidForAssetType(asset))
+		{
+			this.AddError(
+				$"Transaction type '{req.TransactionType}' is not valid for asset type '{asset.AssetType}'.");
+		}
+
+		this.ThrowIfAnyErrors(StatusCodes.Status400BadRequest);
+	}
+
+	private TransactionRequest ValidateUnits(TransactionRequest req)
+	{
+		if (!req.IsUnitsRequired())
+		{
+			return req with { Units = 0 };
 		}
 
 		if (req.Units <= 0)
@@ -82,36 +152,36 @@ internal sealed class AddTransactionEndpoint : Endpoint<AddTransactionRequest>
 			this.AddError("Transaction units must be greater than zero.");
 		}
 
-		this.ThrowIfAnyErrors(StatusCodes.Status400BadRequest);
+		return req;
+	}
 
-		var assetItem = await this.assetItemRepository.GetByIdAsync(
-			this.GetUserId(),
-			new AssetItemId(req.AssetItemId),
-			cancellationToken);
-
-		if (assetItem.Id == AssetItemId.Empty)
+	private TransactionRequest ValidatePrice(TransactionRequest req)
+	{
+		if (!req.IsUnitsRequired())
 		{
-			this.ThrowError("Asset item does not exist.", StatusCodes.Status404NotFound);
+			return req with { Price = 0 };
 		}
 
-		var asset = await this.assetRepository.GetByIdAsync(
-			assetItem.AssetId,
-			cancellationToken);
-
-		if (!req.TransactionType.IsValidForAssetType(asset.AssetType))
+		if (req.Price <= 0)
 		{
-			this.ThrowError(
-				$"Transaction type '{req.TransactionType}' is not valid for asset type '{asset.AssetType}'.",
-				StatusCodes.Status400BadRequest);
+			this.AddError("Transaction price must be greater than zero.");
 		}
+
+		return req;
+	}
+
+	private TransactionRequest ValidateAmount(TransactionRequest req)
+	{
+		if (req.IsUnitsRequired())
+		{
+			return req with { Amount = 0 };
+		}
+
+		if (req.Amount <= 0)
+		{
+			this.AddError("Transaction amount must be greater than zero.");
+		}
+
+		return req;
 	}
 }
-
-[System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "MA0048:File name must match type name", Justification = "Record used only by this endpoint.")]
-[System.Diagnostics.CodeAnalysis.SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1402:File may only contain a single type", Justification = "Record used only by this endpoint.")]
-internal sealed record AddTransactionRequest(
-	DateOnly Date,
-	string Name,
-	TransactionType TransactionType,
-	Guid AssetItemId,
-	decimal Units);

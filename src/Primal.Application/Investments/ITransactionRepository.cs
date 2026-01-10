@@ -23,6 +23,8 @@ public interface ITransactionRepository
 		string name,
 		TransactionType type,
 		decimal units,
+		decimal price,
+		decimal amount,
 		CancellationToken cancellationToken);
 
 	Task UpdateAsync(

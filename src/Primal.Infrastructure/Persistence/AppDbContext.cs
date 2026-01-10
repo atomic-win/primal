@@ -136,6 +136,8 @@ public sealed class AppDbContext : DbContext
 			entity.Property(e => e.Name).IsRequired().HasMaxLength(200);
 			entity.Property(e => e.TransactionType).IsRequired().HasConversion<string>();
 			entity.Property(e => e.Units).IsRequired();
+			entity.Property(e => e.Price).IsRequired();
+			entity.Property(e => e.Amount).IsRequired();
 
 			entity.HasOne<AssetItemTableEntity>()
 				  .WithMany()
