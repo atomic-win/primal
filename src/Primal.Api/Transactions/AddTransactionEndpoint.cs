@@ -25,19 +25,9 @@ internal sealed class AddTransactionEndpoint : Endpoint<TransactionRequest>
 		TransactionRequest req,
 		CancellationToken cancellationToken)
 	{
-		await this.ValidateRequestAsync(
+		req = await this.ValidateRequestAsync(
 			req,
 			cancellationToken);
-
-		var assetItem = await this.assetItemRepository.GetByIdAsync(
-			this.GetUserId(),
-			new AssetItemId(req.AssetItemId),
-			cancellationToken);
-
-		if (assetItem.Id == AssetItemId.Empty)
-		{
-			this.ThrowError("Asset item does not exist.", StatusCodes.Status404NotFound);
-		}
 
 		var transaction = await this.transactionRepository.AddAsync(
 			this.GetUserId(),
@@ -55,7 +45,7 @@ internal sealed class AddTransactionEndpoint : Endpoint<TransactionRequest>
 			cancellation: cancellationToken);
 	}
 
-	private async Task ValidateRequestAsync(
+	private async Task<TransactionRequest> ValidateRequestAsync(
 		TransactionRequest req,
 		CancellationToken cancellationToken)
 	{
@@ -63,17 +53,17 @@ internal sealed class AddTransactionEndpoint : Endpoint<TransactionRequest>
 			req.AssetItemId,
 			cancellationToken);
 
-		this.ValidateDate(req.Date);
-		this.ValidateName(req.Name);
+		this.ValidateDate(req);
+		this.ValidateName(req);
 		this.ValidateTransactionType(req, asset);
 
-		this.ThrowIfAnyErrors(StatusCodes.Status400BadRequest);
-
-		this.ValidateUnits(req, asset);
-		this.ValidatePrice(req, asset);
-		this.ValidateAmount(req, asset);
+		req = this.ValidateUnits(req, asset);
+		req = this.ValidatePrice(req, asset);
+		req = this.ValidateAmount(req, asset);
 
 		this.ThrowIfAnyErrors(StatusCodes.Status400BadRequest);
+
+		return req;
 	}
 
 	private async Task<Asset> ValidateAssetItemIdAsync(
@@ -102,32 +92,32 @@ internal sealed class AddTransactionEndpoint : Endpoint<TransactionRequest>
 		return asset;
 	}
 
-	private void ValidateDate(DateOnly date)
+	private void ValidateDate(TransactionRequest req)
 	{
-		if (date == default)
+		if (req.Date == default)
 		{
 			this.AddError("Transaction date must be provided.");
 		}
 
-		if (date > DateOnly.FromDateTime(DateTime.UtcNow))
+		if (req.Date > DateOnly.FromDateTime(DateTime.UtcNow))
 		{
 			this.AddError("Transaction date cannot be in the future.");
 		}
 	}
 
-	private void ValidateName(string name)
+	private void ValidateName(TransactionRequest req)
 	{
-		if (string.IsNullOrWhiteSpace(name))
+		if (string.IsNullOrWhiteSpace(req.Name))
 		{
 			this.AddError("Transaction name must be provided.");
 		}
 
-		if (name.Length < 3)
+		if (req.Name.Length < 3)
 		{
 			this.AddError("Transaction name must be at least 3 characters long.");
 		}
 
-		if (name.Length > 1000)
+		if (req.Name.Length > 1000)
 		{
 			this.AddError("Transaction name must not exceed 1000 characters.");
 		}
@@ -146,29 +136,52 @@ internal sealed class AddTransactionEndpoint : Endpoint<TransactionRequest>
 			this.AddError(
 				$"Transaction type '{req.TransactionType}' is not valid for asset type '{asset.AssetType}'.");
 		}
+
+		this.ThrowIfAnyErrors(StatusCodes.Status400BadRequest);
 	}
 
-	private void ValidateUnits(TransactionRequest req, Asset asset)
+	private TransactionRequest ValidateUnits(TransactionRequest req, Asset asset)
 	{
-		if (req.IsUnitsRequired(asset) && req.Units <= 0)
+		if (!req.IsUnitsRequired(asset))
+		{
+			return req with { Units = 0 };
+		}
+
+		if (req.Units <= 0)
 		{
 			this.AddError("Transaction units must be greater than zero.");
 		}
+
+		return req;
 	}
 
-	private void ValidatePrice(TransactionRequest req, Asset asset)
+	private TransactionRequest ValidatePrice(TransactionRequest req, Asset asset)
 	{
-		if (!req.IsPriceRequired(asset) && req.Price <= 0)
+		if (!req.IsPriceRequired(asset))
+		{
+			return req with { Price = 0 };
+		}
+
+		if (req.Price <= 0)
 		{
 			this.AddError("Transaction price must be greater than zero.");
 		}
+
+		return req;
 	}
 
-	private void ValidateAmount(TransactionRequest req, Asset asset)
+	private TransactionRequest ValidateAmount(TransactionRequest req, Asset asset)
 	{
-		if (req.IsAmountRequired(asset) && req.Amount <= 0)
+		if (!req.IsAmountRequired(asset))
+		{
+			return req with { Amount = 0 };
+		}
+
+		if (req.Amount <= 0)
 		{
 			this.AddError("Transaction amount must be greater than zero.");
 		}
+
+		return req;
 	}
 }
