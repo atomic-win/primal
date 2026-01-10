@@ -50,12 +50,10 @@ public sealed class TransactionAmountCalculator
 			return transaction.Units * exchangeRate;
 		}
 
-		var assetRate = await this.GetAssetRateAsync(
+		return exchangeRate * (await this.GetAmountAsync(
 			asset,
-			date,
-			cancellationToken);
-
-		return transaction.Units * assetRate * exchangeRate;
+			transaction,
+			cancellationToken));
 	}
 
 	private async Task<Asset> GetAssetAsync(
@@ -71,6 +69,25 @@ public sealed class TransactionAmountCalculator
 		return await this.assetRepository.GetByIdAsync(
 			assetItem.AssetId,
 			cancellationToken);
+	}
+
+	private async Task<decimal> GetAmountAsync(
+		Asset asset,
+		Transaction transaction,
+		CancellationToken cancellationToken)
+	{
+		if (transaction.TransactionType != TransactionType.Buy
+			&& transaction.TransactionType != TransactionType.Sell)
+		{
+			return transaction.Amount;
+		}
+
+		var assetRate = await this.GetAssetRateAsync(
+			asset,
+			transaction.Date,
+			cancellationToken);
+
+		return transaction.Units * assetRate;
 	}
 
 	private async Task<decimal> GetAssetRateAsync(
