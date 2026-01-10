@@ -102,7 +102,7 @@ internal sealed class GetValuationsEndpoint : EndpointWithoutRequest<IReadOnlyLi
 
 		var valuations = new List<ValuationResponse>();
 
-		foreach (var valuationDate in this.GetValuationDates(earliestTransactionDate: transactions.Min(t => t.Date)))
+		foreach (var valuationDate in this.GetValuationDates(earliestTransactionDate: transactions.Length == 0 ? DateOnly.FromDateTime(DateTime.UtcNow) : transactions.Min(t => t.Date)))
 		{
 			valuations.Add(await this.CalculateValuationAsync(
 				userId,
