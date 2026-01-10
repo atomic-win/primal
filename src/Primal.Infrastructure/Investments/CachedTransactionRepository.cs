@@ -56,6 +56,8 @@ internal sealed class CachedTransactionRepository : ITransactionRepository
 		string name,
 		TransactionType type,
 		decimal units,
+		decimal price,
+		decimal amount,
 		CancellationToken cancellationToken)
 	{
 		var transaction = await this.transactionRepository.AddAsync(
@@ -65,6 +67,8 @@ internal sealed class CachedTransactionRepository : ITransactionRepository
 			name,
 			type,
 			units,
+			price,
+			amount,
 			cancellationToken);
 
 		await this.InvalidateCacheAsync(

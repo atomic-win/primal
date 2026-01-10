@@ -60,6 +60,8 @@ internal sealed class TransactionRepository : ITransactionRepository
 		string name,
 		TransactionType type,
 		decimal units,
+		decimal price,
+		decimal amount,
 		CancellationToken cancellationToken)
 	{
 		var transactionTableEntity = new TransactionTableEntity
@@ -71,6 +73,8 @@ internal sealed class TransactionRepository : ITransactionRepository
 			Name = name,
 			TransactionType = type,
 			Units = units,
+			Price = price,
+			Amount = amount,
 		};
 
 		await this.appDbContext.Transactions.AddAsync(transactionTableEntity, cancellationToken);
@@ -116,6 +120,8 @@ internal sealed class TransactionRepository : ITransactionRepository
 			entity.Name,
 			entity.TransactionType,
 			new AssetItemId(entity.AssetItemId),
-			entity.Units);
+			entity.Units,
+			entity.Price,
+			entity.Amount);
 	}
 }

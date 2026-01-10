@@ -10,7 +10,9 @@ public sealed class Transaction : Entity<TransactionId>
 		string name,
 		TransactionType transactionType,
 		AssetItemId assetItemId,
-		decimal units)
+		decimal units,
+		decimal price,
+		decimal amount)
 		: base(id)
 	{
 		this.Date = date;
@@ -18,6 +20,8 @@ public sealed class Transaction : Entity<TransactionId>
 		this.TransactionType = transactionType;
 		this.AssetItemId = assetItemId;
 		this.Units = units;
+		this.Price = price;
+		this.Amount = amount;
 	}
 
 	public static Transaction Empty { get; } = new Transaction(
@@ -26,6 +30,8 @@ public sealed class Transaction : Entity<TransactionId>
 		string.Empty,
 		TransactionType.Buy,
 		AssetItemId.Empty,
+		0m,
+		0m,
 		0m);
 
 	public DateOnly Date { get; init; }
@@ -37,4 +43,8 @@ public sealed class Transaction : Entity<TransactionId>
 	public AssetItemId AssetItemId { get; init; }
 
 	public decimal Units { get; init; }
+
+	public decimal Price { get; init; }
+
+	public decimal Amount { get; init; }
 }
