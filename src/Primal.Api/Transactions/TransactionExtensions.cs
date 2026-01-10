@@ -32,9 +32,11 @@ internal static class TransactionExtensions
 	}
 
 	internal static bool IsValidForAssetType(
-		this TransactionType transactionType,
+		this TransactionRequest req,
 		Asset asset)
 	{
+		var transactionType = req.TransactionType;
+
 		return asset.AssetType switch
 		{
 			AssetType.BankAccount or
@@ -66,9 +68,11 @@ internal static class TransactionExtensions
 	}
 
 	internal static bool IsUnitsRequired(
-		this TransactionType transactionType,
+		this TransactionRequest req,
 		Asset asset)
 	{
+		var transactionType = req.TransactionType;
+
 		return asset.AssetType switch
 		{
 			AssetType.Stock when transactionType == TransactionType.Buy || transactionType == TransactionType.Sell => true,
@@ -78,9 +82,11 @@ internal static class TransactionExtensions
 	}
 
 	internal static bool IsPriceRequired(
-		this TransactionType transactionType,
+		this TransactionRequest req,
 		Asset asset)
 	{
+		var transactionType = req.TransactionType;
+
 		return asset.AssetType switch
 		{
 			AssetType.Stock when transactionType == TransactionType.Buy || transactionType == TransactionType.Sell => true,
@@ -89,9 +95,9 @@ internal static class TransactionExtensions
 	}
 
 	internal static bool IsAmountRequired(
-		this TransactionType transactionType,
+		this TransactionRequest req,
 		Asset asset)
 	{
-		return !(transactionType.IsUnitsRequired(asset) || transactionType.IsPriceRequired(asset));
+		return !(req.IsUnitsRequired(asset) || req.IsPriceRequired(asset));
 	}
 }

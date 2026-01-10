@@ -65,7 +65,7 @@ internal sealed class AddTransactionEndpoint : Endpoint<TransactionRequest>
 
 		this.ValidateDate(req.Date);
 		this.ValidateName(req.Name);
-		this.ValidateTransactionType(req.TransactionType, asset);
+		this.ValidateTransactionType(req, asset);
 
 		this.ThrowIfAnyErrors(StatusCodes.Status400BadRequest);
 
@@ -133,75 +133,42 @@ internal sealed class AddTransactionEndpoint : Endpoint<TransactionRequest>
 		}
 	}
 
-	private void ValidateTransactionType(TransactionType transactionType, Asset asset)
+	private void ValidateTransactionType(TransactionRequest req, Asset asset)
 	{
-		if (transactionType == TransactionType.Unknown)
+		if (req.TransactionType == TransactionType.Unknown)
 		{
 			this.AddError("Transaction type must be provided.");
 			return;
 		}
 
-		if (!transactionType.IsValidForAssetType(asset))
+		if (!req.IsValidForAssetType(asset))
 		{
 			this.AddError(
-				$"Transaction type '{transactionType}' is not valid for asset type '{asset.AssetType}'.");
+				$"Transaction type '{req.TransactionType}' is not valid for asset type '{asset.AssetType}'.");
 		}
 	}
 
 	private void ValidateUnits(TransactionRequest req, Asset asset)
 	{
-		if (req.Units < 0)
+		if (req.IsUnitsRequired(asset) && req.Units <= 0)
 		{
 			this.AddError("Transaction units must be greater than zero.");
-			return;
-		}
-
-		if (req.TransactionType.IsUnitsRequired(asset) && req.Units == 0)
-		{
-			this.AddError($"Transaction units must be provided for asset type '{asset.AssetType}' and transaction type '{req.TransactionType}'.");
-		}
-
-		if (!req.TransactionType.IsUnitsRequired(asset) && req.Units != 0)
-		{
-			this.AddError($"Transaction units must not be provided for asset type '{asset.AssetType}' and transaction type '{req.TransactionType}'.");
 		}
 	}
 
 	private void ValidatePrice(TransactionRequest req, Asset asset)
 	{
-		if (req.Price < 0)
+		if (!req.IsPriceRequired(asset) && req.Price <= 0)
 		{
 			this.AddError("Transaction price must be greater than zero.");
-			return;
-		}
-
-		if (req.TransactionType.IsPriceRequired(asset) && req.Price == 0)
-		{
-			this.AddError($"Transaction price must be provided for asset type '{asset.AssetType}' and transaction type '{req.TransactionType}'.");
-		}
-
-		if (!req.TransactionType.IsPriceRequired(asset) && req.Price != 0)
-		{
-			this.AddError($"Transaction price must not be provided for asset type '{asset.AssetType}' and transaction type '{req.TransactionType}'.");
 		}
 	}
 
 	private void ValidateAmount(TransactionRequest req, Asset asset)
 	{
-		if (req.Amount < 0)
+		if (req.IsAmountRequired(asset) && req.Amount <= 0)
 		{
 			this.AddError("Transaction amount must be greater than zero.");
-			return;
-		}
-
-		if (req.TransactionType.IsAmountRequired(asset) && req.Amount == 0)
-		{
-			this.AddError($"Transaction amount must be provided for asset type '{asset.AssetType}' and transaction type '{req.TransactionType}'.");
-		}
-
-		if (!req.TransactionType.IsAmountRequired(asset) && req.Amount != 0)
-		{
-			this.AddError($"Transaction amount must not be provided for asset type '{asset.AssetType}' and transaction type '{req.TransactionType}'.");
 		}
 	}
 }
