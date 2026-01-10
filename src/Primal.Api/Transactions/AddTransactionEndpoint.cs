@@ -57,9 +57,9 @@ internal sealed class AddTransactionEndpoint : Endpoint<TransactionRequest>
 		this.ValidateName(req);
 		this.ValidateTransactionType(req, asset);
 
-		req = this.ValidateUnits(req, asset);
-		req = this.ValidatePrice(req, asset);
-		req = this.ValidateAmount(req, asset);
+		req = this.ValidateUnits(req);
+		req = this.ValidatePrice(req);
+		req = this.ValidateAmount(req);
 
 		this.ThrowIfAnyErrors(StatusCodes.Status400BadRequest);
 
@@ -140,9 +140,9 @@ internal sealed class AddTransactionEndpoint : Endpoint<TransactionRequest>
 		this.ThrowIfAnyErrors(StatusCodes.Status400BadRequest);
 	}
 
-	private TransactionRequest ValidateUnits(TransactionRequest req, Asset asset)
+	private TransactionRequest ValidateUnits(TransactionRequest req)
 	{
-		if (!req.IsUnitsRequired(asset))
+		if (!req.IsUnitsRequired())
 		{
 			return req with { Units = 0 };
 		}
@@ -155,9 +155,9 @@ internal sealed class AddTransactionEndpoint : Endpoint<TransactionRequest>
 		return req;
 	}
 
-	private TransactionRequest ValidatePrice(TransactionRequest req, Asset asset)
+	private TransactionRequest ValidatePrice(TransactionRequest req)
 	{
-		if (!req.IsPriceRequired(asset))
+		if (!req.IsUnitsRequired())
 		{
 			return req with { Price = 0 };
 		}
@@ -170,9 +170,9 @@ internal sealed class AddTransactionEndpoint : Endpoint<TransactionRequest>
 		return req;
 	}
 
-	private TransactionRequest ValidateAmount(TransactionRequest req, Asset asset)
+	private TransactionRequest ValidateAmount(TransactionRequest req)
 	{
-		if (!req.IsAmountRequired(asset))
+		if (req.IsUnitsRequired())
 		{
 			return req with { Amount = 0 };
 		}

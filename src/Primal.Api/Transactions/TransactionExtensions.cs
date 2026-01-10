@@ -67,37 +67,12 @@ internal static class TransactionExtensions
 		};
 	}
 
-	internal static bool IsUnitsRequired(
-		this TransactionRequest req,
-		Asset asset)
+	internal static bool IsUnitsRequired(this TransactionRequest req)
 	{
-		var transactionType = req.TransactionType;
-
-		return asset.AssetType switch
+		return req.TransactionType switch
 		{
-			AssetType.Stock when transactionType == TransactionType.Buy || transactionType == TransactionType.Sell => true,
-			AssetType.MutualFund => true,
+			TransactionType.Buy or TransactionType.Sell => true,
 			_ => false,
 		};
-	}
-
-	internal static bool IsPriceRequired(
-		this TransactionRequest req,
-		Asset asset)
-	{
-		var transactionType = req.TransactionType;
-
-		return asset.AssetType switch
-		{
-			AssetType.Stock when transactionType == TransactionType.Buy || transactionType == TransactionType.Sell => true,
-			_ => false,
-		};
-	}
-
-	internal static bool IsAmountRequired(
-		this TransactionRequest req,
-		Asset asset)
-	{
-		return !(req.IsUnitsRequired(asset) || req.IsPriceRequired(asset));
 	}
 }
