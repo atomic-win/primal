@@ -33,9 +33,9 @@ internal static class TransactionExtensions
 
 	internal static bool IsValidForAssetType(
 		this TransactionType transactionType,
-		AssetType assetType)
+		Asset asset)
 	{
-		return assetType switch
+		return asset.AssetType switch
 		{
 			AssetType.BankAccount or
 			AssetType.FixedDeposit or
@@ -61,7 +61,37 @@ internal static class TransactionExtensions
 				transactionType == TransactionType.Sell ||
 				transactionType == TransactionType.Interest,
 			_ => throw new InvalidOperationException(
-					$"Unsupported asset type: {assetType}"),
+					$"Unsupported asset type: {asset.AssetType}"),
 		};
+	}
+
+	internal static bool IsUnitsRequired(
+		this TransactionType transactionType,
+		Asset asset)
+	{
+		return asset.AssetType switch
+		{
+			AssetType.Stock when transactionType == TransactionType.Buy || transactionType == TransactionType.Sell => true,
+			AssetType.MutualFund => true,
+			_ => false,
+		};
+	}
+
+	internal static bool IsPriceRequired(
+		this TransactionType transactionType,
+		Asset asset)
+	{
+		return asset.AssetType switch
+		{
+			AssetType.Stock when transactionType == TransactionType.Buy || transactionType == TransactionType.Sell => true,
+			_ => false,
+		};
+	}
+
+	internal static bool IsAmountRequired(
+		this TransactionType transactionType,
+		Asset asset)
+	{
+		return !(transactionType.IsUnitsRequired(asset) || transactionType.IsPriceRequired(asset));
 	}
 }
