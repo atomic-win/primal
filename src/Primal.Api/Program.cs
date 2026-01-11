@@ -5,6 +5,7 @@ using Autofac.Extensions.DependencyInjection;
 using FastEndpoints;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.IdentityModel.Tokens;
 using Primal.Api;
 using Primal.Application;
@@ -21,6 +22,14 @@ var builder = WebApplication.CreateBuilder(args);
 				.RegisterModule<ApplicationModule>()
 				.RegisterModule<InfrastructureModule>();
 		});
+
+	builder.Services.AddHybridCache(options =>
+	{
+		options.DefaultEntryOptions = new HybridCacheEntryOptions
+		{
+			Expiration = TimeSpan.FromDays(1),
+		};
+	});
 
 	builder.Services.AddDbContext<AppDbContext>(options =>
 			options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"), b => b.MigrationsAssembly("Primal.Api")));
