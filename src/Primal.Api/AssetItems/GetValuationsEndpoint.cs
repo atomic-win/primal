@@ -1,4 +1,6 @@
 using System.Collections.Immutable;
+using System.Runtime.CompilerServices;
+using System.Text.Json;
 using FastEndpoints;
 using Microsoft.Extensions.Caching.Hybrid;
 using Primal.Application.Investments;
@@ -9,9 +11,14 @@ using Primal.Domain.Users;
 namespace Primal.Api.AssetItems;
 
 [HttpGet("/api/assetItems/valuations")]
-internal sealed class GetValuationsEndpoint : EndpointWithoutRequest<IReadOnlyList<ValuationResponse>>
+internal sealed class GetValuationsEndpoint : EndpointWithoutRequest
 {
 	private readonly HybridCache cache;
+	private readonly JsonSerializerOptions jsonSerializerOptions = new JsonSerializerOptions
+	{
+		PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+		IndentSize = 0,
+	};
 
 	private readonly IAssetItemRepository assetItemRepository;
 	private readonly ITransactionRepository transactionRepository;
@@ -42,18 +49,14 @@ internal sealed class GetValuationsEndpoint : EndpointWithoutRequest<IReadOnlyLi
 		await this.ValidateRequestParameters(userId, assetItemIds, currency, ct);
 		this.ThrowIfAnyErrors();
 
-		string cacheKey = $"users/{userId.Value}/assetItems/valuations?assetItemIds={string.Join(",", assetItemIds.Select(id => id.Value))}&currency={currency}";
-		var tags = assetItemIds
-			.Select(id => $"users/{userId.Value}/assetItems/{id.Value}/valuations")
-			.ToImmutableArray();
+		this.HttpContext.Response.ContentType = "application/json";
+		await this.HttpContext.Response.StartAsync(ct);
 
-		var valuationResponse = await this.cache.GetOrCreateAsync(
-			cacheKey,
-			async _ => await this.CalculateValuationsAsync(userId, assetItemIds, currency, ct),
-			tags: tags,
-			cancellationToken: ct);
-
-		await this.Send.OkAsync(valuationResponse, ct);
+		await foreach (var valuation in this.CalculateValuationsAsync(userId, assetItemIds, currency, ct))
+		{
+			await this.HttpContext.Response.WriteAsync(JsonSerializer.Serialize(valuation, this.jsonSerializerOptions) + "\n", ct);
+			await this.HttpContext.Response.Body.FlushAsync(ct);
+		}
 	}
 
 	private async Task ValidateRequestParameters(
@@ -82,11 +85,11 @@ internal sealed class GetValuationsEndpoint : EndpointWithoutRequest<IReadOnlyLi
 		}
 	}
 
-	private async Task<IReadOnlyList<ValuationResponse>> CalculateValuationsAsync(
+	private async IAsyncEnumerable<ValuationResponse> CalculateValuationsAsync(
 		UserId userId,
 		IReadOnlyList<AssetItemId> assetItemIds,
 		Currency currency,
-		CancellationToken ct)
+		[EnumeratorCancellation] CancellationToken ct)
 	{
 		var transactions = assetItemIds
 			.Select(async assetItemId => await this.transactionRepository.GetByAssetItemIdAsync(
@@ -96,19 +99,25 @@ internal sealed class GetValuationsEndpoint : EndpointWithoutRequest<IReadOnlyLi
 			.SelectMany(t => t.Result)
 			.ToImmutableArray();
 
-		var valuations = new List<ValuationResponse>();
+		var tags = assetItemIds
+			.Select(id => $"users/{userId.Value}/assetItems/{id.Value}/valuations")
+			.ToImmutableArray();
 
 		foreach (var valuationDate in this.GetValuationDates(earliestTransactionDate: transactions.Length == 0 ? DateOnly.FromDateTime(DateTime.UtcNow) : transactions.Min(t => t.Date)))
 		{
-			valuations.Add(await this.CalculateValuationAsync(
-				userId,
-				transactions.Where(t => t.Date <= valuationDate).ToImmutableArray(),
-				valuationDate,
-				currency,
-				ct));
-		}
+			string cacheKey = $"users/{userId.Value}/assetItems/valuations?assetItemIds={string.Join(",", assetItemIds.Select(id => id.Value))}&currency={currency}&valuationDate={valuationDate}";
 
-		return valuations;
+			yield return await this.cache.GetOrCreateAsync(
+				cacheKey,
+				async _ => await this.CalculateValuationAsync(
+					userId,
+					transactions.Where(t => t.Date <= valuationDate).ToImmutableArray(),
+					valuationDate,
+					currency,
+					ct),
+				tags: tags,
+				cancellationToken: ct);
+		}
 	}
 
 	private async Task<ValuationResponse> CalculateValuationAsync(
