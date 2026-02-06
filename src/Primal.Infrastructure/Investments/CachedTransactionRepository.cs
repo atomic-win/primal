@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using Microsoft.Extensions.Caching.Hybrid;
 using Primal.Application.Investments;
 using Primal.Domain.Investments;
@@ -25,10 +26,10 @@ internal sealed class CachedTransactionRepository : ITransactionRepository
 	{
 		return await this.hybridCache.GetOrCreateAsync(
 			$"users/{userId.Value}/assetItems/{assetItemId.Value}/transactions",
-			async entry => await this.transactionRepository.GetByAssetItemIdAsync(
+			async entry => (await this.transactionRepository.GetByAssetItemIdAsync(
 				userId,
 				assetItemId,
-				cancellationToken),
+				cancellationToken)).ToImmutableArray(),
 			tags: new[] { $"users/{userId.Value}/assetItems/{assetItemId.Value}/transactions" },
 			cancellationToken: cancellationToken);
 	}
