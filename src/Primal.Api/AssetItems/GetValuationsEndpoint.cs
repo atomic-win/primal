@@ -118,12 +118,14 @@ internal sealed class GetValuationsEndpoint : EndpointWithoutRequest<IReadOnlyLi
 		Currency currency,
 		CancellationToken ct)
 	{
-		var investedValue = await this.CalculateInvestedValueAsync(
-			userId,
-			transactions,
-			valuationDate,
-			currency,
-			ct);
+		var investedValue = transactions.GroupBy(t => t.AssetItemId)
+			.Select(async grp => await this.CalculateInvestedValueAsync(
+				userId,
+				grp.ToImmutableArray(),
+				valuationDate,
+				currency,
+				ct))
+			.Sum(t => t.Result);
 
 		var currentValue = await this.CalculateCurrentValueAsync(
 			userId,
@@ -227,12 +229,13 @@ internal sealed class GetValuationsEndpoint : EndpointWithoutRequest<IReadOnlyLi
 
 	[System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "MA0051:Method is too long", Justification = "Refactoring would reduce readability")]
 	private async Task<decimal> CalculateInvestedValueAsync(
-			UserId userId,
-			IEnumerable<Transaction> transactions,
-			DateOnly valuationDate,
-			Currency currency,
-			CancellationToken ct)
+		UserId userId,
+		IEnumerable<Transaction> transactions,
+		DateOnly valuationDate,
+		Currency currency,
+		CancellationToken ct)
 	{
+		// !!! NOTE: This method calculates the invested value for only a single asset item
 		decimal withdrawnAmount = transactions
 			.Where(t => t.TransactionType == TransactionType.Withdrawal ||
 						t.TransactionType == TransactionType.InterestPenalty)
@@ -344,21 +347,10 @@ internal sealed class GetValuationsEndpoint : EndpointWithoutRequest<IReadOnlyLi
 		Currency currency,
 		CancellationToken ct)
 	{
-		if (transaction.TransactionType == TransactionType.Deposit ||
-			transaction.TransactionType == TransactionType.Withdrawal)
-		{
-			return await this.CalculateCurrentAmountAsync(
-				userId,
-				transaction,
-				valuationDate,
-				currency,
-				ct);
-		}
-
 		return await this.transactionAmountCalculator.CalculateAmountAsync(
 			userId,
 			transaction,
-			transaction.Date,
+			transaction.TransactionType == TransactionType.Deposit || transaction.TransactionType == TransactionType.Withdrawal ? valuationDate : transaction.Date,
 			currency,
 			ct);
 	}
