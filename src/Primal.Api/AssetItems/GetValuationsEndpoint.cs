@@ -397,15 +397,12 @@ internal sealed class GetValuationsEndpoint : EndpointWithoutRequest<IAsyncEnume
 		var allLessThanYear = xirrInputs.All(i => i.YearDiff < 1);
 
 		var inValues = xirrInputs
-			.Select(i => new { i.YearDiff, Value = i.TransactionAmount })
+			.Select(i => new
+			{
+				YearDiff = allLessThanYear && balanceAmount != 0 ? 1.0 : i.YearDiff,
+				Value = i.TransactionAmount,
+			})
 			.ToImmutableArray();
-
-		if (allLessThanYear && balanceAmount != 0)
-		{
-			inValues = inValues
-				.Select(i => new { YearDiff = 1.0, i.Value })
-				.ToImmutableArray();
-		}
 
 		decimal xirrLowerBound = -1;
 		decimal xirrUpperBound = 100;
