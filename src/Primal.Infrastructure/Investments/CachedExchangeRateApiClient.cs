@@ -31,6 +31,10 @@ internal sealed class CachedExchangeRateApiClient : IExchangeRateApiClient
 		return await this.hybridCache.GetOrCreateAsync(
 			$"exchange-rate/{fromCurrency}/{toCurrency}/rates",
 			async entry => await this.exchangeRateApiClient.GetExchangeRatesAsync(fromCurrency, toCurrency, cancellationToken),
+			options: new HybridCacheEntryOptions
+			{
+				Flags = HybridCacheEntryFlags.None,
+			},
 			cancellationToken: cancellationToken);
 	}
 
