@@ -227,7 +227,6 @@ internal sealed class GetValuationsEndpoint : EndpointWithoutRequest<IReadOnlyLi
 		};
 	}
 
-	[System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "MA0051:Method is too long", Justification = "Refactoring would reduce readability")]
 	private async Task<decimal> CalculateInvestedValueAsync(
 		UserId userId,
 		IEnumerable<Transaction> transactions,
@@ -247,57 +246,42 @@ internal sealed class GetValuationsEndpoint : EndpointWithoutRequest<IReadOnlyLi
 
 		decimal investedValue = 0;
 
-		foreach (var transaction in transactions.OrderByDescending(t => t.Date))
+		foreach (var transaction in transactions.OrderBy(t => t.Date))
 		{
-			if (transaction.TransactionType == TransactionType.Deposit)
+			if (transaction.TransactionType != TransactionType.Deposit &&
+				transaction.TransactionType != TransactionType.Buy)
 			{
-				var amount = transaction.Amount - Math.Min(withdrawnAmount, transaction.Amount);
-				withdrawnAmount -= transaction.Amount - amount;
-
-				var newTransaction = new Transaction(
-					transaction.Id,
-					transaction.Date,
-					transaction.Name,
-					transaction.TransactionType,
-					transaction.AssetItemId,
-					transaction.Units,
-					transaction.Price,
-					amount);
-
-				investedValue += await this.CalculateInitialAmountAsync(
-					userId,
-					newTransaction,
-					valuationDate,
-					currency,
-					ct);
-
 				continue;
 			}
 
-			if (transaction.TransactionType == TransactionType.Buy)
+			var currentTransactionWithDrawnAmount = Math.Min(withdrawnAmount, transaction.Amount);
+			var currentTransactionWithDrawnUnits = Math.Min(withdrawnUnits, transaction.Units);
+
+			withdrawnAmount -= currentTransactionWithDrawnAmount;
+			withdrawnUnits -= currentTransactionWithDrawnUnits;
+
+			if (transaction.Amount == currentTransactionWithDrawnAmount &&
+				transaction.Units == currentTransactionWithDrawnUnits)
 			{
-				var units = transaction.Units - Math.Min(withdrawnUnits, transaction.Units);
-				withdrawnUnits -= transaction.Units - units;
-
-				var newTransaction = new Transaction(
-					transaction.Id,
-					transaction.Date,
-					transaction.Name,
-					transaction.TransactionType,
-					transaction.AssetItemId,
-					units,
-					transaction.Price,
-					transaction.Amount);
-
-				investedValue += await this.CalculateInitialAmountAsync(
-					userId,
-					newTransaction,
-					valuationDate,
-					currency,
-					ct);
-
 				continue;
 			}
+
+			var newTransaction = new Transaction(
+				transaction.Id,
+				transaction.Date,
+				transaction.Name,
+				transaction.TransactionType,
+				transaction.AssetItemId,
+				transaction.Units - currentTransactionWithDrawnUnits,
+				transaction.Price,
+				transaction.Amount - currentTransactionWithDrawnAmount);
+
+			investedValue += await this.CalculateInitialAmountAsync(
+				userId,
+				newTransaction,
+				valuationDate,
+				currency,
+				ct);
 		}
 
 		return investedValue;
