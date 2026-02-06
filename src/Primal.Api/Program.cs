@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.IdentityModel.Tokens;
+using NeoSmart.Caching.Sqlite;
 using Primal.Api;
 using Primal.Application;
 using Primal.Infrastructure;
@@ -28,11 +29,17 @@ var builder = WebApplication.CreateBuilder(args);
 		options.DefaultEntryOptions = new HybridCacheEntryOptions
 		{
 			Expiration = TimeSpan.FromDays(1),
+			Flags = HybridCacheEntryFlags.DisableDistributedCache,
 		};
 	});
 
 	builder.Services.AddDbContext<AppDbContext>(options =>
 			options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"), b => b.MigrationsAssembly("Primal.Api")));
+
+	builder.Services.AddSqliteCache(options =>
+	{
+		options.CachePath = builder.Configuration.GetConnectionString("CacheConnection");
+	});
 
 	builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 			.AddJwtBearer(options =>
