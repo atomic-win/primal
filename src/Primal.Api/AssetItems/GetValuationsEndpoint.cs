@@ -419,6 +419,7 @@ internal sealed class GetValuationsEndpoint : EndpointWithoutRequest<IAsyncEnume
 				YearDiff = allLessThanYear && balanceAmount != 0 ? 1.0 : i.YearDiff,
 				Value = i.TransactionAmount,
 			})
+			.Where(i => i.Value != 0)
 			.ToImmutableArray();
 
 		decimal xirrLowerBound = -1;
