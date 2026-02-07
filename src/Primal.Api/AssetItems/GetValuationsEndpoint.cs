@@ -103,7 +103,7 @@ internal sealed class GetValuationsEndpoint : EndpointWithoutRequest<IEnumerable
 				Date: i.Date,
 				InvestedValue: i.InvestedValue,
 				CurrentValue: i.CurrentValue,
-				XirrPercent: 100 * this.CalculateXirr(i.XirrInputs)));
+				XirrPercent: 100 * this.CalculateXirr(i.XirrInputs, ct)));
 	}
 
 	private async Task<ValuationInput> CalculateValuationInputAsync(
@@ -389,7 +389,8 @@ internal sealed class GetValuationsEndpoint : EndpointWithoutRequest<IEnumerable
 	}
 
 	private decimal CalculateXirr(
-		IReadOnlyCollection<XirrInput> xirrInputs)
+		IReadOnlyCollection<XirrInput> xirrInputs,
+		CancellationToken ct)
 	{
 		if (xirrInputs.Count == 0)
 		{
@@ -398,6 +399,8 @@ internal sealed class GetValuationsEndpoint : EndpointWithoutRequest<IEnumerable
 
 		xirrInputs = xirrInputs
 			.GroupBy(i => i.YearDiff)
+			.AsParallel()
+			.WithCancellation(ct)
 			.Select(g => new XirrInput
 			{
 				YearDiff = g.Key,
@@ -411,6 +414,8 @@ internal sealed class GetValuationsEndpoint : EndpointWithoutRequest<IEnumerable
 		var allLessThanYear = xirrInputs.All(i => i.YearDiff < 1);
 
 		var inValues = xirrInputs
+			.AsParallel()
+			.WithCancellation(ct)
 			.Where(i => i.TransactionAmount != 0)
 			.Select(i => new
 			{
