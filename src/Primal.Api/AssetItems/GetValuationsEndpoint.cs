@@ -1,6 +1,5 @@
 using System.Collections.Immutable;
 using System.Diagnostics;
-using System.Runtime.CompilerServices;
 using FastEndpoints;
 using Microsoft.Extensions.Caching.Hybrid;
 using Primal.Application.Investments;
@@ -11,7 +10,7 @@ using Primal.Domain.Users;
 namespace Primal.Api.AssetItems;
 
 [HttpGet("/api/assetItems/valuations")]
-internal sealed class GetValuationsEndpoint : EndpointWithoutRequest<IAsyncEnumerable<ValuationResponse>>
+internal sealed class GetValuationsEndpoint : EndpointWithoutRequest<IEnumerable<ValuationResponse>>
 {
 	private readonly HybridCache cache;
 
@@ -44,7 +43,7 @@ internal sealed class GetValuationsEndpoint : EndpointWithoutRequest<IAsyncEnume
 		await this.ValidateRequestParameters(userId, assetItemIds, currency, ct);
 		this.ThrowIfAnyErrors();
 
-		await this.Send.OkAsync(this.CalculateValuationsAsync(userId, assetItemIds, currency, ct), ct);
+		await this.Send.OkAsync(await this.CalculateValuationsAsync(userId, assetItemIds, currency, ct), ct);
 	}
 
 	private async Task ValidateRequestParameters(
@@ -73,35 +72,44 @@ internal sealed class GetValuationsEndpoint : EndpointWithoutRequest<IAsyncEnume
 		}
 	}
 
-	private async IAsyncEnumerable<ValuationResponse> CalculateValuationsAsync(
+	private async Task<IEnumerable<ValuationResponse>> CalculateValuationsAsync(
 		UserId userId,
 		IReadOnlyList<AssetItemId> assetItemIds,
 		Currency currency,
-		[EnumeratorCancellation] CancellationToken ct)
+		CancellationToken ct)
 	{
+		var valuationInputs = new List<ValuationInput>();
+
 		foreach (var valuationDate in this.GetValuationDates())
 		{
 			var startTime = Stopwatch.GetTimestamp();
 
-			var valuation = await this.CalculateValuationAsync(
+			var valuationInput = await this.CalculateValuationInputAsync(
 				userId,
 				assetItemIds,
 				valuationDate,
 				currency,
 				ct);
 
-			Console.WriteLine($"[{Stopwatch.GetElapsedTime(startTime).TotalMilliseconds} ms] Calculated valuation for {valuationDate}");
-
-			if (valuation.Date == DateOnly.MinValue)
+			if (valuationInput.XirrInputs.Count == 0)
 			{
-				yield break;
+				break;
 			}
 
-			yield return valuation;
+			valuationInputs.Add(valuationInput);
 		}
+
+		return valuationInputs
+			.AsParallel()
+			.WithCancellation(ct)
+			.Select(i => new ValuationResponse(
+				Date: i.Date,
+				InvestedValue: i.InvestedValue,
+				CurrentValue: i.CurrentValue,
+				XirrPercent: 100 * this.CalculateXirr(i.XirrInputs, ct)));
 	}
 
-	private async Task<ValuationResponse> CalculateValuationAsync(
+	private async Task<ValuationInput> CalculateValuationInputAsync(
 		UserId userId,
 		IReadOnlyList<AssetItemId> assetItemIds,
 		DateOnly valuationDate,
@@ -123,20 +131,13 @@ internal sealed class GetValuationsEndpoint : EndpointWithoutRequest<IAsyncEnume
 				cancellationToken: ct));
 		}
 
-		if (!valuationInputs.SelectMany(i => i.XirrInputs).Any())
+		return new ValuationInput
 		{
-			return new ValuationResponse(
-				Date: DateOnly.MinValue,
-				InvestedValue: 0,
-				CurrentValue: 0,
-				XirrPercent: 0);
-		}
-
-		return new ValuationResponse(
-			Date: valuationDate,
-			InvestedValue: valuationInputs.Sum(i => i.InvestedValue),
-			CurrentValue: valuationInputs.Sum(i => i.CurrentValue),
-			XirrPercent: 100 * this.CalculateXirr(valuationInputs.SelectMany(i => i.XirrInputs).ToImmutableArray()));
+			Date = valuationDate,
+			InvestedValue = valuationInputs.Sum(i => i.InvestedValue),
+			CurrentValue = valuationInputs.Sum(i => i.CurrentValue),
+			XirrInputs = valuationInputs.SelectMany(i => i.XirrInputs).ToImmutableArray(),
+		};
 	}
 
 	private async Task<ValuationInput> CalculateValuationInputAsync(
@@ -181,6 +182,7 @@ internal sealed class GetValuationsEndpoint : EndpointWithoutRequest<IAsyncEnume
 
 		return new ValuationInput
 		{
+			Date = valuationDate,
 			InvestedValue = investedValue,
 			CurrentValue = currentValue,
 			XirrInputs = xirrInputs,
@@ -390,7 +392,8 @@ internal sealed class GetValuationsEndpoint : EndpointWithoutRequest<IAsyncEnume
 	}
 
 	private decimal CalculateXirr(
-		IReadOnlyCollection<XirrInput> xirrInputs)
+		IReadOnlyCollection<XirrInput> xirrInputs,
+		CancellationToken ct)
 	{
 		if (xirrInputs.Count == 0)
 		{
@@ -401,6 +404,8 @@ internal sealed class GetValuationsEndpoint : EndpointWithoutRequest<IAsyncEnume
 
 		xirrInputs = xirrInputs
 			.GroupBy(i => i.YearDiff)
+			.AsParallel()
+			.WithCancellation(ct)
 			.Select(g => new XirrInput
 			{
 				YearDiff = g.Key,
@@ -414,12 +419,14 @@ internal sealed class GetValuationsEndpoint : EndpointWithoutRequest<IAsyncEnume
 		var allLessThanYear = xirrInputs.All(i => i.YearDiff < 1);
 
 		var inValues = xirrInputs
+			.AsParallel()
+			.WithCancellation(ct)
+			.Where(i => i.TransactionAmount != 0)
 			.Select(i => new
 			{
 				YearDiff = allLessThanYear && balanceAmount != 0 ? 1.0 : i.YearDiff,
 				Value = i.TransactionAmount,
 			})
-			.Where(i => i.Value != 0)
 			.ToImmutableArray();
 
 		decimal xirrLowerBound = -1;
@@ -463,6 +470,8 @@ internal sealed class GetValuationsEndpoint : EndpointWithoutRequest<IAsyncEnume
 
 	private sealed class ValuationInput
 	{
+		public required DateOnly Date { get; init; }
+
 		public required decimal InvestedValue { get; init; }
 
 		public required decimal CurrentValue { get; init; }
