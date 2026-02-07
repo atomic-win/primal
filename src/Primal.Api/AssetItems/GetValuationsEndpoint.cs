@@ -1,5 +1,4 @@
 using System.Collections.Immutable;
-using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using FastEndpoints;
 using Microsoft.Extensions.Caching.Hybrid;
@@ -81,16 +80,12 @@ internal sealed class GetValuationsEndpoint : EndpointWithoutRequest<IAsyncEnume
 	{
 		foreach (var valuationDate in this.GetValuationDates())
 		{
-			var startTime = Stopwatch.GetTimestamp();
-
 			var valuation = await this.CalculateValuationAsync(
 				userId,
 				assetItemIds,
 				valuationDate,
 				currency,
 				ct);
-
-			Console.WriteLine($"[{Stopwatch.GetElapsedTime(startTime).TotalMilliseconds} ms] Calculated valuation for {valuationDate}");
 
 			if (valuation.Date == DateOnly.MinValue)
 			{
@@ -412,12 +407,12 @@ internal sealed class GetValuationsEndpoint : EndpointWithoutRequest<IAsyncEnume
 		var allLessThanYear = xirrInputs.All(i => i.YearDiff < 1);
 
 		var inValues = xirrInputs
+			.Where(i => i.TransactionAmount != 0)
 			.Select(i => new
 			{
 				YearDiff = allLessThanYear && balanceAmount != 0 ? 1.0 : i.YearDiff,
 				Value = i.TransactionAmount,
 			})
-			.Where(i => i.Value != 0)
 			.ToImmutableArray();
 
 		decimal xirrLowerBound = -1;
