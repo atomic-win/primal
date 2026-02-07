@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using FastEndpoints;
 using Microsoft.Extensions.Caching.Hybrid;
@@ -80,12 +81,16 @@ internal sealed class GetValuationsEndpoint : EndpointWithoutRequest<IAsyncEnume
 	{
 		foreach (var valuationDate in this.GetValuationDates())
 		{
+			var startTime = Stopwatch.GetTimestamp();
+
 			var valuation = await this.CalculateValuationAsync(
 				userId,
 				assetItemIds,
 				valuationDate,
 				currency,
 				ct);
+
+			Console.WriteLine($"[{Stopwatch.GetElapsedTime(startTime).TotalMilliseconds} ms] Calculated valuation for {valuationDate}");
 
 			if (valuation.Date == DateOnly.MinValue)
 			{
@@ -392,6 +397,18 @@ internal sealed class GetValuationsEndpoint : EndpointWithoutRequest<IAsyncEnume
 			return 0;
 		}
 
+		var startTime = Stopwatch.GetTimestamp();
+
+		xirrInputs = xirrInputs
+			.GroupBy(i => i.YearDiff)
+			.Select(g => new XirrInput
+			{
+				YearDiff = g.Key,
+				TransactionAmount = g.Sum(i => i.TransactionAmount),
+				BalanceAmount = g.Sum(i => i.BalanceAmount),
+			})
+			.ToImmutableArray();
+
 		decimal balanceAmount = xirrInputs.Sum(i => i.BalanceAmount);
 
 		var allLessThanYear = xirrInputs.All(i => i.YearDiff < 1);
@@ -422,6 +439,8 @@ internal sealed class GetValuationsEndpoint : EndpointWithoutRequest<IAsyncEnume
 				xirrLowerBound = xirr;
 			}
 		}
+
+		Console.WriteLine($"[{Stopwatch.GetElapsedTime(startTime).TotalMilliseconds} ms] Calculated XIRR with {xirrInputs.Count} inputs");
 
 		return xirrUpperBound - xirrLowerBound <= 0.0000001m
 			? xirrUpperBound
