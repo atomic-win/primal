@@ -1,4 +1,3 @@
-using System.Net.Mail;
 using Primal.Domain.Money;
 using Primal.Domain.Users;
 

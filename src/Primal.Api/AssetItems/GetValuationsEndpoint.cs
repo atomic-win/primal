@@ -392,11 +392,22 @@ internal sealed class GetValuationsEndpoint : EndpointWithoutRequest<IAsyncEnume
 			return 0;
 		}
 
+		xirrInputs = xirrInputs
+			.GroupBy(i => i.YearDiff)
+			.Select(g => new XirrInput
+			{
+				YearDiff = g.Key,
+				TransactionAmount = g.Sum(i => i.TransactionAmount),
+				BalanceAmount = g.Sum(i => i.BalanceAmount),
+			})
+			.ToImmutableArray();
+
 		decimal balanceAmount = xirrInputs.Sum(i => i.BalanceAmount);
 
 		var allLessThanYear = xirrInputs.All(i => i.YearDiff < 1);
 
 		var inValues = xirrInputs
+			.Where(i => i.TransactionAmount != 0)
 			.Select(i => new
 			{
 				YearDiff = allLessThanYear && balanceAmount != 0 ? 1.0 : i.YearDiff,

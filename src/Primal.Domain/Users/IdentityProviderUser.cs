@@ -1,4 +1,3 @@
-using System.Net.Mail;
 using Primal.Domain.Common.Models;
 
 namespace Primal.Domain.Users;
