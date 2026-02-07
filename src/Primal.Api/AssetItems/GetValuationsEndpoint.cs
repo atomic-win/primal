@@ -400,8 +400,6 @@ internal sealed class GetValuationsEndpoint : EndpointWithoutRequest<IEnumerable
 			return 0;
 		}
 
-		var startTime = Stopwatch.GetTimestamp();
-
 		xirrInputs = xirrInputs
 			.GroupBy(i => i.YearDiff)
 			.AsParallel()
@@ -447,8 +445,6 @@ internal sealed class GetValuationsEndpoint : EndpointWithoutRequest<IEnumerable
 				xirrLowerBound = xirr;
 			}
 		}
-
-		Console.WriteLine($"[{Stopwatch.GetElapsedTime(startTime).TotalMilliseconds} ms] Calculated XIRR with {xirrInputs.Count} inputs");
 
 		return xirrUpperBound - xirrLowerBound <= 0.0000001m
 			? xirrUpperBound
