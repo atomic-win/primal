@@ -1,4 +1,3 @@
-using System.Net.Mail;
 using Microsoft.Extensions.Caching.Hybrid;
 using Primal.Application.Users;
 using Primal.Domain.Money;
