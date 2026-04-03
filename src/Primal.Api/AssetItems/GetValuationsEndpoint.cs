@@ -14,17 +14,20 @@ internal sealed class GetValuationsEndpoint : EndpointWithoutRequest<IAsyncEnume
 {
 	private readonly HybridCache cache;
 
+	private readonly IAssetRepository assetRepository;
 	private readonly IAssetItemRepository assetItemRepository;
 	private readonly ITransactionRepository transactionRepository;
 	private readonly TransactionAmountCalculator transactionAmountCalculator;
 
 	public GetValuationsEndpoint(
 		HybridCache cache,
+		IAssetRepository assetRepository,
 		IAssetItemRepository assetItemRepository,
 		ITransactionRepository transactionRepository,
 		TransactionAmountCalculator transactionAmountCalculator)
 	{
 		this.cache = cache;
+		this.assetRepository = assetRepository;
 		this.assetItemRepository = assetItemRepository;
 		this.transactionRepository = transactionRepository;
 		this.transactionAmountCalculator = transactionAmountCalculator;
@@ -40,13 +43,13 @@ internal sealed class GetValuationsEndpoint : EndpointWithoutRequest<IAsyncEnume
 			.Order()
 			.Select(id => new AssetItemId(id)).ToImmutableArray();
 
-		await this.ValidateRequestParameters(userId, assetItemIds, currency, ct);
+		var assetItems = await this.ValidateRequestParameters(userId, assetItemIds, currency, ct);
 		this.ThrowIfAnyErrors();
 
-		await this.Send.OkAsync(this.CalculateValuationsAsync(userId, assetItemIds, currency, ct), ct);
+		await this.Send.OkAsync(this.CalculateValuationsAsync(userId, assetItems, currency, ct), ct);
 	}
 
-	private async Task ValidateRequestParameters(
+	private async Task<IReadOnlyList<AssetItem>> ValidateRequestParameters(
 		UserId userId,
 		IReadOnlyCollection<AssetItemId> assetItemIds,
 		Currency currency,
@@ -62,19 +65,25 @@ internal sealed class GetValuationsEndpoint : EndpointWithoutRequest<IAsyncEnume
 			this.AddError("At least one assetItemGuid query parameter is required.");
 		}
 
+		var assetItems = new List<AssetItem>(capacity: assetItemIds.Count);
 		foreach (var assetItemId in assetItemIds)
 		{
 			var assetItem = await this.assetItemRepository.GetByIdAsync(userId, assetItemId, ct);
 			if (assetItem.Id == AssetItemId.Empty)
 			{
 				this.AddError($"Asset item with ID '{assetItemId.Value}' not found.");
+				continue;
 			}
+
+			assetItems.Add(assetItem);
 		}
+
+		return assetItems;
 	}
 
 	private async IAsyncEnumerable<ValuationResponse> CalculateValuationsAsync(
 		UserId userId,
-		IReadOnlyList<AssetItemId> assetItemIds,
+		IReadOnlyList<AssetItem> assetItems,
 		Currency currency,
 		[EnumeratorCancellation] CancellationToken ct)
 	{
@@ -82,7 +91,7 @@ internal sealed class GetValuationsEndpoint : EndpointWithoutRequest<IAsyncEnume
 		{
 			var valuation = await this.CalculateValuationAsync(
 				userId,
-				assetItemIds,
+				assetItems,
 				valuationDate,
 				currency,
 				ct);
@@ -98,23 +107,23 @@ internal sealed class GetValuationsEndpoint : EndpointWithoutRequest<IAsyncEnume
 
 	private async Task<ValuationResponse> CalculateValuationAsync(
 		UserId userId,
-		IReadOnlyList<AssetItemId> assetItemIds,
+		IReadOnlyList<AssetItem> assetItems,
 		DateOnly valuationDate,
 		Currency currency,
 		CancellationToken ct)
 	{
-		var valuationInputs = new List<ValuationInput>(capacity: assetItemIds.Count);
-		foreach (var assetItemId in assetItemIds)
+		var valuationInputs = new List<ValuationInput>(capacity: assetItems.Count);
+		foreach (var assetItem in assetItems)
 		{
 			valuationInputs.Add(await this.cache.GetOrCreateAsync(
-				key: $"users/{userId.Value}/assetItems/{assetItemId.Value}/valuationInput?valuationDate={valuationDate}&currency={currency}",
+				key: $"users/{userId.Value}/assetItems/{assetItem.Id.Value}/valuationInput?valuationDate={valuationDate}&currency={currency}",
 				async _ => await this.CalculateValuationInputAsync(
 					userId,
-					assetItemId,
+					assetItem,
 					valuationDate,
 					currency,
 					ct),
-				tags: new[] { $"users/{userId.Value}/assetItems/{assetItemId.Value}/valuations" },
+				tags: new[] { $"users/{userId.Value}/assetItems/{assetItem.Id.Value}/valuations" },
 				cancellationToken: ct));
 		}
 
@@ -136,26 +145,21 @@ internal sealed class GetValuationsEndpoint : EndpointWithoutRequest<IAsyncEnume
 
 	private async Task<ValuationInput> CalculateValuationInputAsync(
 		UserId userId,
-		AssetItemId assetItemId,
+		AssetItem assetItem,
 		DateOnly valuationDate,
 		Currency currency,
 		CancellationToken ct)
 	{
+		var asset = await this.assetRepository.GetByIdAsync(assetItem.AssetId, ct);
+
 		var allTransactions = await this.transactionRepository.GetByAssetItemIdAsync(
 			userId,
-			assetItemId,
+			assetItem.Id,
 			ct);
 
 		var transactionsWithinValuationDate = allTransactions
 			.Where(t => t.Date <= valuationDate)
 			.ToImmutableArray();
-
-		var investedValue = await this.CalculateInvestedValueAsync(
-			userId,
-			transactionsWithinValuationDate,
-			valuationDate,
-			currency,
-			ct);
 
 		var currentValue = await this.CalculateCurrentValueAsync(
 			userId,
@@ -163,6 +167,18 @@ internal sealed class GetValuationsEndpoint : EndpointWithoutRequest<IAsyncEnume
 			valuationDate,
 			currency,
 			ct);
+
+		var investedValue = asset.AssetType switch
+		{
+			AssetType.BankAccount or AssetType.Wallet or AssetType.TradingAccount or AssetType.Bond => currentValue,
+			AssetType.FixedDeposit or AssetType.EPF or AssetType.PPF or AssetType.MutualFund or AssetType.Stock => await this.CalculateInvestedValueAsync(
+				userId,
+				transactionsWithinValuationDate,
+				valuationDate,
+				currency,
+				ct),
+			_ => throw new InvalidOperationException($"Unsupported asset type: {asset.AssetType}"),
+		};
 
 		var xirrInputs = transactionsWithinValuationDate
 			.Select(async transaction => await this.MapToXirrInputAsync(
