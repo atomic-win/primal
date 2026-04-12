@@ -138,9 +138,9 @@ internal sealed class GetValuationsEndpoint : EndpointWithoutRequest<IAsyncEnume
 
 		return new ValuationResponse(
 			Date: valuationDate,
-			InvestedValue: valuationInputs.Sum(i => i.InvestedValue),
-			CurrentValue: valuationInputs.Sum(i => i.CurrentValue),
-			XirrPercent: 100 * this.CalculateXirr(valuationInputs.SelectMany(i => i.XirrInputs).ToImmutableArray()));
+			InvestedValue: Math.Round(valuationInputs.Sum(i => i.InvestedValue), 2),
+			CurrentValue: Math.Round(valuationInputs.Sum(i => i.CurrentValue), 2),
+			XirrPercent: Math.Round(100 * this.CalculateXirr(valuationInputs.SelectMany(i => i.XirrInputs).ToImmutableArray()), 2));
 	}
 
 	private async Task<ValuationInput> CalculateValuationInputAsync(
@@ -432,9 +432,9 @@ internal sealed class GetValuationsEndpoint : EndpointWithoutRequest<IAsyncEnume
 			.ToImmutableArray();
 
 		decimal xirrLowerBound = -1;
-		decimal xirrUpperBound = 100;
+		decimal xirrUpperBound = 1;
 
-		while (xirrUpperBound - xirrLowerBound > 0.0000001m)
+		while (xirrUpperBound - xirrLowerBound > 0.0001m)
 		{
 			decimal xirr = (xirrLowerBound + xirrUpperBound) / 2;
 			decimal npv = inValues
@@ -450,9 +450,7 @@ internal sealed class GetValuationsEndpoint : EndpointWithoutRequest<IAsyncEnume
 			}
 		}
 
-		return xirrUpperBound - xirrLowerBound <= 0.0000001m
-			? xirrUpperBound
-			: 0;
+		return (xirrLowerBound + xirrUpperBound) / 2;
 	}
 
 	private IEnumerable<DateOnly> GetValuationDates()
