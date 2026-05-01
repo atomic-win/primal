@@ -130,7 +130,7 @@ internal sealed class GetValuationsEndpoint : EndpointWithoutRequest<IAsyncEnume
 		if (!valuationInputs.SelectMany(i => i.XirrInputs).Any())
 		{
 			return new ValuationResponse(
-				Date: DateOnly.MinValue,
+				Date: valuationDate == DateOnly.FromDateTime(DateTime.UtcNow) ? valuationDate : DateOnly.MinValue,
 				InvestedValue: 0,
 				CurrentValue: 0,
 				XirrPercent: 0);
