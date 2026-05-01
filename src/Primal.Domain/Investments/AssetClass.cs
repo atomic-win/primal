@@ -5,5 +5,6 @@ public enum AssetClass
 	Unknown,
 	Equity,
 	Debt,
+	Commodities,
 	EmergencyFund,
 }
