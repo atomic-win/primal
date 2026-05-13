@@ -20,8 +20,8 @@ internal sealed class AssetRepository : IAssetRepository
 	{
 		using var connection = this.connectionFactory.CreateConnection();
 
-		var row = await connection.QueryFirstOrDefaultAsync<AssetTableEntity>(
-			"SELECT * FROM assets WHERE Id = @Id",
+		var row = await connection.QueryFirstOrDefaultAsync<AssetRow>(
+			"SELECT Id, Name, AssetClass, AssetType, Currency, ExternalId FROM assets WHERE Id = @Id",
 			new { Id = assetId.Value.ToString("D", CultureInfo.InvariantCulture).ToUpperInvariant() });
 
 		if (row is null)
@@ -36,8 +36,8 @@ internal sealed class AssetRepository : IAssetRepository
 	{
 		using var connection = this.connectionFactory.CreateConnection();
 
-		var row = await connection.QueryFirstOrDefaultAsync<AssetTableEntity>(
-			"SELECT * FROM assets WHERE ExternalId = @ExternalId",
+		var row = await connection.QueryFirstOrDefaultAsync<AssetRow>(
+			"SELECT Id, Name, AssetClass, AssetType, Currency, ExternalId FROM assets WHERE ExternalId = @ExternalId",
 			new { ExternalId = externalId });
 
 		if (row is null)
@@ -87,14 +87,22 @@ internal sealed class AssetRepository : IAssetRepository
 			externalId);
 	}
 
-	private static Asset MapToAsset(AssetTableEntity entity)
+	private static Asset MapToAsset(AssetRow row)
 	{
 		return new Asset(
-			new AssetId(Guid.Parse(entity.Id)),
-			entity.Name,
-			Enum.Parse<AssetClass>(entity.AssetClass),
-			Enum.Parse<AssetType>(entity.AssetType),
-			Enum.Parse<Currency>(entity.Currency),
-			entity.ExternalId);
+			new AssetId(Guid.Parse(row.Id)),
+			row.Name,
+			Enum.Parse<AssetClass>(row.AssetClass),
+			Enum.Parse<AssetType>(row.AssetType),
+			Enum.Parse<Currency>(row.Currency),
+			row.ExternalId);
 	}
+
+	private sealed record AssetRow(
+		string Id,
+		string Name,
+		string AssetClass,
+		string AssetType,
+		string Currency,
+		string ExternalId);
 }

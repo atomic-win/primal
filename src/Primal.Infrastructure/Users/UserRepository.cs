@@ -22,8 +22,8 @@ internal sealed class UserRepository : IUserRepository
 	{
 		using var connection = this.connectionFactory.CreateConnection();
 
-		var row = await connection.QueryFirstOrDefaultAsync<UserTableEntity>(
-			"SELECT * FROM users WHERE Id = @Id",
+		var row = await connection.QueryFirstOrDefaultAsync<UserRow>(
+			"SELECT Id, Email, FirstName, LastName, FullName, PreferredCurrency, PreferredLocale FROM users WHERE Id = @Id",
 			new { Id = userId.Value.ToString("D", CultureInfo.InvariantCulture).ToUpperInvariant() });
 
 		if (row is null)
@@ -98,15 +98,24 @@ internal sealed class UserRepository : IUserRepository
 			});
 	}
 
-	private static User MapToUser(UserTableEntity entity)
+	private static User MapToUser(UserRow row)
 	{
 		return new User(
-			new UserId(Guid.Parse(entity.Id)),
-			entity.Email,
-			entity.FirstName,
-			entity.LastName,
-			entity.FullName,
-			Enum.Parse<Currency>(entity.PreferredCurrency),
-			Enum.Parse<Locale>(entity.PreferredLocale));
+			new UserId(Guid.Parse(row.Id)),
+			row.Email,
+			row.FirstName,
+			row.LastName,
+			row.FullName,
+			Enum.Parse<Currency>(row.PreferredCurrency),
+			Enum.Parse<Locale>(row.PreferredLocale));
 	}
+
+	private sealed record UserRow(
+		string Id,
+		string Email,
+		string FirstName,
+		string LastName,
+		string FullName,
+		string PreferredCurrency,
+		string PreferredLocale);
 }

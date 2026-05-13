@@ -22,8 +22,8 @@ internal sealed class AssetItemRepository : IAssetItemRepository
 	{
 		using var connection = this.connectionFactory.CreateConnection();
 
-		var rows = await connection.QueryAsync<AssetItemTableEntity>(
-			"SELECT * FROM asset_items WHERE UserId = @UserId",
+		var rows = await connection.QueryAsync<AssetItemRow>(
+			"SELECT Id, Name, UserId, AssetId FROM asset_items WHERE UserId = @UserId",
 			new { UserId = userId.Value.ToString("D", CultureInfo.InvariantCulture).ToUpperInvariant() });
 
 		return rows.Select(MapToAssetItem);
@@ -36,8 +36,8 @@ internal sealed class AssetItemRepository : IAssetItemRepository
 	{
 		using var connection = this.connectionFactory.CreateConnection();
 
-		var row = await connection.QueryFirstOrDefaultAsync<AssetItemTableEntity>(
-			"SELECT * FROM asset_items WHERE UserId = @UserId AND Id = @Id",
+		var row = await connection.QueryFirstOrDefaultAsync<AssetItemRow>(
+			"SELECT Id, Name, UserId, AssetId FROM asset_items WHERE UserId = @UserId AND Id = @Id",
 			new { UserId = userId.Value.ToString("D", CultureInfo.InvariantCulture).ToUpperInvariant(), Id = assetItemId.Value.ToString("D", CultureInfo.InvariantCulture).ToUpperInvariant() });
 
 		if (row is null)
@@ -92,11 +92,17 @@ internal sealed class AssetItemRepository : IAssetItemRepository
 			new { UserId = userId.Value.ToString("D", CultureInfo.InvariantCulture).ToUpperInvariant(), Id = assetItemId.Value.ToString("D", CultureInfo.InvariantCulture).ToUpperInvariant() });
 	}
 
-	private static AssetItem MapToAssetItem(AssetItemTableEntity entity)
+	private static AssetItem MapToAssetItem(AssetItemRow row)
 	{
 		return new AssetItem(
-			new AssetItemId(Guid.Parse(entity.Id)),
-			new AssetId(Guid.Parse(entity.AssetId)),
-			entity.Name);
+			new AssetItemId(Guid.Parse(row.Id)),
+			new AssetId(Guid.Parse(row.AssetId)),
+			row.Name);
 	}
+
+	private sealed record AssetItemRow(
+		string Id,
+		string Name,
+		string UserId,
+		string AssetId);
 }

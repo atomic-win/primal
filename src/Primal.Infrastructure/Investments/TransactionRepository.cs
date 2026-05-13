@@ -23,8 +23,8 @@ internal sealed class TransactionRepository : ITransactionRepository
 	{
 		using var connection = this.connectionFactory.CreateConnection();
 
-		var rows = await connection.QueryAsync<TransactionTableEntity>(
-			"SELECT * FROM transactions WHERE UserId = @UserId AND AssetItemId = @AssetItemId",
+		var rows = await connection.QueryAsync<TransactionRow>(
+			"SELECT Id, Date, Name, TransactionType, AssetItemId, UserId, Units, Price, Amount FROM transactions WHERE UserId = @UserId AND AssetItemId = @AssetItemId",
 			new { UserId = userId.Value.ToString("D", CultureInfo.InvariantCulture).ToUpperInvariant(), AssetItemId = assetItemId.Value.ToString("D", CultureInfo.InvariantCulture).ToUpperInvariant() });
 
 		return rows.Select(MapToTransaction);
@@ -38,8 +38,8 @@ internal sealed class TransactionRepository : ITransactionRepository
 	{
 		using var connection = this.connectionFactory.CreateConnection();
 
-		var row = await connection.QueryFirstOrDefaultAsync<TransactionTableEntity>(
-			"SELECT * FROM transactions WHERE UserId = @UserId AND AssetItemId = @AssetItemId AND Id = @Id",
+		var row = await connection.QueryFirstOrDefaultAsync<TransactionRow>(
+			"SELECT Id, Date, Name, TransactionType, AssetItemId, UserId, Units, Price, Amount FROM transactions WHERE UserId = @UserId AND AssetItemId = @AssetItemId AND Id = @Id",
 			new
 			{
 				UserId = userId.Value.ToString("D", CultureInfo.InvariantCulture).ToUpperInvariant(),
@@ -150,16 +150,27 @@ internal sealed class TransactionRepository : ITransactionRepository
 			});
 	}
 
-	private static Transaction MapToTransaction(TransactionTableEntity entity)
+	private static Transaction MapToTransaction(TransactionRow row)
 	{
 		return new Transaction(
-			new TransactionId(Guid.Parse(entity.Id)),
-			DateOnly.Parse(entity.Date, CultureInfo.InvariantCulture),
-			entity.Name,
-			Enum.Parse<TransactionType>(entity.TransactionType),
-			new AssetItemId(Guid.Parse(entity.AssetItemId)),
-			decimal.Parse(entity.Units, CultureInfo.InvariantCulture),
-			decimal.Parse(entity.Price, CultureInfo.InvariantCulture),
-			decimal.Parse(entity.Amount, CultureInfo.InvariantCulture));
+			new TransactionId(Guid.Parse(row.Id)),
+			DateOnly.Parse(row.Date, CultureInfo.InvariantCulture),
+			row.Name,
+			Enum.Parse<TransactionType>(row.TransactionType),
+			new AssetItemId(Guid.Parse(row.AssetItemId)),
+			decimal.Parse(row.Units, CultureInfo.InvariantCulture),
+			decimal.Parse(row.Price, CultureInfo.InvariantCulture),
+			decimal.Parse(row.Amount, CultureInfo.InvariantCulture));
 	}
+
+	private sealed record TransactionRow(
+		string Id,
+		string Date,
+		string Name,
+		string TransactionType,
+		string AssetItemId,
+		string UserId,
+		string Units,
+		string Price,
+		string Amount);
 }
