@@ -9,21 +9,13 @@ using Microsoft.IdentityModel.Tokens;
 using NeoSmart.Caching.Sqlite;
 using Primal.Application;
 using Primal.Infrastructure;
-using Primal.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 {
-	var connectionFactory = new DbConnectionFactory(
-		builder.Configuration.GetConnectionString("DefaultConnection")!);
-
 	builder.Host
 		.UseServiceProviderFactory(new AutofacServiceProviderFactory())
 		.ConfigureContainer<ContainerBuilder>(containerBuilder =>
 		{
-			containerBuilder
-				.RegisterInstance(connectionFactory)
-				.SingleInstance();
-
 			containerBuilder
 				.RegisterModule<ApplicationModule>()
 				.RegisterModule<InfrastructureModule>();
@@ -79,8 +71,6 @@ var builder = WebApplication.CreateBuilder(args);
 					.AllowAnyMethod();
 			});
 	});
-
-	DatabaseInitializer.Initialize(connectionFactory);
 }
 
 var app = builder.Build();
