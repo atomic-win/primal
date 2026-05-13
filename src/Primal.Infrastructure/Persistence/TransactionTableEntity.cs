@@ -1,24 +1,22 @@
-using Primal.Domain.Investments;
-
 namespace Primal.Infrastructure.Persistence;
 
 internal sealed class TransactionTableEntity : TableEntity
 {
-	internal required Guid Id { get; init; }
+	public string Id { get; set; } = null!;
 
-	internal required DateOnly Date { get; init; }
+	public string Date { get; set; } = null!;
 
-	internal required string Name { get; init; }
+	public string Name { get; set; } = null!;
 
-	internal required TransactionType TransactionType { get; init; }
+	public string TransactionType { get; set; } = null!;
 
-	internal required Guid AssetItemId { get; init; }
+	public string AssetItemId { get; set; } = null!;
 
-	internal required Guid UserId { get; init; }
+	public string UserId { get; set; } = null!;
 
-	internal required decimal Units { get; init; }
+	public string Units { get; set; } = null!;
 
-	internal required decimal Price { get; init; }
+	public string Price { get; set; } = null!;
 
-	internal required decimal Amount { get; init; }
+	public string Amount { get; set; } = null!;
 }

@@ -1,19 +1,16 @@
-using Primal.Domain.Investments;
-using Primal.Domain.Money;
-
 namespace Primal.Infrastructure.Persistence;
 
 internal sealed class AssetTableEntity : TableEntity
 {
-	internal required Guid Id { get; set; }
+	public string Id { get; set; } = null!;
 
-	internal required string Name { get; set; }
+	public string Name { get; set; } = null!;
 
-	internal required AssetClass AssetClass { get; set; }
+	public string AssetClass { get; set; } = null!;
 
-	internal required AssetType AssetType { get; set; }
+	public string AssetType { get; set; } = null!;
 
-	internal required Currency Currency { get; set; }
+	public string Currency { get; set; } = null!;
 
-	internal required string ExternalId { get; set; }
+	public string ExternalId { get; set; } = null!;
 }

@@ -1,8 +1,8 @@
 namespace Primal.Infrastructure.Persistence;
 
-internal abstract class TableEntity
+internal class TableEntity
 {
-	internal DateTimeOffset CreatedAt { get; set; }
+	public string CreatedAt { get; set; } = null!;
 
-	internal DateTimeOffset UpdatedAt { get; set; }
+	public string UpdatedAt { get; set; } = null!;
 }

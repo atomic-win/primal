@@ -4,22 +4,27 @@ using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using FastEndpoints;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.IdentityModel.Tokens;
 using NeoSmart.Caching.Sqlite;
-using Primal.Api;
 using Primal.Application;
 using Primal.Infrastructure;
 using Primal.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 {
+	var connectionFactory = new DbConnectionFactory(
+		builder.Configuration.GetConnectionString("DefaultConnection")!);
+
 	builder.Host
 		.UseServiceProviderFactory(new AutofacServiceProviderFactory())
-		.ConfigureContainer<ContainerBuilder>(builder =>
+		.ConfigureContainer<ContainerBuilder>(containerBuilder =>
 		{
-			builder
+			containerBuilder
+				.RegisterInstance(connectionFactory)
+				.SingleInstance();
+
+			containerBuilder
 				.RegisterModule<ApplicationModule>()
 				.RegisterModule<InfrastructureModule>();
 		});
@@ -32,9 +37,6 @@ var builder = WebApplication.CreateBuilder(args);
 			Flags = HybridCacheEntryFlags.DisableDistributedCache,
 		};
 	});
-
-	builder.Services.AddDbContext<AppDbContext>(options =>
-			options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"), b => b.MigrationsAssembly("Primal.Api")));
 
 	builder.Services.AddSqliteCache(options =>
 	{
@@ -77,6 +79,8 @@ var builder = WebApplication.CreateBuilder(args);
 					.AllowAnyMethod();
 			});
 	});
+
+	DatabaseInitializer.Initialize(connectionFactory);
 }
 
 var app = builder.Build();
@@ -87,11 +91,6 @@ var app = builder.Build();
 	app.UseAuthorization();
 	app.UseFastEndpoints(c =>
 	{
-		c.Endpoints.Configurator = epc =>
-		{
-			epc.PostProcessors(Order.After, typeof(EfSaveChangesPostProcessor<,>));
-		};
-
 		c.Serializer.Options.Converters.Add(new JsonStringEnumConverter());
 	});
 

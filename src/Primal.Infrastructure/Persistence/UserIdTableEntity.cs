@@ -1,12 +1,10 @@
-using Primal.Domain.Users;
-
 namespace Primal.Infrastructure.Persistence;
 
 internal sealed class UserIdTableEntity : TableEntity
 {
-	internal required string Id { get; init; } = null!;
+	public string Id { get; set; } = null!;
 
-	internal required IdentityProvider IdentityProvider { get; init; }
+	public string IdentityProvider { get; set; } = null!;
 
-	internal required Guid UserId { get; init; }
+	public string UserId { get; set; } = null!;
 }

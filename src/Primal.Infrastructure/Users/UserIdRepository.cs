@@ -1,4 +1,5 @@
-using Microsoft.EntityFrameworkCore;
+using System.Globalization;
+using Dapper;
 using Primal.Application.Users;
 using Primal.Domain.Users;
 using Primal.Infrastructure.Persistence;
@@ -7,11 +8,11 @@ namespace Primal.Infrastructure.Users;
 
 internal sealed class UserIdRepository : IUserIdRepository
 {
-	private readonly AppDbContext appDbContext;
+	private readonly DbConnectionFactory connectionFactory;
 
-	internal UserIdRepository(AppDbContext appDbContext)
+	internal UserIdRepository(DbConnectionFactory connectionFactory)
 	{
-		this.appDbContext = appDbContext;
+		this.connectionFactory = connectionFactory;
 	}
 
 	public async Task<UserId> GetUserId(
@@ -19,13 +20,13 @@ internal sealed class UserIdRepository : IUserIdRepository
 		IdentityProviderUserId identityProviderUserId,
 		CancellationToken cancellationToken)
 	{
-		var userIdTableEntity = await this.appDbContext.UserIds
-			.AsNoTracking()
-			.FirstOrDefaultAsync(
-				x => x.IdentityProvider == identityProvider && x.Id == identityProviderUserId.Value,
-				cancellationToken);
+		using var connection = this.connectionFactory.CreateConnection();
 
-		return userIdTableEntity is null ? UserId.Empty : new UserId(userIdTableEntity.UserId);
+		var userId = await connection.QueryFirstOrDefaultAsync<string>(
+			"SELECT UserId FROM user_ids WHERE IdentityProvider = @IdentityProvider AND Id = @Id",
+			new { IdentityProvider = identityProvider.ToString(), Id = identityProviderUserId.Value });
+
+		return userId is null ? UserId.Empty : new UserId(Guid.Parse(userId));
 	}
 
 	public async Task<UserId> AddUserId(
@@ -33,15 +34,25 @@ internal sealed class UserIdRepository : IUserIdRepository
 		IdentityProviderUserId identityProviderUserId,
 		CancellationToken cancellationToken)
 	{
-		var userIdTableEntity = new UserIdTableEntity
-		{
-			IdentityProvider = identityProvider,
-			Id = identityProviderUserId.Value,
-			UserId = Guid.CreateVersion7(),
-		};
+		var userId = Guid.CreateVersion7();
+		var now = DateTimeOffset.UtcNow.ToString("O");
 
-		await this.appDbContext.UserIds.AddAsync(userIdTableEntity, cancellationToken);
+		using var connection = this.connectionFactory.CreateConnection();
 
-		return new UserId(userIdTableEntity.UserId);
+		await connection.ExecuteAsync(
+			"""
+			INSERT INTO user_ids (Id, IdentityProvider, UserId, CreatedAt, UpdatedAt)
+			VALUES (@Id, @IdentityProvider, @UserId, @CreatedAt, @UpdatedAt)
+			""",
+			new
+			{
+				Id = identityProviderUserId.Value,
+				IdentityProvider = identityProvider.ToString(),
+				UserId = userId.ToString("D", CultureInfo.InvariantCulture).ToUpperInvariant(),
+				CreatedAt = now,
+				UpdatedAt = now,
+			});
+
+		return new UserId(userId);
 	}
 }

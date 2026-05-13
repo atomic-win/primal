@@ -55,12 +55,12 @@ public sealed class InfrastructureModule : Module
 	private void RegisterPersistence(ContainerBuilder builder)
 	{
 		builder.Register(c => new UserIdRepository(
-			c.Resolve<AppDbContext>()))
+			c.Resolve<DbConnectionFactory>()))
 			.As<IUserIdRepository>()
 			.InstancePerLifetimeScope();
 
 		builder.Register(c => new UserRepository(
-			c.Resolve<AppDbContext>()))
+			c.Resolve<DbConnectionFactory>()))
 			.As<UserRepository>()
 			.InstancePerLifetimeScope();
 
@@ -71,7 +71,7 @@ public sealed class InfrastructureModule : Module
 			.InstancePerLifetimeScope();
 
 		builder.Register(c => new AssetRepository(
-			c.Resolve<AppDbContext>()))
+			c.Resolve<DbConnectionFactory>()))
 			.As<AssetRepository>()
 			.InstancePerLifetimeScope();
 
@@ -82,7 +82,7 @@ public sealed class InfrastructureModule : Module
 			.InstancePerLifetimeScope();
 
 		builder.Register(c => new AssetItemRepository(
-			c.Resolve<AppDbContext>()))
+			c.Resolve<DbConnectionFactory>()))
 			.As<AssetItemRepository>()
 			.InstancePerLifetimeScope();
 
@@ -93,7 +93,7 @@ public sealed class InfrastructureModule : Module
 			.InstancePerLifetimeScope();
 
 		builder.Register(c => new TransactionRepository(
-			c.Resolve<AppDbContext>()))
+			c.Resolve<DbConnectionFactory>()))
 			.As<TransactionRepository>()
 			.InstancePerLifetimeScope();
 

@@ -1,4 +1,5 @@
-using Microsoft.EntityFrameworkCore;
+using System.Globalization;
+using Dapper;
 using Primal.Application.Investments;
 using Primal.Domain.Investments;
 using Primal.Domain.Users;
@@ -8,11 +9,11 @@ namespace Primal.Infrastructure.Investments;
 
 internal sealed class TransactionRepository : ITransactionRepository
 {
-	private readonly AppDbContext appDbContext;
+	private readonly DbConnectionFactory connectionFactory;
 
-	internal TransactionRepository(AppDbContext appDbContext)
+	internal TransactionRepository(DbConnectionFactory connectionFactory)
 	{
-		this.appDbContext = appDbContext;
+		this.connectionFactory = connectionFactory;
 	}
 
 	public async Task<IEnumerable<Transaction>> GetByAssetItemIdAsync(
@@ -20,14 +21,13 @@ internal sealed class TransactionRepository : ITransactionRepository
 		AssetItemId assetItemId,
 		CancellationToken cancellationToken)
 	{
-		var transactionTableEntities = await this.appDbContext.Transactions
-			.AsNoTracking()
-			.Where(t => t.UserId == userId.Value && t.AssetItemId == assetItemId.Value)
-			.ToListAsync(cancellationToken);
+		using var connection = this.connectionFactory.CreateConnection();
 
-		return transactionTableEntities
-			.AsParallel()
-			.Select(this.MapToTransaction);
+		var rows = await connection.QueryAsync<TransactionTableEntity>(
+			"SELECT * FROM transactions WHERE UserId = @UserId AND AssetItemId = @AssetItemId",
+			new { UserId = userId.Value.ToString("D", CultureInfo.InvariantCulture).ToUpperInvariant(), AssetItemId = assetItemId.Value.ToString("D", CultureInfo.InvariantCulture).ToUpperInvariant() });
+
+		return rows.Select(MapToTransaction);
 	}
 
 	public async Task<Transaction> GetByIdAsync(
@@ -36,21 +36,23 @@ internal sealed class TransactionRepository : ITransactionRepository
 		TransactionId transactionId,
 		CancellationToken cancellationToken)
 	{
-		var transactionTableEntity = await this.appDbContext.Transactions
-			.AsNoTracking()
-			.FirstOrDefaultAsync(
-				t =>
-				t.UserId == userId.Value &&
-				t.AssetItemId == assetItemId.Value &&
-				t.Id == transactionId.Value,
-				cancellationToken);
+		using var connection = this.connectionFactory.CreateConnection();
 
-		if (transactionTableEntity is null)
+		var row = await connection.QueryFirstOrDefaultAsync<TransactionTableEntity>(
+			"SELECT * FROM transactions WHERE UserId = @UserId AND AssetItemId = @AssetItemId AND Id = @Id",
+			new
+			{
+				UserId = userId.Value.ToString("D", CultureInfo.InvariantCulture).ToUpperInvariant(),
+				AssetItemId = assetItemId.Value.ToString("D", CultureInfo.InvariantCulture).ToUpperInvariant(),
+				Id = transactionId.Value.ToString("D", CultureInfo.InvariantCulture).ToUpperInvariant(),
+			});
+
+		if (row is null)
 		{
 			return Transaction.Empty;
 		}
 
-		return this.MapToTransaction(transactionTableEntity);
+		return MapToTransaction(row);
 	}
 
 	public async Task<Transaction> AddAsync(
@@ -64,22 +66,40 @@ internal sealed class TransactionRepository : ITransactionRepository
 		decimal amount,
 		CancellationToken cancellationToken)
 	{
-		var transactionTableEntity = new TransactionTableEntity
-		{
-			Id = Guid.CreateVersion7(),
-			UserId = userId.Value,
-			AssetItemId = assetItemId.Value,
-			Date = date,
-			Name = name,
-			TransactionType = type,
-			Units = units,
-			Price = price,
-			Amount = amount,
-		};
+		var id = Guid.CreateVersion7();
+		var now = DateTimeOffset.UtcNow.ToString("O");
 
-		await this.appDbContext.Transactions.AddAsync(transactionTableEntity, cancellationToken);
+		using var connection = this.connectionFactory.CreateConnection();
 
-		return this.MapToTransaction(transactionTableEntity);
+		await connection.ExecuteAsync(
+			"""
+			INSERT INTO transactions (Id, Date, Name, TransactionType, AssetItemId, UserId, Units, Price, Amount, CreatedAt, UpdatedAt)
+			VALUES (@Id, @Date, @Name, @TransactionType, @AssetItemId, @UserId, @Units, @Price, @Amount, @CreatedAt, @UpdatedAt)
+			""",
+			new
+			{
+				Id = id.ToString("D", CultureInfo.InvariantCulture).ToUpperInvariant(),
+				Date = date.ToString("O"),
+				Name = name,
+				TransactionType = type.ToString(),
+				AssetItemId = assetItemId.Value.ToString("D", CultureInfo.InvariantCulture).ToUpperInvariant(),
+				UserId = userId.Value.ToString("D", CultureInfo.InvariantCulture).ToUpperInvariant(),
+				Units = units.ToString(CultureInfo.InvariantCulture),
+				Price = price.ToString(CultureInfo.InvariantCulture),
+				Amount = amount.ToString(CultureInfo.InvariantCulture),
+				CreatedAt = now,
+				UpdatedAt = now,
+			});
+
+		return new Transaction(
+			new TransactionId(id),
+			date,
+			name,
+			type,
+			assetItemId,
+			units,
+			price,
+			amount);
 	}
 
 	public async Task UpdateAsync(
@@ -87,17 +107,29 @@ internal sealed class TransactionRepository : ITransactionRepository
 		Transaction transaction,
 		CancellationToken cancellationToken)
 	{
-		await this.appDbContext.Transactions
-			.Where(t => t.UserId == userId.Value && t.Id == transaction.Id.Value)
-			.ExecuteUpdateAsync(
-				s => s
-					.SetProperty(t => t.Date, transaction.Date)
-					.SetProperty(t => t.Name, transaction.Name)
-					.SetProperty(t => t.TransactionType, transaction.TransactionType)
-					.SetProperty(t => t.Units, transaction.Units)
-					.SetProperty(t => t.Price, transaction.Price)
-					.SetProperty(t => t.Amount, transaction.Amount),
-				cancellationToken);
+		var now = DateTimeOffset.UtcNow.ToString("O");
+
+		using var connection = this.connectionFactory.CreateConnection();
+
+		await connection.ExecuteAsync(
+			"""
+			UPDATE transactions
+			SET Date = @Date, Name = @Name, TransactionType = @TransactionType,
+				Units = @Units, Price = @Price, Amount = @Amount, UpdatedAt = @UpdatedAt
+			WHERE UserId = @UserId AND Id = @Id
+			""",
+			new
+			{
+				Id = transaction.Id.Value.ToString("D", CultureInfo.InvariantCulture).ToUpperInvariant(),
+				UserId = userId.Value.ToString("D", CultureInfo.InvariantCulture).ToUpperInvariant(),
+				Date = transaction.Date.ToString("O"),
+				Name = transaction.Name,
+				TransactionType = transaction.TransactionType.ToString(),
+				Units = transaction.Units.ToString(CultureInfo.InvariantCulture),
+				Price = transaction.Price.ToString(CultureInfo.InvariantCulture),
+				Amount = transaction.Amount.ToString(CultureInfo.InvariantCulture),
+				UpdatedAt = now,
+			});
 	}
 
 	public async Task DeleteAsync(
@@ -106,24 +138,28 @@ internal sealed class TransactionRepository : ITransactionRepository
 		TransactionId transactionId,
 		CancellationToken cancellationToken)
 	{
-		await this.appDbContext.Transactions
-			.Where(t =>
-				t.UserId == userId.Value &&
-				t.AssetItemId == assetItemId.Value &&
-				t.Id == transactionId.Value)
-			.ExecuteDeleteAsync(cancellationToken);
+		using var connection = this.connectionFactory.CreateConnection();
+
+		await connection.ExecuteAsync(
+			"DELETE FROM transactions WHERE UserId = @UserId AND AssetItemId = @AssetItemId AND Id = @Id",
+			new
+			{
+				UserId = userId.Value.ToString("D", CultureInfo.InvariantCulture).ToUpperInvariant(),
+				AssetItemId = assetItemId.Value.ToString("D", CultureInfo.InvariantCulture).ToUpperInvariant(),
+				Id = transactionId.Value.ToString("D", CultureInfo.InvariantCulture).ToUpperInvariant(),
+			});
 	}
 
-	private Transaction MapToTransaction(TransactionTableEntity entity)
+	private static Transaction MapToTransaction(TransactionTableEntity entity)
 	{
 		return new Transaction(
-			new TransactionId(entity.Id),
-			entity.Date,
+			new TransactionId(Guid.Parse(entity.Id)),
+			DateOnly.Parse(entity.Date, CultureInfo.InvariantCulture),
 			entity.Name,
-			entity.TransactionType,
-			new AssetItemId(entity.AssetItemId),
-			entity.Units,
-			entity.Price,
-			entity.Amount);
+			Enum.Parse<TransactionType>(entity.TransactionType),
+			new AssetItemId(Guid.Parse(entity.AssetItemId)),
+			decimal.Parse(entity.Units, CultureInfo.InvariantCulture),
+			decimal.Parse(entity.Price, CultureInfo.InvariantCulture),
+			decimal.Parse(entity.Amount, CultureInfo.InvariantCulture));
 	}
 }

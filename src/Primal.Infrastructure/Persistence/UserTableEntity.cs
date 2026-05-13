@@ -1,21 +1,18 @@
-using Primal.Domain.Money;
-using Primal.Domain.Users;
-
 namespace Primal.Infrastructure.Persistence;
 
 internal sealed class UserTableEntity : TableEntity
 {
-	internal required Guid Id { get; init; }
+	public string Id { get; set; } = null!;
 
-	internal required string Email { get; init; } = null!;
+	public string Email { get; set; } = null!;
 
-	internal required string FirstName { get; init; } = null!;
+	public string FirstName { get; set; } = null!;
 
-	internal required string LastName { get; init; } = null!;
+	public string LastName { get; set; } = null!;
 
-	internal required string FullName { get; init; } = null!;
+	public string FullName { get; set; } = null!;
 
-	internal required Currency PreferredCurrency { get; init; }
+	public string PreferredCurrency { get; set; } = null!;
 
-	internal required Locale PreferredLocale { get; init; }
+	public string PreferredLocale { get; set; } = null!;
 }
