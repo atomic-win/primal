@@ -3,16 +3,16 @@ using Microsoft.Data.Sqlite;
 
 namespace Primal.Infrastructure.Persistence;
 
-public sealed class DbConnectionFactory
+internal sealed class DbConnectionFactory
 {
 	private readonly string connectionString;
 
-	public DbConnectionFactory(string connectionString)
+	internal DbConnectionFactory(string connectionString)
 	{
 		this.connectionString = connectionString;
 	}
 
-	public IDbConnection CreateConnection()
+	internal IDbConnection CreateConnection()
 	{
 		return new SqliteConnection(this.connectionString);
 	}

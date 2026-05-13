@@ -2,9 +2,9 @@ using Dapper;
 
 namespace Primal.Infrastructure.Persistence;
 
-public static class DatabaseInitializer
+internal static class DatabaseInitializer
 {
-	public static void Initialize(DbConnectionFactory connectionFactory)
+	internal static void Initialize(DbConnectionFactory connectionFactory)
 	{
 		using var connection = connectionFactory.CreateConnection();
 		connection.Open();
