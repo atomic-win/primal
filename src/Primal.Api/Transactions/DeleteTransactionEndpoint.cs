@@ -4,7 +4,7 @@ using Primal.Domain.Investments;
 
 namespace Primal.Api.Transactions;
 
-[HttpDelete("/api/assetItems/{assetItemId:guid}/transactions/{transactionId:guid}")]
+[HttpDelete("/api/asset-items/{assetItemId:guid}/transactions/{transactionId:guid}")]
 internal sealed class DeleteTransactionEndpoint : EndpointWithoutRequest
 {
 	private readonly ITransactionRepository transactionRepository;

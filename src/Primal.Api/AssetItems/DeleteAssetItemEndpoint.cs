@@ -4,7 +4,7 @@ using Primal.Domain.Investments;
 
 namespace Primal.Api.AssetItems;
 
-[HttpDelete("/api/assetItems/{id:guid}")]
+[HttpDelete("/api/asset-items/{id:guid}")]
 internal sealed class DeleteAssetItemEndpoint : EndpointWithoutRequest
 {
 	private readonly IAssetItemRepository assetItemRepository;

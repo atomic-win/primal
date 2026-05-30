@@ -6,7 +6,7 @@ using Primal.Domain.Money;
 
 namespace Primal.Api.AssetItems;
 
-[HttpGet("/api/assetItems")]
+[HttpGet("/api/asset-items")]
 internal sealed class GetAllAssetItemsEndpoint : EndpointWithoutRequest<IAsyncEnumerable<AssetItemResponse>>
 {
 	private readonly IAssetItemRepository assetItemRepository;

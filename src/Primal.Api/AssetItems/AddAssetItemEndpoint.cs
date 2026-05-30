@@ -5,7 +5,7 @@ using Primal.Domain.Money;
 
 namespace Primal.Api.AssetItems;
 
-[HttpPost("/api/assetItems")]
+[HttpPost("/api/asset-items")]
 internal sealed class AddAssetItemEndpoint : Endpoint<AssetItemRequest>
 {
 	private readonly IAssetApiClient<MutualFund> mutualFundApiClient;

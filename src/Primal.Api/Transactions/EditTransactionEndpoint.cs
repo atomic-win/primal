@@ -4,7 +4,7 @@ using Primal.Domain.Investments;
 
 namespace Primal.Api.Transactions;
 
-[HttpPatch("/api/assetItems/{assetItemId:guid}/transactions/{transactionId:guid}")]
+[HttpPatch("/api/asset-items/{assetItemId:guid}/transactions/{transactionId:guid}")]
 internal sealed class EditTransactionEndpoint : Endpoint<TransactionRequest>
 {
 	private readonly ITransactionRepository transactionRepository;

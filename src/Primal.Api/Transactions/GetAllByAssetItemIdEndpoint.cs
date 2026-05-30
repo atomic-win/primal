@@ -6,7 +6,7 @@ using Primal.Domain.Money;
 
 namespace Primal.Api.Transactions;
 
-[HttpGet("/api/assetItems/{assetItemId:guid}/transactions")]
+[HttpGet("/api/asset-items/{assetItemId:guid}/transactions")]
 internal sealed class GetAllByAssetItemIdEndpoint : EndpointWithoutRequest<IAsyncEnumerable<TransactionResponse>>
 {
 	private readonly ITransactionRepository transactionRepository;

@@ -4,7 +4,7 @@ using Primal.Domain.Investments;
 
 namespace Primal.Api.Transactions;
 
-[HttpPost("/api/assetItems/{assetItemId:guid}/transactions")]
+[HttpPost("/api/asset-items/{assetItemId:guid}/transactions")]
 internal sealed class AddTransactionEndpoint : Endpoint<TransactionRequest>
 {
 	private readonly ITransactionRepository transactionRepository;

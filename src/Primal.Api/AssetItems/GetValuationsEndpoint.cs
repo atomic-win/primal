@@ -9,7 +9,7 @@ using Primal.Domain.Users;
 
 namespace Primal.Api.AssetItems;
 
-[HttpGet("/api/assetItems/valuations")]
+[HttpGet("/api/asset-items/valuations")]
 internal sealed class GetValuationsEndpoint : EndpointWithoutRequest<IAsyncEnumerable<ValuationResponse>>
 {
 	private readonly HybridCache cache;
