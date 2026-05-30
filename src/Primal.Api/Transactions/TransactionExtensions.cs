@@ -31,49 +31,4 @@ internal static class TransactionExtensions
 			transaction.Price,
 			amount);
 	}
-
-	internal static bool IsValidForAssetType(
-		this TransactionRequest req,
-		Asset asset)
-	{
-		var transactionType = req.TransactionType;
-
-		return asset.AssetType switch
-		{
-			AssetType.BankAccount or
-			AssetType.FixedDeposit or
-			AssetType.EPF or
-			AssetType.PPF =>
-				transactionType == TransactionType.Deposit ||
-				transactionType == TransactionType.Withdrawal ||
-				transactionType == TransactionType.Interest ||
-				transactionType == TransactionType.SelfInterest ||
-				transactionType == TransactionType.InterestPenalty,
-			AssetType.MutualFund =>
-				transactionType == TransactionType.Buy ||
-				transactionType == TransactionType.Sell,
-			AssetType.Stock =>
-				transactionType == TransactionType.Buy ||
-				transactionType == TransactionType.Sell ||
-				transactionType == TransactionType.Dividend,
-			AssetType.Wallet or AssetType.TradingAccount =>
-				transactionType == TransactionType.Deposit ||
-				transactionType == TransactionType.Withdrawal,
-			AssetType.Bond =>
-				transactionType == TransactionType.Deposit ||
-				transactionType == TransactionType.Withdrawal ||
-				transactionType == TransactionType.Interest,
-			_ => throw new InvalidOperationException(
-					$"Unsupported asset type: {asset.AssetType}"),
-		};
-	}
-
-	internal static bool IsUnitsRequired(this TransactionRequest req)
-	{
-		return req.TransactionType switch
-		{
-			TransactionType.Buy or TransactionType.Sell => true,
-			_ => false,
-		};
-	}
 }

@@ -5,7 +5,7 @@ using Primal.Domain.Money;
 
 namespace Primal.Api.AssetItems;
 
-internal sealed class AddAssetItemValidator : Validator<AssetItemRequest>
+internal sealed class AddAssetItemValidator : Validator<AddAssetItemRequest>
 {
 	public AddAssetItemValidator()
 	{

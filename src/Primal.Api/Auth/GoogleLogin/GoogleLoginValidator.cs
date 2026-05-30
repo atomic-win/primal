@@ -3,7 +3,7 @@ using FluentValidation;
 
 namespace Primal.Api.Auth;
 
-internal sealed class GoogleLoginValidator : Validator<LoginRequest>
+internal sealed class GoogleLoginValidator : Validator<GoogleLoginRequest>
 {
 	public GoogleLoginValidator()
 	{

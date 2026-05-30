@@ -42,9 +42,3 @@ internal sealed class UpdateUserEndpoint : Endpoint<UpdateUserRequest>
 		await this.Send.NoContentAsync(ct);
 	}
 }
-
-[System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "MA0048:File name must match type name", Justification = "used only in this file")]
-[System.Diagnostics.CodeAnalysis.SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1402:File may only contain a single type", Justification = "used only in this file")]
-internal sealed record UpdateUserRequest(
-	Currency PreferredCurrency,
-	Locale PreferredLocale);

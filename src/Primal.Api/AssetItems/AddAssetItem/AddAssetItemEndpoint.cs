@@ -6,7 +6,7 @@ using Primal.Domain.Money;
 namespace Primal.Api.AssetItems;
 
 [HttpPost("/api/asset-items")]
-internal sealed class AddAssetItemEndpoint : Endpoint<AssetItemRequest>
+internal sealed class AddAssetItemEndpoint : Endpoint<AddAssetItemRequest>
 {
 	private readonly IAssetApiClient<MutualFund> mutualFundApiClient;
 	private readonly IAssetApiClient<Stock> stockApiClient;
@@ -26,7 +26,7 @@ internal sealed class AddAssetItemEndpoint : Endpoint<AssetItemRequest>
 		this.assetItemRepository = assetItemRepository;
 	}
 
-	public override async Task HandleAsync(AssetItemRequest req, CancellationToken ct)
+	public override async Task HandleAsync(AddAssetItemRequest req, CancellationToken ct)
 	{
 		if (req.AssetType == AssetType.MutualFund)
 		{
@@ -49,7 +49,7 @@ internal sealed class AddAssetItemEndpoint : Endpoint<AssetItemRequest>
 		await this.AddOtherAssetItemTypeAsync(req, ct);
 	}
 
-	private async Task AddMutualFundAsync(AssetItemRequest req, CancellationToken ct)
+	private async Task AddMutualFundAsync(AddAssetItemRequest req, CancellationToken ct)
 	{
 		var asset = await this.assetRepository.GetByExternalIdAsync($"mf-{req.ExternalId}", ct);
 
@@ -74,7 +74,7 @@ internal sealed class AddAssetItemEndpoint : Endpoint<AssetItemRequest>
 		await this.AddAssetItemAsync(asset.Id, req.Name, ct);
 	}
 
-	private async Task AddStockAsync(AssetItemRequest req, CancellationToken ct)
+	private async Task AddStockAsync(AddAssetItemRequest req, CancellationToken ct)
 	{
 		var asset = await this.assetRepository.GetByExternalIdAsync($"stock-{req.ExternalId.ToLowerInvariant()}", ct);
 		if (asset.Id == AssetId.Empty)
@@ -98,7 +98,7 @@ internal sealed class AddAssetItemEndpoint : Endpoint<AssetItemRequest>
 		await this.AddAssetItemAsync(asset.Id, req.Name, ct);
 	}
 
-	private async Task AddOtherAssetItemTypeAsync(AssetItemRequest req, CancellationToken ct)
+	private async Task AddOtherAssetItemTypeAsync(AddAssetItemRequest req, CancellationToken ct)
 	{
 		var asset = await this.assetRepository.GetByExternalIdAsync($"default-{req.AssetClass}-{req.AssetType}-{req.Currency}", ct);
 
@@ -128,12 +128,3 @@ internal sealed class AddAssetItemEndpoint : Endpoint<AssetItemRequest>
 			ct);
 	}
 }
-
-[System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "MA0048:File name must match type name", Justification = "used only in this file")]
-[System.Diagnostics.CodeAnalysis.SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1402:File may only contain a single type", Justification = "used only in this file")]
-internal sealed record AssetItemRequest(
-	string Name,
-	AssetClass AssetClass,
-	AssetType AssetType,
-	string ExternalId,
-	Currency Currency);

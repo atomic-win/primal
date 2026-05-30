@@ -12,7 +12,7 @@ namespace Primal.Api.Auth;
 
 [HttpPost("/api/auth/login/google")]
 [AllowAnonymous]
-internal sealed class GoogleLoginEndpoint : Endpoint<LoginRequest, TokenResponse>
+internal sealed class GoogleLoginEndpoint : Endpoint<GoogleLoginRequest, TokenResponse>
 {
 	private readonly IUserIdRepository userIdRepository;
 	private readonly IUserRepository userRepository;
@@ -25,7 +25,7 @@ internal sealed class GoogleLoginEndpoint : Endpoint<LoginRequest, TokenResponse
 		this.userRepository = userRepository;
 	}
 
-	public override async Task HandleAsync(LoginRequest req, CancellationToken ct)
+	public override async Task HandleAsync(GoogleLoginRequest req, CancellationToken ct)
 	{
 		try
 		{
@@ -77,7 +77,3 @@ internal sealed class GoogleLoginEndpoint : Endpoint<LoginRequest, TokenResponse
 		}
 	}
 }
-
-[System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "MA0048:File name must match type name", Justification = "used only in this file")]
-[System.Diagnostics.CodeAnalysis.SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1402:File may only contain a single type", Justification = "used only in this file")]
-internal sealed record LoginRequest(string IdToken);
