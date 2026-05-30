@@ -36,6 +36,10 @@ internal sealed class PrimalApiFactory : WebApplicationFactory<Program>
 
 	internal IExchangeRateApiClient ExchangeRateApiClient { get; } = Substitute.For<IExchangeRateApiClient>();
 
+	internal IAssetApiClient<MutualFund> MutualFundApiClient { get; } = Substitute.For<IAssetApiClient<MutualFund>>();
+
+	internal IAssetApiClient<Stock> StockApiClient { get; } = Substitute.For<IAssetApiClient<Stock>>();
+
 	internal string CreateToken(UserId userId)
 	{
 		var key = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(TestSecretKey));
@@ -85,6 +89,8 @@ internal sealed class PrimalApiFactory : WebApplicationFactory<Program>
 			containerBuilder.RegisterInstance(this.TransactionRepository).As<ITransactionRepository>();
 			containerBuilder.RegisterInstance(this.TransactionAmountCalculator).As<ITransactionAmountCalculator>();
 			containerBuilder.RegisterInstance(this.ExchangeRateApiClient).As<IExchangeRateApiClient>();
+			containerBuilder.RegisterInstance(this.MutualFundApiClient).As<IAssetApiClient<MutualFund>>();
+			containerBuilder.RegisterInstance(this.StockApiClient).As<IAssetApiClient<Stock>>();
 		});
 
 		return base.CreateHost(builder);

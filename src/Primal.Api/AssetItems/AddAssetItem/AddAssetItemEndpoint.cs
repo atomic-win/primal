@@ -28,103 +28,91 @@ internal sealed class AddAssetItemEndpoint : Endpoint<AddAssetItemRequest>
 
 	public override async Task HandleAsync(AddAssetItemRequest req, CancellationToken ct)
 	{
-		if (req.AssetType == AssetType.MutualFund)
+		var asset = req.AssetType switch
 		{
-			await this.AddMutualFundAsync(req, ct);
-			return;
-		}
+			AssetType.MutualFund => await this.GetOrCreateMutualFundAssetAsync(req, ct),
+			AssetType.Stock => await this.GetOrCreateStockAssetAsync(req, ct),
+			AssetType.Bond => await this.GetOrCreateDefaultAssetAsync(req with { AssetClass = AssetClass.Debt }, ct),
+			_ => await this.GetOrCreateDefaultAssetAsync(req, ct),
+		};
 
-		if (req.AssetType == AssetType.Stock)
-		{
-			await this.AddStockAsync(req, ct);
-			return;
-		}
+		var assetItem = await this.assetItemRepository.AddAsync(
+			this.GetUserId(),
+			asset.Id,
+			req.Name,
+			ct);
 
-		if (req.AssetType == AssetType.Bond)
-		{
-			await this.AddOtherAssetItemTypeAsync(req with { AssetClass = AssetClass.Debt }, ct);
-			return;
-		}
-
-		await this.AddOtherAssetItemTypeAsync(req, ct);
+		await this.Send.CreatedAtAsync(
+			$"/api/asset-items/{assetItem.Id.Value}",
+			cancellation: ct);
 	}
 
-	private async Task AddMutualFundAsync(AddAssetItemRequest req, CancellationToken ct)
+	private async Task<Asset> GetOrCreateMutualFundAssetAsync(AddAssetItemRequest req, CancellationToken ct)
 	{
 		var asset = await this.assetRepository.GetByExternalIdAsync($"mf-{req.ExternalId}", ct);
 
-		if (asset.Id == AssetId.Empty)
+		if (asset.Id != AssetId.Empty)
 		{
-			var mutualFund = await this.mutualFundApiClient.GetBySymbolAsync(req.ExternalId, ct);
-
-			if (string.IsNullOrWhiteSpace(mutualFund.SchemeCode))
-			{
-				this.ThrowError("Mutual fund not found", StatusCodes.Status404NotFound);
-			}
-
-			asset = await this.assetRepository.AddAsync(
-				mutualFund.Name,
-				req.AssetClass,
-				AssetType.MutualFund,
-				Currency.INR,
-				$"mf-{mutualFund.SchemeCode}",
-				ct);
+			return asset;
 		}
 
-		await this.AddAssetItemAsync(asset.Id, req.Name, ct);
+		var mutualFund = await this.mutualFundApiClient.GetBySymbolAsync(req.ExternalId, ct);
+
+		if (string.IsNullOrWhiteSpace(mutualFund.SchemeCode))
+		{
+			this.ThrowError("Mutual fund not found", StatusCodes.Status404NotFound);
+		}
+
+		return await this.assetRepository.AddAsync(
+			mutualFund.Name,
+			req.AssetClass,
+			AssetType.MutualFund,
+			Currency.INR,
+			$"mf-{mutualFund.SchemeCode}",
+			ct);
 	}
 
-	private async Task AddStockAsync(AddAssetItemRequest req, CancellationToken ct)
+	private async Task<Asset> GetOrCreateStockAssetAsync(AddAssetItemRequest req, CancellationToken ct)
 	{
 		var asset = await this.assetRepository.GetByExternalIdAsync($"stock-{req.ExternalId.ToLowerInvariant()}", ct);
-		if (asset.Id == AssetId.Empty)
+
+		if (asset.Id != AssetId.Empty)
 		{
-			var stock = await this.stockApiClient.GetBySymbolAsync(req.ExternalId, ct);
-
-			if (string.IsNullOrWhiteSpace(stock.Symbol))
-			{
-				this.ThrowError("Stock not found", StatusCodes.Status404NotFound);
-			}
-
-			asset = await this.assetRepository.AddAsync(
-				stock.Name,
-				AssetClass.Equity,
-				AssetType.Stock,
-				Currency.USD,
-				$"stock-{stock.Symbol.ToLowerInvariant()}",
-				ct);
+			return asset;
 		}
 
-		await this.AddAssetItemAsync(asset.Id, req.Name, ct);
-	}
+		var stock = await this.stockApiClient.GetBySymbolAsync(req.ExternalId, ct);
 
-	private async Task AddOtherAssetItemTypeAsync(AddAssetItemRequest req, CancellationToken ct)
-	{
-		var asset = await this.assetRepository.GetByExternalIdAsync($"default-{req.AssetClass}-{req.AssetType}-{req.Currency}", ct);
-
-		if (asset.Id == AssetId.Empty)
+		if (string.IsNullOrWhiteSpace(stock.Symbol))
 		{
-			asset = await this.assetRepository.AddAsync(
-				$"default-{req.AssetClass}-{req.AssetType}-{req.Currency}",
-				req.AssetClass,
-				req.AssetType,
-				req.Currency,
-				$"default-{req.AssetClass}-{req.AssetType}-{req.Currency}",
-				ct);
+			this.ThrowError("Stock not found", StatusCodes.Status404NotFound);
 		}
 
-		await this.AddAssetItemAsync(asset.Id, req.Name, ct);
+		return await this.assetRepository.AddAsync(
+			stock.Name,
+			AssetClass.Equity,
+			AssetType.Stock,
+			Currency.USD,
+			$"stock-{stock.Symbol.ToLowerInvariant()}",
+			ct);
 	}
 
-	private async Task AddAssetItemAsync(
-		AssetId assetId,
-		string name,
-		CancellationToken ct)
+	private async Task<Asset> GetOrCreateDefaultAssetAsync(AddAssetItemRequest req, CancellationToken ct)
 	{
-		await this.assetItemRepository.AddAsync(
-			this.GetUserId(),
-			assetId,
-			name,
+		var externalId = $"default-{req.AssetClass}-{req.AssetType}-{req.Currency}";
+		var asset = await this.assetRepository.GetByExternalIdAsync(externalId, ct);
+
+		if (asset.Id != AssetId.Empty)
+		{
+			return asset;
+		}
+
+		return await this.assetRepository.AddAsync(
+			externalId,
+			req.AssetClass,
+			req.AssetType,
+			req.Currency,
+			externalId,
 			ct);
 	}
 }
