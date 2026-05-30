@@ -1,7 +1,7 @@
 using FluentValidation.Results;
 using Primal.Api.Auth;
 
-namespace Primal.UnitTests.Api.Auth.GoogleLogin;
+namespace Primal.Api.UnitTests.Api.Auth.GoogleLogin;
 
 public sealed class GoogleLoginValidatorTests
 {

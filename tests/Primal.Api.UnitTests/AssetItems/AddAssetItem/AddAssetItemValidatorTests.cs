@@ -3,7 +3,7 @@ using Primal.Api.AssetItems;
 using Primal.Domain.Investments;
 using Primal.Domain.Money;
 
-namespace Primal.UnitTests.Api.AssetItems.AddAssetItem;
+namespace Primal.Api.UnitTests.Api.AssetItems.AddAssetItem;
 
 public sealed class AddAssetItemValidatorTests
 {

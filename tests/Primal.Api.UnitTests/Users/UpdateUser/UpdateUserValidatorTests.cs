@@ -3,7 +3,7 @@ using Primal.Api.Users;
 using Primal.Domain.Money;
 using Primal.Domain.Users;
 
-namespace Primal.UnitTests.Api.Users.UpdateUser;
+namespace Primal.Api.UnitTests.Api.Users.UpdateUser;
 
 public sealed class UpdateUserValidatorTests
 {

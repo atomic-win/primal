@@ -7,15 +7,15 @@ using Primal.Application.Investments;
 using Primal.Domain.Investments;
 using Primal.Domain.Money;
 
-namespace Primal.UnitTests.Api.Transactions.AddTransaction;
+namespace Primal.Api.UnitTests.Api.Transactions.EditTransaction;
 
-public sealed class AddTransactionValidatorTests
+public sealed class EditTransactionValidatorTests
 {
 	[Test]
-	public async Task ValidateAsync_ReturnsValid_ForStockBuyTransaction()
+	public async Task ValidateAsync_ReturnsValid_ForPartialUpdateWithoutOptionalFields()
 	{
 		var validator = CreateValidator(assetType: AssetType.Stock);
-		var request = CreateRequest(transactionType: TransactionType.Buy, units: 10m, price: 25m);
+		var request = CreateRequest();
 
 		var result = await validator.ValidateAsync(request);
 
@@ -23,15 +23,28 @@ public sealed class AddTransactionValidatorTests
 	}
 
 	[Test]
-	public async Task ValidateAsync_ReturnsValid_ForBankAccountDepositTransaction()
+	public async Task ValidateAsync_ReturnsValid_WhenBuyTransactionUsesZeroUnitsAndPrice()
+	{
+		var validator = CreateValidator(assetType: AssetType.Stock);
+		var request = CreateRequest(
+			name: "Update buy",
+			transactionType: TransactionType.Buy,
+			units: 0m,
+			price: 0m);
+
+		var result = await validator.ValidateAsync(request);
+
+		await Assert.That(result.IsValid).IsTrue();
+	}
+
+	[Test]
+	public async Task ValidateAsync_ReturnsValid_WhenDepositUsesZeroAmount()
 	{
 		var validator = CreateValidator(assetType: AssetType.BankAccount);
 		var request = CreateRequest(
+			name: "Update deposit",
 			transactionType: TransactionType.Deposit,
-			units: 0m,
-			price: 0m,
-			amount: 1000m,
-			name: "Monthly deposit");
+			amount: 0m);
 
 		var result = await validator.ValidateAsync(request);
 
@@ -63,39 +76,15 @@ public sealed class AddTransactionValidatorTests
 	}
 
 	[Test]
-	public async Task ValidateAsync_ReturnsError_WhenDateIsDefault()
+	public async Task ValidateAsync_ReturnsError_WhenTransactionDoesNotExist()
 	{
-		var validator = CreateValidator();
-		var request = CreateRequest(date: DateOnly.MinValue);
+		var validator = CreateValidator(transactionExists: false);
+		var request = CreateRequest();
 
 		var result = await validator.ValidateAsync(request);
 
 		await Assert.That(result.IsValid).IsFalse();
-		await AssertHasError(result, "Transaction date must be provided.");
-	}
-
-	[Test]
-	public async Task ValidateAsync_ReturnsError_WhenDateIsInTheFuture()
-	{
-		var validator = CreateValidator();
-		var request = CreateRequest(date: DateOnly.FromDateTime(DateTime.UtcNow.AddDays(1)));
-
-		var result = await validator.ValidateAsync(request);
-
-		await Assert.That(result.IsValid).IsFalse();
-		await AssertHasError(result, "Transaction date cannot be in the future.");
-	}
-
-	[Test]
-	public async Task ValidateAsync_ReturnsError_WhenNameIsEmpty()
-	{
-		var validator = CreateValidator();
-		var request = CreateRequest(name: string.Empty);
-
-		var result = await validator.ValidateAsync(request);
-
-		await Assert.That(result.IsValid).IsFalse();
-		await AssertHasError(result, "Transaction name must be provided.");
+		await AssertHasError(result, "Transaction does not exist.");
 	}
 
 	[Test]
@@ -123,22 +112,10 @@ public sealed class AddTransactionValidatorTests
 	}
 
 	[Test]
-	public async Task ValidateAsync_ReturnsError_WhenTransactionTypeIsUnknown()
-	{
-		var validator = CreateValidator();
-		var request = CreateRequest(transactionType: TransactionType.Unknown);
-
-		var result = await validator.ValidateAsync(request);
-
-		await Assert.That(result.IsValid).IsFalse();
-		await AssertHasError(result, "Transaction type must be provided.");
-	}
-
-	[Test]
 	public async Task ValidateAsync_ReturnsError_WhenTransactionTypeIsInvalidForAssetType()
 	{
 		var validator = CreateValidator(assetType: AssetType.BankAccount);
-		var request = CreateRequest(transactionType: TransactionType.Buy);
+		var request = CreateRequest(name: "Invalid type", transactionType: TransactionType.Buy);
 
 		var result = await validator.ValidateAsync(request);
 
@@ -147,63 +124,72 @@ public sealed class AddTransactionValidatorTests
 	}
 
 	[Test]
-	[Arguments(TransactionType.Buy, 0)]
-	[Arguments(TransactionType.Sell, -1)]
-	public async Task ValidateAsync_ReturnsError_WhenUnitsAreNotGreaterThanZeroForBuyOrSell(
+	[Arguments(TransactionType.Buy, -1)]
+	[Arguments(TransactionType.Sell, -5)]
+	public async Task ValidateAsync_ReturnsError_WhenUnitsAreNegativeForBuyOrSell(
 		TransactionType transactionType,
 		decimal units)
 	{
 		var validator = CreateValidator(assetType: AssetType.Stock);
-		var request = CreateRequest(transactionType: transactionType, units: units, price: 25m);
+		var request = CreateRequest(
+			name: "Negative units",
+			transactionType: transactionType,
+			units: units,
+			price: 10m);
 
 		var result = await validator.ValidateAsync(request);
 
 		await Assert.That(result.IsValid).IsFalse();
-		await AssertHasError(result, "Transaction units must be greater than zero.");
+		await AssertHasError(result, "Transaction units must be greater than or equal to zero.");
 	}
 
 	[Test]
-	[Arguments(TransactionType.Buy, 0)]
-	[Arguments(TransactionType.Sell, -1)]
-	public async Task ValidateAsync_ReturnsError_WhenPriceIsNotGreaterThanZeroForBuyOrSell(
+	[Arguments(TransactionType.Buy, -1)]
+	[Arguments(TransactionType.Sell, -5)]
+	public async Task ValidateAsync_ReturnsError_WhenPriceIsNegativeForBuyOrSell(
 		TransactionType transactionType,
 		decimal price)
 	{
 		var validator = CreateValidator(assetType: AssetType.Stock);
-		var request = CreateRequest(transactionType: transactionType, units: 10m, price: price);
+		var request = CreateRequest(
+			name: "Negative price",
+			transactionType: transactionType,
+			units: 10m,
+			price: price);
 
 		var result = await validator.ValidateAsync(request);
 
 		await Assert.That(result.IsValid).IsFalse();
-		await AssertHasError(result, "Transaction price must be greater than zero.");
+		await AssertHasError(result, "Transaction price must be greater than or equal to zero.");
 	}
 
 	[Test]
-	[Arguments(TransactionType.Deposit, 0)]
-	[Arguments(TransactionType.Interest, -1)]
-	public async Task ValidateAsync_ReturnsError_WhenAmountIsNotGreaterThanZeroForNonBuyOrSell(
+	[Arguments(TransactionType.Deposit, -1)]
+	[Arguments(TransactionType.Interest, -5)]
+	public async Task ValidateAsync_ReturnsError_WhenAmountIsNegativeForNonBuyOrSell(
 		TransactionType transactionType,
 		decimal amount)
 	{
 		var validator = CreateValidator(assetType: AssetType.BankAccount);
 		var request = CreateRequest(
+			name: "Negative amount",
 			transactionType: transactionType,
-			units: 0m,
-			price: 0m,
 			amount: amount);
 
 		var result = await validator.ValidateAsync(request);
 
 		await Assert.That(result.IsValid).IsFalse();
-		await AssertHasError(result, "Transaction amount must be greater than zero.");
+		await AssertHasError(result, "Transaction amount must be greater than or equal to zero.");
 	}
 
-	private static AddTransactionValidator CreateValidator(
+	private static EditTransactionValidator CreateValidator(
 		AssetType assetType = AssetType.Stock,
-		bool assetItemExists = true)
+		bool assetItemExists = true,
+		bool transactionExists = true)
 	{
 		var assetItemRepository = Substitute.For<IAssetItemRepository>();
 		var assetRepository = Substitute.For<IAssetRepository>();
+		var transactionRepository = Substitute.For<ITransactionRepository>();
 		var assetItem = assetItemExists
 			? new AssetItem(new AssetItemId(Guid.NewGuid()), new AssetId(Guid.NewGuid()), "Asset Item")
 			: AssetItem.Empty;
@@ -214,27 +200,44 @@ public sealed class AddTransactionValidatorTests
 			assetType,
 			assetType is AssetType.Stock or AssetType.MutualFund ? Currency.Unknown : Currency.USD,
 			assetType is AssetType.Stock or AssetType.MutualFund ? "EXT-123" : string.Empty);
+		var transaction = transactionExists
+			? new Transaction(
+				new TransactionId(Guid.NewGuid()),
+				DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-1)),
+				"Existing transaction",
+				TransactionType.Deposit,
+				assetItem.Id,
+				0m,
+				0m,
+				100m)
+			: Transaction.Empty;
 
 		assetItemRepository.GetByIdAsync(Arg.Any<Domain.Users.UserId>(), Arg.Any<AssetItemId>(), Arg.Any<CancellationToken>())
 			.Returns(assetItem);
 		assetRepository.GetByIdAsync(Arg.Any<AssetId>(), Arg.Any<CancellationToken>())
 			.Returns(asset);
+		transactionRepository.GetByIdAsync(Arg.Any<Domain.Users.UserId>(), Arg.Any<AssetItemId>(), Arg.Any<TransactionId>(), Arg.Any<CancellationToken>())
+			.Returns(transaction);
 
-		return new AddTransactionValidator(assetItemRepository, assetRepository, CreateMockHttpContextAccessor());
+		return new EditTransactionValidator(
+			assetItemRepository,
+			assetRepository,
+			transactionRepository,
+			CreateMockHttpContextAccessor());
 	}
 
-	private static AddTransactionRequest CreateRequest(
+	private static EditTransactionRequest CreateRequest(
 		Guid? assetItemId = null,
-		DateOnly? date = null,
-		string name = "Buy transaction",
-		TransactionType transactionType = TransactionType.Buy,
-		decimal units = 10m,
-		decimal price = 25m,
+		Guid? transactionId = null,
+		string name = "",
+		TransactionType transactionType = TransactionType.Unknown,
+		decimal units = 0m,
+		decimal price = 0m,
 		decimal amount = 0m)
 	{
-		return new AddTransactionRequest(
+		return new EditTransactionRequest(
 			assetItemId ?? Guid.NewGuid(),
-			date ?? DateOnly.FromDateTime(DateTime.UtcNow),
+			transactionId ?? Guid.NewGuid(),
 			name,
 			transactionType,
 			units,

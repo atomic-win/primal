@@ -2,7 +2,7 @@ using Primal.Api.Transactions;
 using Primal.Domain.Investments;
 using Primal.Domain.Money;
 
-namespace Primal.UnitTests.Api.Transactions;
+namespace Primal.Api.UnitTests.Api.Transactions;
 
 public sealed class TransactionValidationExtensionsTests
 {
