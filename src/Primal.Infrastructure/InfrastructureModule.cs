@@ -55,52 +55,52 @@ public sealed class InfrastructureModule : Module
 	private void RegisterPersistence(ContainerBuilder builder)
 	{
 		builder.Register(c => new UserIdRepository(
-			c.Resolve<AppDbContext>()))
+			c.Resolve<DbConnectionFactory>()))
 			.As<IUserIdRepository>()
-			.InstancePerLifetimeScope();
+			.SingleInstance();
 
 		builder.Register(c => new UserRepository(
-			c.Resolve<AppDbContext>()))
+			c.Resolve<DbConnectionFactory>()))
 			.As<UserRepository>()
-			.InstancePerLifetimeScope();
+			.SingleInstance();
 
 		builder.Register(c => new CachedUserRepository(
 			c.Resolve<HybridCache>(),
 			c.Resolve<UserRepository>()))
 			.As<IUserRepository>()
-			.InstancePerLifetimeScope();
+			.SingleInstance();
 
 		builder.Register(c => new AssetRepository(
-			c.Resolve<AppDbContext>()))
+			c.Resolve<DbConnectionFactory>()))
 			.As<AssetRepository>()
-			.InstancePerLifetimeScope();
+			.SingleInstance();
 
 		builder.Register(c => new CachedAssetRepository(
 			c.Resolve<HybridCache>(),
 			c.Resolve<AssetRepository>()))
 			.As<IAssetRepository>()
-			.InstancePerLifetimeScope();
+			.SingleInstance();
 
 		builder.Register(c => new AssetItemRepository(
-			c.Resolve<AppDbContext>()))
+			c.Resolve<DbConnectionFactory>()))
 			.As<AssetItemRepository>()
-			.InstancePerLifetimeScope();
+			.SingleInstance();
 
 		builder.Register(c => new CachedAssetItemRepository(
 			c.Resolve<HybridCache>(),
 			c.Resolve<AssetItemRepository>()))
 			.As<IAssetItemRepository>()
-			.InstancePerLifetimeScope();
+			.SingleInstance();
 
 		builder.Register(c => new TransactionRepository(
-			c.Resolve<AppDbContext>()))
+			c.Resolve<DbConnectionFactory>()))
 			.As<TransactionRepository>()
-			.InstancePerLifetimeScope();
+			.SingleInstance();
 
 		builder.Register(c => new CachedTransactionRepository(
 			c.Resolve<HybridCache>(),
 			c.Resolve<TransactionRepository>()))
 			.As<ITransactionRepository>()
-			.InstancePerLifetimeScope();
+			.SingleInstance();
 	}
 }

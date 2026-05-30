@@ -1,4 +1,5 @@
-using Microsoft.EntityFrameworkCore;
+using System.Globalization;
+using Dapper;
 using Primal.Application.Investments;
 using Primal.Domain.Investments;
 using Primal.Domain.Money;
@@ -8,39 +9,43 @@ namespace Primal.Infrastructure.Investments;
 
 internal sealed class AssetRepository : IAssetRepository
 {
-	private readonly AppDbContext appDbContext;
+	private readonly DbConnectionFactory connectionFactory;
 
-	internal AssetRepository(AppDbContext appDbContext)
+	internal AssetRepository(DbConnectionFactory connectionFactory)
 	{
-		this.appDbContext = appDbContext;
+		this.connectionFactory = connectionFactory;
 	}
 
 	public async Task<Asset> GetByIdAsync(AssetId assetId, CancellationToken cancellationToken)
 	{
-		var assetTableEntity = await this.appDbContext.Assets
-			.AsNoTracking()
-			.FirstOrDefaultAsync(a => a.Id == assetId.Value, cancellationToken);
+		using var connection = this.connectionFactory.CreateConnection();
 
-		if (assetTableEntity is null)
+		var row = await connection.QueryFirstOrDefaultAsync<AssetRow>(
+			"SELECT Id, Name, AssetClass, AssetType, Currency, ExternalId FROM assets WHERE Id = @Id",
+			new { Id = assetId.Value.ToString("D", CultureInfo.InvariantCulture).ToUpperInvariant() });
+
+		if (row is null)
 		{
 			return Asset.Empty;
 		}
 
-		return this.MapToAsset(assetTableEntity);
+		return MapToAsset(row);
 	}
 
 	public async Task<Asset> GetByExternalIdAsync(string externalId, CancellationToken cancellationToken)
 	{
-		var assetTableEntity = await this.appDbContext.Assets
-			.AsNoTracking()
-			.FirstOrDefaultAsync(a => a.ExternalId == externalId, cancellationToken);
+		using var connection = this.connectionFactory.CreateConnection();
 
-		if (assetTableEntity is null)
+		var row = await connection.QueryFirstOrDefaultAsync<AssetRow>(
+			"SELECT Id, Name, AssetClass, AssetType, Currency, ExternalId FROM assets WHERE ExternalId = @ExternalId",
+			new { ExternalId = externalId });
+
+		if (row is null)
 		{
 			return Asset.Empty;
 		}
 
-		return this.MapToAsset(assetTableEntity);
+		return MapToAsset(row);
 	}
 
 	public async Task<Asset> AddAsync(
@@ -51,29 +56,53 @@ internal sealed class AssetRepository : IAssetRepository
 		string externalId,
 		CancellationToken cancellationToken)
 	{
-		var assetTableEntity = new AssetTableEntity
-		{
-			Id = Guid.CreateVersion7(),
-			Name = name,
-			AssetClass = assetClass,
-			AssetType = assetType,
-			Currency = currency,
-			ExternalId = externalId,
-		};
+		var id = Guid.CreateVersion7();
+		var now = DateTimeOffset.UtcNow.ToString("O");
 
-		await this.appDbContext.Assets.AddAsync(assetTableEntity, cancellationToken);
+		using var connection = this.connectionFactory.CreateConnection();
 
-		return this.MapToAsset(assetTableEntity);
+		await connection.ExecuteAsync(
+			"""
+			INSERT INTO assets (Id, Name, AssetClass, AssetType, Currency, ExternalId, CreatedAt, UpdatedAt)
+			VALUES (@Id, @Name, @AssetClass, @AssetType, @Currency, @ExternalId, @CreatedAt, @UpdatedAt)
+			""",
+			new
+			{
+				Id = id.ToString("D", CultureInfo.InvariantCulture).ToUpperInvariant(),
+				Name = name,
+				AssetClass = assetClass.ToString(),
+				AssetType = assetType.ToString(),
+				Currency = currency.ToString(),
+				ExternalId = externalId,
+				CreatedAt = now,
+				UpdatedAt = now,
+			});
+
+		return new Asset(
+			new AssetId(id),
+			name,
+			assetClass,
+			assetType,
+			currency,
+			externalId);
 	}
 
-	private Asset MapToAsset(AssetTableEntity assetTableEntity)
+	private static Asset MapToAsset(AssetRow row)
 	{
 		return new Asset(
-			new AssetId(assetTableEntity.Id),
-			assetTableEntity.Name,
-			assetTableEntity.AssetClass,
-			assetTableEntity.AssetType,
-			assetTableEntity.Currency,
-			assetTableEntity.ExternalId);
+			new AssetId(Guid.Parse(row.Id)),
+			row.Name,
+			Enum.Parse<AssetClass>(row.AssetClass),
+			Enum.Parse<AssetType>(row.AssetType),
+			Enum.Parse<Currency>(row.Currency),
+			row.ExternalId);
 	}
+
+	private sealed record AssetRow(
+		string Id,
+		string Name,
+		string AssetClass,
+		string AssetType,
+		string Currency,
+		string ExternalId);
 }

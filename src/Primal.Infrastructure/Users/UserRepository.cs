@@ -1,4 +1,5 @@
-using Microsoft.EntityFrameworkCore;
+using System.Globalization;
+using Dapper;
 using Primal.Application.Users;
 using Primal.Domain.Money;
 using Primal.Domain.Users;
@@ -8,27 +9,29 @@ namespace Primal.Infrastructure.Users;
 
 internal sealed class UserRepository : IUserRepository
 {
-	private readonly AppDbContext appDbContext;
+	private readonly DbConnectionFactory connectionFactory;
 
-	internal UserRepository(AppDbContext appDbContext)
+	internal UserRepository(DbConnectionFactory connectionFactory)
 	{
-		this.appDbContext = appDbContext;
+		this.connectionFactory = connectionFactory;
 	}
 
 	public async Task<User> GetUserAsync(
 		UserId userId,
 		CancellationToken cancellationToken)
 	{
-		var userTableEntity = await this.appDbContext.Users
-			.AsNoTracking()
-			.FirstOrDefaultAsync(u => u.Id == userId.Value, cancellationToken);
+		using var connection = this.connectionFactory.CreateConnection();
 
-		if (userTableEntity is null)
+		var row = await connection.QueryFirstOrDefaultAsync<UserRow>(
+			"SELECT Id, Email, FirstName, LastName, FullName, PreferredCurrency, PreferredLocale FROM users WHERE Id = @Id",
+			new { Id = userId.Value.ToString("D", CultureInfo.InvariantCulture).ToUpperInvariant() });
+
+		if (row is null)
 		{
 			return User.Empty;
 		}
 
-		return this.MapToUser(userTableEntity);
+		return MapToUser(row);
 	}
 
 	public async Task<User> AddUserAsync(
@@ -39,20 +42,36 @@ internal sealed class UserRepository : IUserRepository
 		string fullName,
 		CancellationToken cancellationToken)
 	{
-		var userTableEntity = new UserTableEntity
-		{
-			Id = userId.Value,
-			Email = email,
-			FirstName = firstName,
-			LastName = lastName,
-			FullName = fullName,
-			PreferredCurrency = Currency.USD,
-			PreferredLocale = Locale.EN_US,
-		};
+		var now = DateTimeOffset.UtcNow.ToString("O");
 
-		await this.appDbContext.Users.AddAsync(userTableEntity, cancellationToken);
+		using var connection = this.connectionFactory.CreateConnection();
 
-		return this.MapToUser(userTableEntity);
+		await connection.ExecuteAsync(
+			"""
+			INSERT INTO users (Id, Email, FirstName, LastName, FullName, PreferredCurrency, PreferredLocale, CreatedAt, UpdatedAt)
+			VALUES (@Id, @Email, @FirstName, @LastName, @FullName, @PreferredCurrency, @PreferredLocale, @CreatedAt, @UpdatedAt)
+			""",
+			new
+			{
+				Id = userId.Value.ToString("D", CultureInfo.InvariantCulture).ToUpperInvariant(),
+				Email = email,
+				FirstName = firstName,
+				LastName = lastName,
+				FullName = fullName,
+				PreferredCurrency = Currency.USD.ToString(),
+				PreferredLocale = Locale.EN_US.ToString(),
+				CreatedAt = now,
+				UpdatedAt = now,
+			});
+
+		return new User(
+			userId,
+			email,
+			firstName,
+			lastName,
+			fullName,
+			Currency.USD,
+			Locale.EN_US);
 	}
 
 	public async Task UpdateUserProfileAsync(
@@ -61,23 +80,42 @@ internal sealed class UserRepository : IUserRepository
 		Locale preferredLocale,
 		CancellationToken cancellationToken)
 	{
-		await this.appDbContext.Users.Where(u => u.Id == userId.Value)
-			.ExecuteUpdateAsync(
-				setters => setters
-				.SetProperty(u => u.PreferredCurrency, preferredCurrency)
-				.SetProperty(u => u.PreferredLocale, preferredLocale),
-				cancellationToken);
+		var now = DateTimeOffset.UtcNow.ToString("O");
+
+		using var connection = this.connectionFactory.CreateConnection();
+
+		await connection.ExecuteAsync(
+			"""
+			UPDATE users SET PreferredCurrency = @PreferredCurrency, PreferredLocale = @PreferredLocale, UpdatedAt = @UpdatedAt
+			WHERE Id = @Id
+			""",
+			new
+			{
+				Id = userId.Value.ToString("D", CultureInfo.InvariantCulture).ToUpperInvariant(),
+				PreferredCurrency = preferredCurrency.ToString(),
+				PreferredLocale = preferredLocale.ToString(),
+				UpdatedAt = now,
+			});
 	}
 
-	private User MapToUser(UserTableEntity userTableEntity)
+	private static User MapToUser(UserRow row)
 	{
 		return new User(
-			new UserId(userTableEntity.Id),
-			userTableEntity.Email,
-			userTableEntity.FirstName,
-			userTableEntity.LastName,
-			userTableEntity.FullName,
-			userTableEntity.PreferredCurrency,
-			userTableEntity.PreferredLocale);
+			new UserId(Guid.Parse(row.Id)),
+			row.Email,
+			row.FirstName,
+			row.LastName,
+			row.FullName,
+			Enum.Parse<Currency>(row.PreferredCurrency),
+			Enum.Parse<Locale>(row.PreferredLocale));
 	}
+
+	private sealed record UserRow(
+		string Id,
+		string Email,
+		string FirstName,
+		string LastName,
+		string FullName,
+		string PreferredCurrency,
+		string PreferredLocale);
 }

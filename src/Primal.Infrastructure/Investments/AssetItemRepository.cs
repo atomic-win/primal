@@ -1,4 +1,5 @@
-using Microsoft.EntityFrameworkCore;
+using System.Globalization;
+using Dapper;
 using Primal.Application.Investments;
 using Primal.Domain.Investments;
 using Primal.Domain.Users;
@@ -8,23 +9,24 @@ namespace Primal.Infrastructure.Investments;
 
 internal sealed class AssetItemRepository : IAssetItemRepository
 {
-	private readonly AppDbContext appDbContext;
+	private readonly DbConnectionFactory connectionFactory;
 
-	internal AssetItemRepository(AppDbContext appDbContext)
+	internal AssetItemRepository(DbConnectionFactory connectionFactory)
 	{
-		this.appDbContext = appDbContext;
+		this.connectionFactory = connectionFactory;
 	}
 
 	public async Task<IEnumerable<AssetItem>> GetAllAsync(
 		UserId userId,
 		CancellationToken cancellationToken)
 	{
-		var assetItemTableEntities = await this.appDbContext.AssetItems
-			.AsNoTracking()
-			.Where(ai => ai.UserId == userId.Value)
-			.ToListAsync(cancellationToken);
+		using var connection = this.connectionFactory.CreateConnection();
 
-		return assetItemTableEntities.Select(this.MapToAssetItem);
+		var rows = await connection.QueryAsync<AssetItemRow>(
+			"SELECT Id, Name, UserId, AssetId FROM asset_items WHERE UserId = @UserId",
+			new { UserId = userId.Value.ToString("D", CultureInfo.InvariantCulture).ToUpperInvariant() });
+
+		return rows.Select(MapToAssetItem);
 	}
 
 	public async Task<AssetItem> GetByIdAsync(
@@ -32,16 +34,18 @@ internal sealed class AssetItemRepository : IAssetItemRepository
 		AssetItemId assetItemId,
 		CancellationToken cancellationToken)
 	{
-		var assetItemTableEntity = await this.appDbContext.AssetItems
-			.AsNoTracking()
-			.FirstOrDefaultAsync(ai => ai.UserId == userId.Value && ai.Id == assetItemId.Value, cancellationToken);
+		using var connection = this.connectionFactory.CreateConnection();
 
-		if (assetItemTableEntity is null)
+		var row = await connection.QueryFirstOrDefaultAsync<AssetItemRow>(
+			"SELECT Id, Name, UserId, AssetId FROM asset_items WHERE UserId = @UserId AND Id = @Id",
+			new { UserId = userId.Value.ToString("D", CultureInfo.InvariantCulture).ToUpperInvariant(), Id = assetItemId.Value.ToString("D", CultureInfo.InvariantCulture).ToUpperInvariant() });
+
+		if (row is null)
 		{
 			return AssetItem.Empty;
 		}
 
-		return this.MapToAssetItem(assetItemTableEntity);
+		return MapToAssetItem(row);
 	}
 
 	public async Task<AssetItem> AddAsync(
@@ -50,17 +54,30 @@ internal sealed class AssetItemRepository : IAssetItemRepository
 		string name,
 		CancellationToken cancellationToken)
 	{
-		var assetItemTableEntity = new AssetItemTableEntity
-		{
-			Id = Guid.CreateVersion7(),
-			UserId = userId.Value,
-			AssetId = assetId.Value,
-			Name = name,
-		};
+		var id = Guid.CreateVersion7();
+		var now = DateTimeOffset.UtcNow.ToString("O");
 
-		await this.appDbContext.AssetItems.AddAsync(assetItemTableEntity, cancellationToken);
+		using var connection = this.connectionFactory.CreateConnection();
 
-		return this.MapToAssetItem(assetItemTableEntity);
+		await connection.ExecuteAsync(
+			"""
+			INSERT INTO asset_items (Id, Name, UserId, AssetId, CreatedAt, UpdatedAt)
+			VALUES (@Id, @Name, @UserId, @AssetId, @CreatedAt, @UpdatedAt)
+			""",
+			new
+			{
+				Id = id.ToString("D", CultureInfo.InvariantCulture).ToUpperInvariant(),
+				Name = name,
+				UserId = userId.Value.ToString("D", CultureInfo.InvariantCulture).ToUpperInvariant(),
+				AssetId = assetId.Value.ToString("D", CultureInfo.InvariantCulture).ToUpperInvariant(),
+				CreatedAt = now,
+				UpdatedAt = now,
+			});
+
+		return new AssetItem(
+			new AssetItemId(id),
+			assetId,
+			name);
 	}
 
 	public async Task DeleteAsync(
@@ -68,16 +85,24 @@ internal sealed class AssetItemRepository : IAssetItemRepository
 		AssetItemId assetItemId,
 		CancellationToken cancellationToken)
 	{
-		await this.appDbContext.AssetItems
-			.Where(ai => ai.UserId == userId.Value && ai.Id == assetItemId.Value)
-			.ExecuteDeleteAsync(cancellationToken);
+		using var connection = this.connectionFactory.CreateConnection();
+
+		await connection.ExecuteAsync(
+			"DELETE FROM asset_items WHERE UserId = @UserId AND Id = @Id",
+			new { UserId = userId.Value.ToString("D", CultureInfo.InvariantCulture).ToUpperInvariant(), Id = assetItemId.Value.ToString("D", CultureInfo.InvariantCulture).ToUpperInvariant() });
 	}
 
-	private AssetItem MapToAssetItem(AssetItemTableEntity assetItemTableEntity)
+	private static AssetItem MapToAssetItem(AssetItemRow row)
 	{
 		return new AssetItem(
-			new AssetItemId(assetItemTableEntity.Id),
-			new AssetId(assetItemTableEntity.AssetId),
-			assetItemTableEntity.Name);
+			new AssetItemId(Guid.Parse(row.Id)),
+			new AssetId(Guid.Parse(row.AssetId)),
+			row.Name);
 	}
+
+	private sealed record AssetItemRow(
+		string Id,
+		string Name,
+		string UserId,
+		string AssetId);
 }
