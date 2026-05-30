@@ -19,5 +19,7 @@
     <PackageVersion Include="NeoSmart.Caching.Sqlite.AspNetCore" Version="9.0.1" />
     <PackageVersion Include="StronglyTypedId" Version="1.0.0-beta08" PrivateAssets="all" ExcludeAssets="runtime" />
     <PackageVersion Include="StyleCop.Analyzers" Version="1.2.0-beta.556" />
+    <!-- Test packages -->
+    <PackageVersion Include="TUnit" Version="1.45.29" />
   </ItemGroup>
 </Project>

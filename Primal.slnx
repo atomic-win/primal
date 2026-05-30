@@ -5,4 +5,9 @@
     <Project Path="src/Primal.Domain/Primal.Domain.csproj" />
     <Project Path="src/Primal.Infrastructure/Primal.Infrastructure.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Primal.UnitTests/Primal.UnitTests.csproj" />
+    <Project Path="tests/Primal.IntegrationTests/Primal.IntegrationTests.csproj" />
+    <Project Path="tests/Primal.E2ETests/Primal.E2ETests.csproj" />
+  </Folder>
 </Solution>
