@@ -22,7 +22,7 @@ public abstract class Entity<TId> : IEquatable<Entity<TId>>
 
 	public bool Equals(Entity<TId> other)
 	{
-		return this.Id.Equals(other.Id);
+		return other is not null && this.Id.Equals(other.Id);
 	}
 
 	public override bool Equals(object obj)
