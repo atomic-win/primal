@@ -28,8 +28,6 @@ internal sealed class AddAssetItemEndpoint : Endpoint<AssetItemRequest>
 
 	public override async Task HandleAsync(AssetItemRequest req, CancellationToken ct)
 	{
-		this.ValidateRequest(req);
-
 		var userId = this.GetUserId();
 
 		if (req.AssetType == AssetType.MutualFund)
@@ -130,87 +128,6 @@ internal sealed class AddAssetItemEndpoint : Endpoint<AssetItemRequest>
 			assetId,
 			name,
 			ct);
-	}
-
-	private void ValidateRequest(AssetItemRequest req)
-	{
-		if (req.AssetType == AssetType.Unknown)
-		{
-			this.ThrowError("Asset type cannot be Unknown", StatusCodes.Status400BadRequest);
-		}
-
-		if (string.IsNullOrWhiteSpace(req.Name))
-		{
-			this.AddError("Name cannot be empty");
-		}
-
-		this.ValidateAssetClass(req);
-		this.ValidateExternalId(req);
-		this.ValidateCurrency(req);
-
-		this.ThrowIfAnyErrors(StatusCodes.Status400BadRequest);
-	}
-
-	private void ValidateAssetClass(AssetItemRequest req)
-	{
-		if (req.AssetClass == AssetClass.Unknown)
-		{
-			if (req.AssetType != AssetType.Stock && req.AssetType != AssetType.Bond)
-			{
-				this.AddError($"Asset class must be specified for {req.AssetType} asset type");
-			}
-		}
-		else
-		{
-			if (req.AssetType == AssetType.Stock || req.AssetType == AssetType.Bond)
-			{
-				this.AddError($"Asset class must not be specified for {req.AssetType} asset type");
-			}
-		}
-
-		if (req.AssetType == AssetType.MutualFund &&
-			req.AssetClass != AssetClass.Equity &&
-			req.AssetClass != AssetClass.Debt &&
-			req.AssetClass != AssetClass.Commodities)
-		{
-			this.AddError($"Asset class '{req.AssetClass}' is not valid for MutualFund asset type");
-		}
-	}
-
-	private void ValidateExternalId(AssetItemRequest req)
-	{
-		if (string.IsNullOrWhiteSpace(req.ExternalId))
-		{
-			if (req.AssetType == AssetType.MutualFund || req.AssetType == AssetType.Stock)
-			{
-				this.AddError($"ExternalId must be specified for {req.AssetType} asset type");
-			}
-		}
-		else
-		{
-			if (req.AssetType != AssetType.MutualFund && req.AssetType != AssetType.Stock)
-			{
-				this.AddError($"ExternalId must not be specified for {req.AssetType} asset type");
-			}
-		}
-	}
-
-	private void ValidateCurrency(AssetItemRequest req)
-	{
-		if (req.Currency == Currency.Unknown)
-		{
-			if (req.AssetType != AssetType.MutualFund && req.AssetType != AssetType.Stock)
-			{
-				this.AddError($"Currency must be specified for {req.AssetType} asset type");
-			}
-		}
-		else
-		{
-			if (req.AssetType == AssetType.MutualFund || req.AssetType == AssetType.Stock)
-			{
-				this.AddError($"Currency must not be specified for {req.AssetType} asset type");
-			}
-		}
 	}
 }
 

@@ -26,8 +26,6 @@ internal sealed class UpdateUserEndpoint : Endpoint<UpdateUserRequest>
 			return;
 		}
 
-		this.ValidateRequest(req);
-
 		if ((req.PreferredCurrency == Currency.Unknown || req.PreferredCurrency == user.PreferredCurrency)
 			&& (req.PreferredLocale == Locale.Unknown || req.PreferredLocale == user.PreferredLocale))
 		{
@@ -42,15 +40,6 @@ internal sealed class UpdateUserEndpoint : Endpoint<UpdateUserRequest>
 			ct);
 
 		await this.Send.NoContentAsync(ct);
-	}
-
-	private void ValidateRequest(UpdateUserRequest req)
-	{
-		if (req.PreferredCurrency == Currency.Unknown
-			&& req.PreferredLocale == Locale.Unknown)
-		{
-			this.ThrowError("At least one field of preferred currency or preferred locale must be provided", 400);
-		}
 	}
 }
 

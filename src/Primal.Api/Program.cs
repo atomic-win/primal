@@ -59,6 +59,8 @@ var builder = WebApplication.CreateBuilder(args);
 	builder.Services
 		.AddInfrastructure(builder.Configuration);
 
+	builder.Services.AddHttpContextAccessor();
+
 	builder.Services.AddFastEndpoints();
 
 	builder.Services.AddCors(options =>
