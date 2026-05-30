@@ -28,8 +28,6 @@ internal sealed class AddAssetItemEndpoint : Endpoint<AssetItemRequest>
 
 	public override async Task HandleAsync(AssetItemRequest req, CancellationToken ct)
 	{
-		var userId = this.GetUserId();
-
 		if (req.AssetType == AssetType.MutualFund)
 		{
 			await this.AddMutualFundAsync(req, ct);
