@@ -2,6 +2,7 @@ using System.Net;
 using NSubstitute;
 using Primal.Domain.Money;
 using Primal.Infrastructure.Investments;
+using RichardSzalay.MockHttp;
 
 namespace Primal.Infrastructure.IntegrationTests.Investments;
 
@@ -10,7 +11,7 @@ public sealed class MutualFundApiClientTests
 	[Test]
 	public async Task GetBySymbolAsync_NotFound_ReturnsEmptyMutualFund()
 	{
-		var client = CreateClient("{}", HttpStatusCode.NotFound);
+		var client = CreateClient("*", "{}", HttpStatusCode.NotFound);
 
 		var result = await client.GetBySymbolAsync("123456", CancellationToken.None);
 
@@ -27,7 +28,7 @@ public sealed class MutualFundApiClientTests
 		const string json = """
 		{"meta":{"fund_house":"Test Fund","scheme_type":"Open Ended","scheme_category":"Equity","scheme_code":123456,"scheme_name":"Test Scheme"},"data":[{"date":"31-05-2024","nav":"150.25"}],"status":"SUCCESS"}
 		""";
-		var client = CreateClient(json);
+		var client = CreateClient("/mf/123456/latest", json);
 
 		var result = await client.GetBySymbolAsync("123456", CancellationToken.None);
 
@@ -41,7 +42,7 @@ public sealed class MutualFundApiClientTests
 	[Test]
 	public async Task GetPricesAsync_NotFound_ReturnsEmptyDictionary()
 	{
-		var client = CreateClient("{}", HttpStatusCode.NotFound);
+		var client = CreateClient("*", "{}", HttpStatusCode.NotFound);
 
 		var result = await client.GetPricesAsync("123456", CancellationToken.None);
 
@@ -54,7 +55,7 @@ public sealed class MutualFundApiClientTests
 		const string json = """
 		{"meta":{"fund_house":"Test Fund","scheme_type":"Open Ended","scheme_category":"Equity","scheme_code":123456,"scheme_name":"Test Scheme"},"data":[{"date":"31-05-2024","nav":"150.25"},{"date":"30-05-2024","nav":"149.75"}],"status":"SUCCESS"}
 		""";
-		var client = CreateClient(json);
+		var client = CreateClient("/mf/123456", json);
 
 		var result = await client.GetPricesAsync("123456", CancellationToken.None);
 
@@ -66,18 +67,21 @@ public sealed class MutualFundApiClientTests
 	[Test]
 	public async Task GetOnOrBeforePriceAsync_ThrowsNotSupportedException()
 	{
-		var client = CreateClient("{}");
+		var client = CreateClient("*", "{}");
 
 		await Assert.ThrowsAsync<NotSupportedException>(
 			() => client.GetOnOrBeforePriceAsync("123456", new DateOnly(2024, 5, 31), CancellationToken.None));
 	}
 
-	private static MutualFundApiClient CreateClient(string content, HttpStatusCode statusCode = HttpStatusCode.OK)
+	private static MutualFundApiClient CreateClient(string url, string content, HttpStatusCode statusCode = HttpStatusCode.OK)
 	{
-		var httpClient = new HttpClient(new MockHttpMessageHandler(content, statusCode))
-		{
-			BaseAddress = new Uri("https://test.com"),
-		};
+		var mockHttp = new MockHttpMessageHandler();
+		mockHttp.When(url)
+			.Respond(statusCode, "application/json", content);
+
+		var httpClient = mockHttp.ToHttpClient();
+		httpClient.BaseAddress = new Uri("https://api.mfapi.in");
+
 		var httpClientFactory = Substitute.For<IHttpClientFactory>();
 		httpClientFactory.CreateClient(nameof(MutualFundApiClient)).Returns(httpClient);
 		return new MutualFundApiClient(httpClientFactory);

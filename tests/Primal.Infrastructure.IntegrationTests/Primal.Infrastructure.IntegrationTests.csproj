@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="NSubstitute" />
+    <PackageReference Include="RichardSzalay.MockHttp" />
     <PackageReference Include="TUnit" />
   </ItemGroup>
 
