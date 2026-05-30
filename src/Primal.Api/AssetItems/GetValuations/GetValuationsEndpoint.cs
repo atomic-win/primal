@@ -484,11 +484,3 @@ internal sealed class GetValuationsEndpoint : EndpointWithoutRequest<IAsyncEnume
 		public required decimal BalanceAmount { get; init; }
 	}
 }
-
-[System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "MA0048:File name must match type name", Justification = "used only in this file")]
-[System.Diagnostics.CodeAnalysis.SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1402:File may only contain a single type", Justification = "used only in this file")]
-internal sealed record ValuationResponse(
-	DateOnly Date,
-	decimal InvestedValue,
-	decimal CurrentValue,
-	decimal XirrPercent);

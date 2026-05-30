@@ -6,7 +6,7 @@ using Primal.Domain.Money;
 namespace Primal.Api.AssetItems;
 
 [HttpPost("/api/asset-items")]
-internal sealed class AddAssetItemEndpoint : Endpoint<AssetItemRequest>
+internal sealed class AddAssetItemEndpoint : Endpoint<AddAssetItemRequest>
 {
 	private readonly IAssetApiClient<MutualFund> mutualFundApiClient;
 	private readonly IAssetApiClient<Stock> stockApiClient;
@@ -26,12 +26,8 @@ internal sealed class AddAssetItemEndpoint : Endpoint<AssetItemRequest>
 		this.assetItemRepository = assetItemRepository;
 	}
 
-	public override async Task HandleAsync(AssetItemRequest req, CancellationToken ct)
+	public override async Task HandleAsync(AddAssetItemRequest req, CancellationToken ct)
 	{
-		this.ValidateRequest(req);
-
-		var userId = this.GetUserId();
-
 		if (req.AssetType == AssetType.MutualFund)
 		{
 			await this.AddMutualFundAsync(req, ct);
@@ -53,7 +49,7 @@ internal sealed class AddAssetItemEndpoint : Endpoint<AssetItemRequest>
 		await this.AddOtherAssetItemTypeAsync(req, ct);
 	}
 
-	private async Task AddMutualFundAsync(AssetItemRequest req, CancellationToken ct)
+	private async Task AddMutualFundAsync(AddAssetItemRequest req, CancellationToken ct)
 	{
 		var asset = await this.assetRepository.GetByExternalIdAsync($"mf-{req.ExternalId}", ct);
 
@@ -78,7 +74,7 @@ internal sealed class AddAssetItemEndpoint : Endpoint<AssetItemRequest>
 		await this.AddAssetItemAsync(asset.Id, req.Name, ct);
 	}
 
-	private async Task AddStockAsync(AssetItemRequest req, CancellationToken ct)
+	private async Task AddStockAsync(AddAssetItemRequest req, CancellationToken ct)
 	{
 		var asset = await this.assetRepository.GetByExternalIdAsync($"stock-{req.ExternalId.ToLowerInvariant()}", ct);
 		if (asset.Id == AssetId.Empty)
@@ -102,7 +98,7 @@ internal sealed class AddAssetItemEndpoint : Endpoint<AssetItemRequest>
 		await this.AddAssetItemAsync(asset.Id, req.Name, ct);
 	}
 
-	private async Task AddOtherAssetItemTypeAsync(AssetItemRequest req, CancellationToken ct)
+	private async Task AddOtherAssetItemTypeAsync(AddAssetItemRequest req, CancellationToken ct)
 	{
 		var asset = await this.assetRepository.GetByExternalIdAsync($"default-{req.AssetClass}-{req.AssetType}-{req.Currency}", ct);
 
@@ -131,94 +127,4 @@ internal sealed class AddAssetItemEndpoint : Endpoint<AssetItemRequest>
 			name,
 			ct);
 	}
-
-	private void ValidateRequest(AssetItemRequest req)
-	{
-		if (req.AssetType == AssetType.Unknown)
-		{
-			this.ThrowError("Asset type cannot be Unknown", StatusCodes.Status400BadRequest);
-		}
-
-		if (string.IsNullOrWhiteSpace(req.Name))
-		{
-			this.AddError("Name cannot be empty");
-		}
-
-		this.ValidateAssetClass(req);
-		this.ValidateExternalId(req);
-		this.ValidateCurrency(req);
-
-		this.ThrowIfAnyErrors(StatusCodes.Status400BadRequest);
-	}
-
-	private void ValidateAssetClass(AssetItemRequest req)
-	{
-		if (req.AssetClass == AssetClass.Unknown)
-		{
-			if (req.AssetType != AssetType.Stock && req.AssetType != AssetType.Bond)
-			{
-				this.AddError($"Asset class must be specified for {req.AssetType} asset type");
-			}
-		}
-		else
-		{
-			if (req.AssetType == AssetType.Stock || req.AssetType == AssetType.Bond)
-			{
-				this.AddError($"Asset class must not be specified for {req.AssetType} asset type");
-			}
-		}
-
-		if (req.AssetType == AssetType.MutualFund &&
-			req.AssetClass != AssetClass.Equity &&
-			req.AssetClass != AssetClass.Debt &&
-			req.AssetClass != AssetClass.Commodities)
-		{
-			this.AddError($"Asset class '{req.AssetClass}' is not valid for MutualFund asset type");
-		}
-	}
-
-	private void ValidateExternalId(AssetItemRequest req)
-	{
-		if (string.IsNullOrWhiteSpace(req.ExternalId))
-		{
-			if (req.AssetType == AssetType.MutualFund || req.AssetType == AssetType.Stock)
-			{
-				this.AddError($"ExternalId must be specified for {req.AssetType} asset type");
-			}
-		}
-		else
-		{
-			if (req.AssetType != AssetType.MutualFund && req.AssetType != AssetType.Stock)
-			{
-				this.AddError($"ExternalId must not be specified for {req.AssetType} asset type");
-			}
-		}
-	}
-
-	private void ValidateCurrency(AssetItemRequest req)
-	{
-		if (req.Currency == Currency.Unknown)
-		{
-			if (req.AssetType != AssetType.MutualFund && req.AssetType != AssetType.Stock)
-			{
-				this.AddError($"Currency must be specified for {req.AssetType} asset type");
-			}
-		}
-		else
-		{
-			if (req.AssetType == AssetType.MutualFund || req.AssetType == AssetType.Stock)
-			{
-				this.AddError($"Currency must not be specified for {req.AssetType} asset type");
-			}
-		}
-	}
 }
-
-[System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "MA0048:File name must match type name", Justification = "used only in this file")]
-[System.Diagnostics.CodeAnalysis.SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1402:File may only contain a single type", Justification = "used only in this file")]
-internal sealed record AssetItemRequest(
-	string Name,
-	AssetClass AssetClass,
-	AssetType AssetType,
-	string ExternalId,
-	Currency Currency);

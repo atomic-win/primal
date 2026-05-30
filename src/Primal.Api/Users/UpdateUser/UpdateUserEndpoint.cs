@@ -26,8 +26,6 @@ internal sealed class UpdateUserEndpoint : Endpoint<UpdateUserRequest>
 			return;
 		}
 
-		this.ValidateRequest(req);
-
 		if ((req.PreferredCurrency == Currency.Unknown || req.PreferredCurrency == user.PreferredCurrency)
 			&& (req.PreferredLocale == Locale.Unknown || req.PreferredLocale == user.PreferredLocale))
 		{
@@ -43,19 +41,4 @@ internal sealed class UpdateUserEndpoint : Endpoint<UpdateUserRequest>
 
 		await this.Send.NoContentAsync(ct);
 	}
-
-	private void ValidateRequest(UpdateUserRequest req)
-	{
-		if (req.PreferredCurrency == Currency.Unknown
-			&& req.PreferredLocale == Locale.Unknown)
-		{
-			this.ThrowError("At least one field of preferred currency or preferred locale must be provided", 400);
-		}
-	}
 }
-
-[System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "MA0048:File name must match type name", Justification = "used only in this file")]
-[System.Diagnostics.CodeAnalysis.SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1402:File may only contain a single type", Justification = "used only in this file")]
-internal sealed record UpdateUserRequest(
-	Currency PreferredCurrency,
-	Locale PreferredLocale);

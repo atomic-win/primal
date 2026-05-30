@@ -51,12 +51,3 @@ internal sealed class GetAllAssetItemsEndpoint : EndpointWithoutRequest<IAsyncEn
 			asset.Currency);
 	}
 }
-
-[System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "MA0048:File name must match type name", Justification = "used only in this file")]
-[System.Diagnostics.CodeAnalysis.SuppressMessage("StyleCop.CSharp.MaintainabilityRules", "SA1402:File may only contain a single type", Justification = "used only in this file")]
-internal sealed record AssetItemResponse(
-	Guid Id,
-	string Name,
-	AssetType AssetType,
-	AssetClass AssetClass,
-	Currency Currency);
