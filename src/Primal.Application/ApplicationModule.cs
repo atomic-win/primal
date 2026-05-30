@@ -9,6 +9,6 @@ public sealed class ApplicationModule : Module
 	{
 		builder.RegisterType<TransactionAmountCalculator>()
 				.As<ITransactionAmountCalculator>()
-				.InstancePerLifetimeScope();
+					.SingleInstance();
 	}
 }
