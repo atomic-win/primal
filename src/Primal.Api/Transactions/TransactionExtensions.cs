@@ -10,7 +10,7 @@ internal static class TransactionExtensions
 	internal static async Task<TransactionResponse> ToResponse(
 		this Transaction transaction,
 		UserId userId,
-		TransactionAmountCalculator transactionAmountCalculator,
+		ITransactionAmountCalculator transactionAmountCalculator,
 		Currency targetCurrency,
 		CancellationToken cancellationToken)
 	{

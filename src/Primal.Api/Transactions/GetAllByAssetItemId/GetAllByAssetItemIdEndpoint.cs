@@ -12,12 +12,12 @@ internal sealed class GetAllByAssetItemIdEndpoint : EndpointWithoutRequest<IAsyn
 	private readonly ITransactionRepository transactionRepository;
 	private readonly IAssetItemRepository assetItemRepository;
 
-	private readonly TransactionAmountCalculator transactionAmountCalculator;
+	private readonly ITransactionAmountCalculator transactionAmountCalculator;
 
 	public GetAllByAssetItemIdEndpoint(
 		ITransactionRepository transactionRepository,
 		IAssetItemRepository assetItemRepository,
-		TransactionAmountCalculator transactionAmountCalculator)
+		ITransactionAmountCalculator transactionAmountCalculator)
 	{
 		this.transactionRepository = transactionRepository;
 		this.assetItemRepository = assetItemRepository;

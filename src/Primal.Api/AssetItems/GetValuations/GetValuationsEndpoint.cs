@@ -17,14 +17,14 @@ internal sealed class GetValuationsEndpoint : EndpointWithoutRequest<IAsyncEnume
 	private readonly IAssetRepository assetRepository;
 	private readonly IAssetItemRepository assetItemRepository;
 	private readonly ITransactionRepository transactionRepository;
-	private readonly TransactionAmountCalculator transactionAmountCalculator;
+	private readonly ITransactionAmountCalculator transactionAmountCalculator;
 
 	public GetValuationsEndpoint(
 		HybridCache cache,
 		IAssetRepository assetRepository,
 		IAssetItemRepository assetItemRepository,
 		ITransactionRepository transactionRepository,
-		TransactionAmountCalculator transactionAmountCalculator)
+		ITransactionAmountCalculator transactionAmountCalculator)
 	{
 		this.cache = cache;
 		this.assetRepository = assetRepository;

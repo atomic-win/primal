@@ -10,11 +10,11 @@ internal sealed class GetTransactionByIdEndpoint : EndpointWithoutRequest<Transa
 {
 	private readonly ITransactionRepository transactionRepository;
 
-	private readonly TransactionAmountCalculator transactionAmountCalculator;
+	private readonly ITransactionAmountCalculator transactionAmountCalculator;
 
 	public GetTransactionByIdEndpoint(
 		ITransactionRepository transactionRepository,
-		TransactionAmountCalculator transactionAmountCalculator)
+		ITransactionAmountCalculator transactionAmountCalculator)
 	{
 		this.transactionRepository = transactionRepository;
 		this.transactionAmountCalculator = transactionAmountCalculator;

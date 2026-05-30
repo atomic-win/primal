@@ -4,7 +4,7 @@ using Primal.Domain.Users;
 
 namespace Primal.Application.Investments;
 
-public sealed class TransactionAmountCalculator
+public sealed class TransactionAmountCalculator : ITransactionAmountCalculator
 {
 	private readonly IAssetApiClient<MutualFund> mutualFundApiClient;
 	private readonly IAssetApiClient<Stock> stockApiClient;
