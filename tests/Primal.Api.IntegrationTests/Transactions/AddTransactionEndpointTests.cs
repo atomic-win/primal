@@ -33,6 +33,43 @@ public sealed class AddTransactionEndpointTests
 	}
 
 	[Test]
+	[NotInParallel("AddTransaction")]
+	public async Task AddTransaction_BuyTransaction_Returns201()
+	{
+		await using var factory = new PrimalApiFactory();
+		var userId = new UserId(Guid.NewGuid());
+		var assetId = new AssetId(Guid.NewGuid());
+		var assetItemId = new AssetItemId(Guid.NewGuid());
+		var transactionId = new TransactionId(Guid.NewGuid());
+		var assetItem = new AssetItem(assetItemId, assetId, "My MF");
+		var asset = new Asset(assetId, "Test MF", AssetClass.Equity, AssetType.MutualFund, Currency.USD, "mf-123456");
+		var date = new DateOnly(2024, 6, 15);
+		var transaction = new Transaction(transactionId, date, "SIP Buy", TransactionType.Buy, assetItemId, 10m, 25m, 0m);
+
+		factory.AssetItemRepository
+			.GetByIdAsync(userId, assetItemId, Arg.Any<CancellationToken>())
+			.Returns(assetItem);
+
+		factory.AssetRepository
+			.GetByIdAsync(assetId, Arg.Any<CancellationToken>())
+			.Returns(asset);
+
+		factory.TransactionRepository
+			.AddAsync(userId, assetItemId, date, "SIP Buy", TransactionType.Buy, 10m, 25m, 0m, Arg.Any<CancellationToken>())
+			.Returns(transaction);
+
+		var client = factory.CreateClient();
+		client.DefaultRequestHeaders.Authorization =
+			new AuthenticationHeaderValue("Bearer", factory.CreateToken(userId));
+
+		var request = new AddTransactionRequest(assetItemId.Value, date, "SIP Buy", TransactionType.Buy, 10m, 25m, 0m);
+		var response = await client.PostAsJsonAsync($"/api/asset-items/{assetItemId.Value}/transactions", request, JsonOptions);
+
+		await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.Created);
+	}
+
+	[Test]
+	[NotInParallel("AddTransaction")]
 	public async Task AddTransaction_DepositTransaction_Returns201()
 	{
 		await using var factory = new PrimalApiFactory();
