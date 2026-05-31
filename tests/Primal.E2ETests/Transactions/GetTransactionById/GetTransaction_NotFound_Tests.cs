@@ -11,6 +11,8 @@ public sealed class GetTransaction_NotFound_Tests
 		await using var factory = new PrimalE2EFactory();
 		_ = factory.CreateClient();
 
+		WireMockSetup.SetupExchangeRate(factory.ExchangeRateApi);
+
 		var userId = await TestDataSeeder.SeedUserAsync(factory);
 		var client = factory.CreateAuthenticatedClient(userId);
 
@@ -19,7 +21,7 @@ public sealed class GetTransaction_NotFound_Tests
 		var response = await client.GetAsync(
 			$"/api/asset-items/{assetItemId}/transactions/{Guid.NewGuid()}?currency=INR");
 
-		await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.OK);
+		await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.NotFound);
 
 		var body = await response.Content.ReadAsStringAsync();
 		await Verifier.Verify(body);

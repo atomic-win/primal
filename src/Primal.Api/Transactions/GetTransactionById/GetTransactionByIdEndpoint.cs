@@ -33,6 +33,12 @@ internal sealed class GetTransactionByIdEndpoint : Endpoint<GetTransactionByIdRe
 			new TransactionId(req.TransactionId),
 			cancellationToken);
 
+		if (transaction.Id == TransactionId.Empty)
+		{
+			await this.Send.NotFoundAsync(cancellationToken);
+			return;
+		}
+
 		var response = await transaction.ToResponse(
 			userId,
 			this.transactionAmountCalculator,
