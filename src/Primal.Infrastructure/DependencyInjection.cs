@@ -30,7 +30,7 @@ public static class DependencyInjection
 	{
 		services.AddHttpClient<MutualFundApiClient>(client =>
 		{
-			client.BaseAddress = new Uri("https://api.mfapi.in");
+			client.BaseAddress = new Uri(configuration["InvestmentSettings:MutualFundApiBaseUrl"]!);
 		})
 		.ConfigurePrimaryHttpMessageHandler(() =>
 		{
@@ -43,7 +43,7 @@ public static class DependencyInjection
 
 		services.AddHttpClient<StockApiClient>(client =>
 		{
-			client.BaseAddress = new Uri("https://financialmodelingprep.com");
+			client.BaseAddress = new Uri(configuration["InvestmentSettings:StockApiBaseUrl"]!);
 		})
 		.ConfigurePrimaryHttpMessageHandler(() =>
 		{
@@ -56,7 +56,7 @@ public static class DependencyInjection
 
 		services.AddHttpClient<ExchangeRateApiClient>(client =>
 		{
-			client.BaseAddress = new Uri("https://www.alphavantage.co");
+			client.BaseAddress = new Uri(configuration["InvestmentSettings:ExchangeRateApiBaseUrl"]!);
 		})
 		.ConfigurePrimaryHttpMessageHandler(() =>
 		{
