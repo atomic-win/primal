@@ -45,11 +45,6 @@ internal sealed class GetAllAssetItemsEndpoint : Endpoint<GetAllAssetItemsReques
 	{
 		var asset = await this.assetRepository.GetByIdAsync(assetItem.AssetId, ct);
 
-		return new AssetItemResponse(
-			assetItem.Id.Value,
-			assetItem.Name,
-			asset.AssetType,
-			asset.AssetClass,
-			asset.Currency);
+		return AssetItemResponse.From(assetItem, asset);
 	}
 }
