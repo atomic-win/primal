@@ -5,6 +5,11 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<InternalsVisibleTo Include="Primal.Api.UnitTests" />
+		<InternalsVisibleTo Include="Primal.Api.IntegrationTests" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<ProjectReference Include="..\Primal.Application\Primal.Application.csproj" />
 		<ProjectReference Include="..\Primal.Infrastructure\Primal.Infrastructure.csproj" />
 	</ItemGroup>

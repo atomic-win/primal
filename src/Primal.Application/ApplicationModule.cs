@@ -8,6 +8,7 @@ public sealed class ApplicationModule : Module
 	protected override void Load(ContainerBuilder builder)
 	{
 		builder.RegisterType<TransactionAmountCalculator>()
-			.InstancePerLifetimeScope();
+				.As<ITransactionAmountCalculator>()
+					.SingleInstance();
 	}
 }

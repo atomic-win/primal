@@ -1,6 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<ItemGroup>
+		<InternalsVisibleTo Include="Primal.Infrastructure.IntegrationTests" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<ProjectReference Include="..\Primal.Application\Primal.Application.csproj" />
 	</ItemGroup>
 
