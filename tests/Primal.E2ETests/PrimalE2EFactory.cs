@@ -72,8 +72,6 @@ internal sealed class PrimalE2EFactory : WebApplicationFactory<Program>
 
 	protected override void Dispose(bool disposing)
 	{
-		base.Dispose(disposing);
-
 		this.MutualFundApi.Stop();
 		this.StockApi.Stop();
 		this.ExchangeRateApi.Stop();
