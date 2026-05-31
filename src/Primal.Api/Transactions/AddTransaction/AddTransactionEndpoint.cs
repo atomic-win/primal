@@ -45,7 +45,7 @@ internal sealed class AddTransactionEndpoint : Endpoint<AddTransactionRequest, T
 
 		await this.Send.CreatedAtAsync(
 			$"/api/asset-items/{req.AssetItemId}/transactions/{transaction.Id.Value}",
-			response,
+			responseBody: response,
 			cancellation: cancellationToken);
 	}
 

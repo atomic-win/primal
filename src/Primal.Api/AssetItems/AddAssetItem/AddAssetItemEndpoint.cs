@@ -47,7 +47,7 @@ internal sealed class AddAssetItemEndpoint : Endpoint<AddAssetItemRequest, Asset
 
 		await this.Send.CreatedAtAsync(
 			$"/api/asset-items/{assetItem.Id.Value}",
-			response,
+			responseBody: response,
 			cancellation: ct);
 	}
 
