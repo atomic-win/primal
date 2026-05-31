@@ -1,11 +1,12 @@
 using FastEndpoints;
 using Primal.Application.Investments;
 using Primal.Domain.Investments;
+using Primal.Domain.Users;
 
 namespace Primal.Api.AssetItems;
 
 [HttpDelete("/api/asset-items/{id:guid}")]
-internal sealed class DeleteAssetItemEndpoint : EndpointWithoutRequest
+internal sealed class DeleteAssetItemEndpoint : Endpoint<DeleteAssetItemRequest>
 {
 	private readonly IAssetItemRepository assetItemRepository;
 
@@ -14,12 +15,12 @@ internal sealed class DeleteAssetItemEndpoint : EndpointWithoutRequest
 		this.assetItemRepository = assetItemRepository;
 	}
 
-	public override async Task HandleAsync(CancellationToken ct)
+	public override async Task HandleAsync(DeleteAssetItemRequest req, CancellationToken ct)
 	{
-		var assetItem = await this.assetItemRepository.GetByIdAsync(
-			this.GetUserId(),
-			new AssetItemId(this.Route<Guid>("id")),
-			ct);
+		var userId = new UserId(req.UserId);
+		var assetItemId = new AssetItemId(req.Id);
+
+		var assetItem = await this.assetItemRepository.GetByIdAsync(userId, assetItemId, ct);
 
 		if (assetItem.Id == AssetItemId.Empty)
 		{
@@ -27,7 +28,7 @@ internal sealed class DeleteAssetItemEndpoint : EndpointWithoutRequest
 			return;
 		}
 
-		await this.assetItemRepository.DeleteAsync(this.GetUserId(), assetItem.Id, ct);
+		await this.assetItemRepository.DeleteAsync(userId, assetItem.Id, ct);
 		await this.Send.NoContentAsync();
 	}
 }

@@ -11,7 +11,7 @@ public sealed class UpdateUserValidatorTests
 	public async Task ValidateAsync_ReturnsValid_WhenPreferredCurrencyIsProvided()
 	{
 		var validator = new UpdateUserValidator();
-		var request = new UpdateUserRequest(Currency.USD, Locale.Unknown);
+		var request = new UpdateUserRequest(Guid.Empty, Currency.USD, Locale.Unknown);
 
 		var result = await validator.ValidateAsync(request);
 
@@ -22,7 +22,7 @@ public sealed class UpdateUserValidatorTests
 	public async Task ValidateAsync_ReturnsValid_WhenPreferredLocaleIsProvided()
 	{
 		var validator = new UpdateUserValidator();
-		var request = new UpdateUserRequest(Currency.Unknown, Locale.EN_IN);
+		var request = new UpdateUserRequest(Guid.Empty, Currency.Unknown, Locale.EN_IN);
 
 		var result = await validator.ValidateAsync(request);
 
@@ -33,7 +33,7 @@ public sealed class UpdateUserValidatorTests
 	public async Task ValidateAsync_ReturnsError_WhenNoFieldsAreProvided()
 	{
 		var validator = new UpdateUserValidator();
-		var request = new UpdateUserRequest(Currency.Unknown, Locale.Unknown);
+		var request = new UpdateUserRequest(Guid.Empty, Currency.Unknown, Locale.Unknown);
 
 		var result = await validator.ValidateAsync(request);
 

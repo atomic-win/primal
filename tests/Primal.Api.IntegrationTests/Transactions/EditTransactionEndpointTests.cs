@@ -27,7 +27,7 @@ public sealed class EditTransactionEndpointTests
 		var transactionId = Guid.NewGuid();
 		var client = factory.CreateClient();
 
-		var request = new EditTransactionRequest(assetItemId, transactionId, "Updated buy", TransactionType.Buy, 12m, 11m, 0m);
+		var request = new EditTransactionRequest(Guid.Empty, assetItemId, transactionId, "Updated buy", TransactionType.Buy, 12m, 11m, 0m);
 		var response = await client.PatchAsJsonAsync($"/api/asset-items/{assetItemId}/transactions/{transactionId}", request, JsonOptions);
 
 		await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.Unauthorized);
@@ -76,7 +76,7 @@ public sealed class EditTransactionEndpointTests
 		client.DefaultRequestHeaders.Authorization =
 			new AuthenticationHeaderValue("Bearer", factory.CreateToken(userId));
 
-		var request = new EditTransactionRequest(assetItemId.Value, transactionId.Value, "Updated buy", TransactionType.Buy, 12m, 11m, 0m);
+		var request = new EditTransactionRequest(Guid.Empty, assetItemId.Value, transactionId.Value, "Updated buy", TransactionType.Buy, 12m, 11m, 0m);
 		var response = await client.PatchAsJsonAsync($"/api/asset-items/{assetItemId.Value}/transactions/{transactionId.Value}", request, JsonOptions);
 
 		await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.NoContent);

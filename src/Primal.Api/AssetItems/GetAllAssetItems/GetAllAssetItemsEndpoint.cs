@@ -3,11 +3,12 @@ using FastEndpoints;
 using Primal.Application.Investments;
 using Primal.Domain.Investments;
 using Primal.Domain.Money;
+using Primal.Domain.Users;
 
 namespace Primal.Api.AssetItems;
 
 [HttpGet("/api/asset-items")]
-internal sealed class GetAllAssetItemsEndpoint : EndpointWithoutRequest<IAsyncEnumerable<AssetItemResponse>>
+internal sealed class GetAllAssetItemsEndpoint : Endpoint<GetAllAssetItemsRequest, IAsyncEnumerable<AssetItemResponse>>
 {
 	private readonly IAssetItemRepository assetItemRepository;
 	private readonly IAssetRepository assetRepository;
@@ -20,11 +21,12 @@ internal sealed class GetAllAssetItemsEndpoint : EndpointWithoutRequest<IAsyncEn
 		this.assetRepository = assetRepository;
 	}
 
-	public override async Task<IAsyncEnumerable<AssetItemResponse>> ExecuteAsync(CancellationToken ct)
+	public override async Task HandleAsync(GetAllAssetItemsRequest req, CancellationToken ct)
 	{
-		var assetItems = await this.assetItemRepository.GetAllAsync(this.GetUserId(), ct);
+		var userId = new UserId(req.UserId);
+		var assetItems = await this.assetItemRepository.GetAllAsync(userId, ct);
 
-		return this.MapToResponsesAsync(assetItems, ct);
+		await this.Send.OkAsync(this.MapToResponsesAsync(assetItems, ct), ct);
 	}
 
 	private async IAsyncEnumerable<AssetItemResponse> MapToResponsesAsync(

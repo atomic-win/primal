@@ -2,11 +2,12 @@ using FastEndpoints;
 using Primal.Application.Investments;
 using Primal.Domain.Investments;
 using Primal.Domain.Money;
+using Primal.Domain.Users;
 
 namespace Primal.Api.Transactions;
 
 [HttpGet("/api/asset-items/{assetItemId:guid}/transactions/{transactionId:guid}")]
-internal sealed class GetTransactionByIdEndpoint : EndpointWithoutRequest<TransactionResponse>
+internal sealed class GetTransactionByIdEndpoint : Endpoint<GetTransactionByIdRequest, TransactionResponse>
 {
 	private readonly ITransactionRepository transactionRepository;
 
@@ -20,23 +21,24 @@ internal sealed class GetTransactionByIdEndpoint : EndpointWithoutRequest<Transa
 		this.transactionAmountCalculator = transactionAmountCalculator;
 	}
 
-	public override async Task<TransactionResponse> ExecuteAsync(
+	public override async Task HandleAsync(
+		GetTransactionByIdRequest req,
 		CancellationToken cancellationToken)
 	{
-		Guid assetItemId = this.Route<Guid>("assetItemId");
-		Guid transactionId = this.Route<Guid>("transactionId");
-		Currency currency = this.Query<Currency>("currency");
+		var userId = new UserId(req.UserId);
 
 		var transaction = await this.transactionRepository.GetByIdAsync(
-			this.GetUserId(),
-			new AssetItemId(assetItemId),
-			new TransactionId(transactionId),
+			userId,
+			new AssetItemId(req.AssetItemId),
+			new TransactionId(req.TransactionId),
 			cancellationToken);
 
-		return await transaction.ToResponse(
-			this.GetUserId(),
+		var response = await transaction.ToResponse(
+			userId,
 			this.transactionAmountCalculator,
-			currency,
+			req.Currency,
 			cancellationToken);
+
+		await this.Send.OkAsync(response, cancellationToken);
 	}
 }

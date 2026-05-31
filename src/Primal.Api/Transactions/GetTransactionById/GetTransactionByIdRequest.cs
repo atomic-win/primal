@@ -1,15 +1,11 @@
 using System.Security.Claims;
 using FastEndpoints;
-using Primal.Domain.Investments;
+using Primal.Domain.Money;
 
 namespace Primal.Api.Transactions;
 
-internal sealed record EditTransactionRequest(
+internal sealed record GetTransactionByIdRequest(
 	[property: FromClaim(ClaimTypes.NameIdentifier)] Guid UserId,
 	Guid AssetItemId,
 	Guid TransactionId,
-	string Name,
-	TransactionType TransactionType,
-	decimal Units,
-	decimal Price,
-	decimal Amount);
+	Currency Currency);

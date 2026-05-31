@@ -2,6 +2,7 @@ using FastEndpoints;
 using FluentValidation;
 using Primal.Application.Investments;
 using Primal.Domain.Investments;
+using Primal.Domain.Users;
 
 namespace Primal.Api.Transactions;
 
@@ -10,18 +11,15 @@ internal sealed class EditTransactionValidator : Validator<EditTransactionReques
 	private readonly IAssetItemRepository assetItemRepository;
 	private readonly IAssetRepository assetRepository;
 	private readonly ITransactionRepository transactionRepository;
-	private readonly IHttpContextAccessor httpContextAccessor;
 
 	public EditTransactionValidator(
 		IAssetItemRepository assetItemRepository,
 		IAssetRepository assetRepository,
-		ITransactionRepository transactionRepository,
-		IHttpContextAccessor httpContextAccessor)
+		ITransactionRepository transactionRepository)
 	{
 		this.assetItemRepository = assetItemRepository;
 		this.assetRepository = assetRepository;
 		this.transactionRepository = transactionRepository;
-		this.httpContextAccessor = httpContextAccessor;
 
 		this.ConfigureAssetItemRules();
 		this.ConfigureTransactionExistsRule();
@@ -36,9 +34,9 @@ internal sealed class EditTransactionValidator : Validator<EditTransactionReques
 			.WithMessage("Asset item ID must be provided.");
 
 		this.RuleFor(x => x.AssetItemId)
-			.MustAsync(async (assetItemId, ct) =>
+			.MustAsync(async (req, assetItemId, ct) =>
 			{
-				var userId = this.httpContextAccessor.GetUserId();
+				var userId = new UserId(req.UserId);
 				var assetItem = await this.assetItemRepository.GetByIdAsync(userId, new AssetItemId(assetItemId), ct);
 				return assetItem.Id != AssetItemId.Empty;
 			})
@@ -51,7 +49,7 @@ internal sealed class EditTransactionValidator : Validator<EditTransactionReques
 		this.RuleFor(x => x)
 			.MustAsync(async (req, ct) =>
 			{
-				var userId = this.httpContextAccessor.GetUserId();
+				var userId = new UserId(req.UserId);
 				var existingTransaction = await this.transactionRepository.GetByIdAsync(
 					userId,
 					new AssetItemId(req.AssetItemId),
@@ -78,7 +76,7 @@ internal sealed class EditTransactionValidator : Validator<EditTransactionReques
 		this.RuleFor(x => x)
 			.MustAsync(async (req, ct) =>
 			{
-				var userId = this.httpContextAccessor.GetUserId();
+				var userId = new UserId(req.UserId);
 				var assetItem = await this.assetItemRepository.GetByIdAsync(userId, new AssetItemId(req.AssetItemId), ct);
 				if (assetItem.Id == AssetItemId.Empty)
 				{

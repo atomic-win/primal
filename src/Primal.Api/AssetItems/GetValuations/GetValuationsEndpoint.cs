@@ -10,7 +10,7 @@ using Primal.Domain.Users;
 namespace Primal.Api.AssetItems;
 
 [HttpGet("/api/asset-items/valuations")]
-internal sealed class GetValuationsEndpoint : EndpointWithoutRequest<IAsyncEnumerable<ValuationResponse>>
+internal sealed class GetValuationsEndpoint : Endpoint<GetValuationsRequest, IAsyncEnumerable<ValuationResponse>>
 {
 	private readonly HybridCache cache;
 
@@ -33,20 +33,18 @@ internal sealed class GetValuationsEndpoint : EndpointWithoutRequest<IAsyncEnume
 		this.transactionAmountCalculator = transactionAmountCalculator;
 	}
 
-	public override async Task HandleAsync(CancellationToken ct)
+	public override async Task HandleAsync(GetValuationsRequest req, CancellationToken ct)
 	{
-		var userId = this.GetUserId();
-		var assetItemGuids = this.Query<IEnumerable<Guid>>("assetItemIds") ?? Array.Empty<Guid>();
-		var currency = this.Query<Currency>("currency");
-		var assetItemIds = assetItemGuids
+		var userId = new UserId(req.UserId);
+		var assetItemIds = (req.AssetItemIds ?? Array.Empty<Guid>())
 			.Distinct()
 			.Order()
 			.Select(id => new AssetItemId(id)).ToImmutableArray();
 
-		var assetItems = await this.ValidateRequestParameters(userId, assetItemIds, currency, ct);
+		var assetItems = await this.ValidateRequestParameters(userId, assetItemIds, req.Currency, ct);
 		this.ThrowIfAnyErrors();
 
-		await this.Send.OkAsync(this.CalculateValuationsAsync(userId, assetItems, currency, ct), ct);
+		await this.Send.OkAsync(this.CalculateValuationsAsync(userId, assetItems, req.Currency, ct), ct);
 	}
 
 	private async Task<IReadOnlyList<AssetItem>> ValidateRequestParameters(

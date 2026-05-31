@@ -24,7 +24,7 @@ public sealed class UpdateUserEndpointTests
 		await using var factory = new PrimalApiFactory();
 		var client = factory.CreateClient();
 
-		var response = await client.PatchAsJsonAsync("/api/users/me", new UpdateUserRequest(Currency.INR, Locale.Unknown), JsonOptions);
+		var response = await client.PatchAsJsonAsync("/api/users/me", new UpdateUserRequest(Guid.Empty, Currency.INR, Locale.Unknown), JsonOptions);
 
 		await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.Unauthorized);
 	}
@@ -43,7 +43,7 @@ public sealed class UpdateUserEndpointTests
 		client.DefaultRequestHeaders.Authorization =
 			new AuthenticationHeaderValue("Bearer", factory.CreateToken(userId));
 
-		var response = await client.PatchAsJsonAsync("/api/users/me", new UpdateUserRequest(Currency.INR, Locale.Unknown), JsonOptions);
+		var response = await client.PatchAsJsonAsync("/api/users/me", new UpdateUserRequest(Guid.Empty, Currency.INR, Locale.Unknown), JsonOptions);
 
 		await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.NotFound);
 	}
@@ -63,7 +63,7 @@ public sealed class UpdateUserEndpointTests
 		client.DefaultRequestHeaders.Authorization =
 			new AuthenticationHeaderValue("Bearer", factory.CreateToken(userId));
 
-		var response = await client.PatchAsJsonAsync("/api/users/me", new UpdateUserRequest(Currency.USD, Locale.EN_US), JsonOptions);
+		var response = await client.PatchAsJsonAsync("/api/users/me", new UpdateUserRequest(Guid.Empty, Currency.USD, Locale.EN_US), JsonOptions);
 
 		await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.NoContent);
 		await factory.UserRepository.DidNotReceive().UpdateUserProfileAsync(
@@ -85,7 +85,7 @@ public sealed class UpdateUserEndpointTests
 		client.DefaultRequestHeaders.Authorization =
 			new AuthenticationHeaderValue("Bearer", factory.CreateToken(userId));
 
-		var response = await client.PatchAsJsonAsync("/api/users/me", new UpdateUserRequest(Currency.INR, Locale.Unknown), JsonOptions);
+		var response = await client.PatchAsJsonAsync("/api/users/me", new UpdateUserRequest(Guid.Empty, Currency.INR, Locale.Unknown), JsonOptions);
 
 		await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.NoContent);
 		await factory.UserRepository.Received(1).UpdateUserProfileAsync(

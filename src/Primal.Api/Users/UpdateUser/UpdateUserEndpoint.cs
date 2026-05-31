@@ -17,7 +17,7 @@ internal sealed class UpdateUserEndpoint : Endpoint<UpdateUserRequest>
 
 	public override async Task HandleAsync(UpdateUserRequest req, CancellationToken ct)
 	{
-		var userId = this.GetUserId();
+		var userId = new UserId(req.UserId);
 		var user = await this.userRepository.GetUserAsync(userId, ct);
 
 		if (user.Id == UserId.Empty)

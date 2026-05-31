@@ -1,6 +1,7 @@
 using FastEndpoints;
 using Primal.Application.Investments;
 using Primal.Domain.Investments;
+using Primal.Domain.Users;
 
 namespace Primal.Api.Transactions;
 
@@ -22,7 +23,7 @@ internal sealed class AddTransactionEndpoint : Endpoint<AddTransactionRequest>
 		var (units, price, amount) = this.NormalizeAmounts(req);
 
 		var transaction = await this.transactionRepository.AddAsync(
-			this.GetUserId(),
+			new UserId(req.UserId),
 			new AssetItemId(req.AssetItemId),
 			req.Date,
 			req.Name,

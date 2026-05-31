@@ -26,7 +26,7 @@ public sealed class AddAssetItemEndpointTests
 		await using var factory = new PrimalApiFactory();
 		var client = factory.CreateClient();
 
-		var request = new AddAssetItemRequest("My Bank", AssetClass.EmergencyFund, AssetType.BankAccount, string.Empty, Currency.INR);
+		var request = new AddAssetItemRequest(Guid.Empty, "My Bank", AssetClass.EmergencyFund, AssetType.BankAccount, string.Empty, Currency.INR);
 		var response = await client.PostAsJsonAsync("/api/asset-items", request, JsonOptions);
 
 		await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.Unauthorized);
@@ -56,7 +56,7 @@ public sealed class AddAssetItemEndpointTests
 		client.DefaultRequestHeaders.Authorization =
 			new AuthenticationHeaderValue("Bearer", factory.CreateToken(userId));
 
-		var request = new AddAssetItemRequest("My Bank", AssetClass.EmergencyFund, AssetType.BankAccount, string.Empty, Currency.INR);
+		var request = new AddAssetItemRequest(Guid.Empty, "My Bank", AssetClass.EmergencyFund, AssetType.BankAccount, string.Empty, Currency.INR);
 		var response = await client.PostAsJsonAsync("/api/asset-items", request, JsonOptions);
 
 		await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.Created);
@@ -81,7 +81,7 @@ public sealed class AddAssetItemEndpointTests
 		client.DefaultRequestHeaders.Authorization =
 			new AuthenticationHeaderValue("Bearer", factory.CreateToken(userId));
 
-		var request = new AddAssetItemRequest("MF", AssetClass.Equity, AssetType.MutualFund, "999999", Currency.Unknown);
+		var request = new AddAssetItemRequest(Guid.Empty, "MF", AssetClass.Equity, AssetType.MutualFund, "999999", Currency.Unknown);
 		var response = await client.PostAsJsonAsync("/api/asset-items", request, JsonOptions);
 
 		await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.NotFound);
@@ -115,7 +115,7 @@ public sealed class AddAssetItemEndpointTests
 		client.DefaultRequestHeaders.Authorization =
 			new AuthenticationHeaderValue("Bearer", factory.CreateToken(userId));
 
-		var request = new AddAssetItemRequest("My MF", AssetClass.Equity, AssetType.MutualFund, "123456", Currency.Unknown);
+		var request = new AddAssetItemRequest(Guid.Empty, "My MF", AssetClass.Equity, AssetType.MutualFund, "123456", Currency.Unknown);
 		var response = await client.PostAsJsonAsync("/api/asset-items", request, JsonOptions);
 
 		await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.Created);

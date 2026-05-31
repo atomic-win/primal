@@ -2,6 +2,7 @@ using FastEndpoints;
 using FluentValidation;
 using Primal.Application.Investments;
 using Primal.Domain.Investments;
+using Primal.Domain.Users;
 
 namespace Primal.Api.Transactions;
 
@@ -9,16 +10,13 @@ internal sealed class AddTransactionValidator : Validator<AddTransactionRequest>
 {
 	private readonly IAssetItemRepository assetItemRepository;
 	private readonly IAssetRepository assetRepository;
-	private readonly IHttpContextAccessor httpContextAccessor;
 
 	public AddTransactionValidator(
 		IAssetItemRepository assetItemRepository,
-		IAssetRepository assetRepository,
-		IHttpContextAccessor httpContextAccessor)
+		IAssetRepository assetRepository)
 	{
 		this.assetItemRepository = assetItemRepository;
 		this.assetRepository = assetRepository;
-		this.httpContextAccessor = httpContextAccessor;
 
 		this.ConfigureAssetItemRules();
 		this.ConfigureFieldRules();
@@ -33,9 +31,9 @@ internal sealed class AddTransactionValidator : Validator<AddTransactionRequest>
 			.WithMessage("Asset item ID must be provided.");
 
 		this.RuleFor(x => x.AssetItemId)
-			.MustAsync(async (assetItemId, ct) =>
+			.MustAsync(async (req, assetItemId, ct) =>
 			{
-				var userId = this.httpContextAccessor.GetUserId();
+				var userId = new UserId(req.UserId);
 				var assetItem = await this.assetItemRepository.GetByIdAsync(userId, new AssetItemId(assetItemId), ct);
 				return assetItem.Id != AssetItemId.Empty;
 			})
@@ -76,7 +74,7 @@ internal sealed class AddTransactionValidator : Validator<AddTransactionRequest>
 		this.RuleFor(x => x)
 			.MustAsync(async (req, ct) =>
 			{
-				var userId = this.httpContextAccessor.GetUserId();
+				var userId = new UserId(req.UserId);
 				var assetItem = await this.assetItemRepository.GetByIdAsync(userId, new AssetItemId(req.AssetItemId), ct);
 				if (assetItem.Id == AssetItemId.Empty)
 				{
