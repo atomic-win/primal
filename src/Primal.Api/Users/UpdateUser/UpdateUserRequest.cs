@@ -6,9 +6,6 @@ using Primal.Domain.Users;
 namespace Primal.Api.Users;
 
 internal sealed record UpdateUserRequest(
+	[property: FromClaim(ClaimTypes.NameIdentifier)] Guid UserId,
 	Currency PreferredCurrency,
-	Locale PreferredLocale)
-{
-	[FromClaim(ClaimTypes.NameIdentifier)]
-	public Guid UserId { get; set; }
-}
+	Locale PreferredLocale);

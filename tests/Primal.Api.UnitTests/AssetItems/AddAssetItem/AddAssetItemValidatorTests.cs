@@ -12,6 +12,7 @@ public sealed class AddAssetItemValidatorTests
 	{
 		var validator = new AddAssetItemValidator();
 		var request = new AddAssetItemRequest(
+			Guid.Empty,
 			"Index Fund",
 			AssetClass.Equity,
 			AssetType.MutualFund,
@@ -28,6 +29,7 @@ public sealed class AddAssetItemValidatorTests
 	{
 		var validator = new AddAssetItemValidator();
 		var request = new AddAssetItemRequest(
+			Guid.Empty,
 			"Emergency Fund",
 			AssetClass.EmergencyFund,
 			AssetType.BankAccount,
@@ -44,6 +46,7 @@ public sealed class AddAssetItemValidatorTests
 	{
 		var validator = new AddAssetItemValidator();
 		var request = new AddAssetItemRequest(
+			Guid.Empty,
 			"Cash",
 			AssetClass.EmergencyFund,
 			AssetType.Unknown,
@@ -61,6 +64,7 @@ public sealed class AddAssetItemValidatorTests
 	{
 		var validator = new AddAssetItemValidator();
 		var request = new AddAssetItemRequest(
+			Guid.Empty,
 			string.Empty,
 			AssetClass.EmergencyFund,
 			AssetType.BankAccount,
@@ -80,6 +84,7 @@ public sealed class AddAssetItemValidatorTests
 	{
 		var validator = new AddAssetItemValidator();
 		var request = new AddAssetItemRequest(
+			Guid.Empty,
 			"Cash",
 			AssetClass.Unknown,
 			assetType,
@@ -99,6 +104,7 @@ public sealed class AddAssetItemValidatorTests
 	{
 		var validator = new AddAssetItemValidator();
 		var request = new AddAssetItemRequest(
+			Guid.Empty,
 			"Holding",
 			AssetClass.Equity,
 			assetType,
@@ -116,6 +122,7 @@ public sealed class AddAssetItemValidatorTests
 	{
 		var validator = new AddAssetItemValidator();
 		var request = new AddAssetItemRequest(
+			Guid.Empty,
 			"Fund",
 			AssetClass.EmergencyFund,
 			AssetType.MutualFund,
@@ -135,6 +142,7 @@ public sealed class AddAssetItemValidatorTests
 	{
 		var validator = new AddAssetItemValidator();
 		var request = new AddAssetItemRequest(
+			Guid.Empty,
 			"Asset",
 			assetType == AssetType.MutualFund ? AssetClass.Equity : AssetClass.Unknown,
 			assetType,
@@ -154,6 +162,7 @@ public sealed class AddAssetItemValidatorTests
 	{
 		var validator = new AddAssetItemValidator();
 		var request = new AddAssetItemRequest(
+			Guid.Empty,
 			"Asset",
 			assetType == AssetType.Bond ? AssetClass.Unknown : AssetClass.EmergencyFund,
 			assetType,
@@ -173,6 +182,7 @@ public sealed class AddAssetItemValidatorTests
 	{
 		var validator = new AddAssetItemValidator();
 		var request = new AddAssetItemRequest(
+			Guid.Empty,
 			"Asset",
 			assetType == AssetType.Bond ? AssetClass.Unknown : AssetClass.EmergencyFund,
 			assetType,
@@ -192,6 +202,7 @@ public sealed class AddAssetItemValidatorTests
 	{
 		var validator = new AddAssetItemValidator();
 		var request = new AddAssetItemRequest(
+			Guid.Empty,
 			"Asset",
 			assetType == AssetType.MutualFund ? AssetClass.Equity : AssetClass.Unknown,
 			assetType,

@@ -235,16 +235,14 @@ public sealed class EditTransactionValidatorTests
 		decimal amount = 0m)
 	{
 		return new EditTransactionRequest(
+			TestUserId,
 			assetItemId ?? Guid.NewGuid(),
 			transactionId ?? Guid.NewGuid(),
 			name,
 			transactionType,
 			units,
 			price,
-			amount)
-		{
-			UserId = TestUserId,
-		};
+			amount);
 	}
 
 	private static async Task AssertHasError(ValidationResult result, string errorMessage)

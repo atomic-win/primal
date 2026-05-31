@@ -233,16 +233,14 @@ public sealed class AddTransactionValidatorTests
 		decimal amount = 0m)
 	{
 		return new AddTransactionRequest(
+			TestUserId,
 			assetItemId ?? Guid.NewGuid(),
 			date ?? DateOnly.FromDateTime(DateTime.UtcNow),
 			name,
 			transactionType,
 			units,
 			price,
-			amount)
-		{
-			UserId = TestUserId,
-		};
+			amount);
 	}
 
 	private static async Task AssertHasError(ValidationResult result, string errorMessage)

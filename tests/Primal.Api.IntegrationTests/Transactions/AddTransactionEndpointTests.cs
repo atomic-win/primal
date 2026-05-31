@@ -26,7 +26,7 @@ public sealed class AddTransactionEndpointTests
 		var assetItemId = Guid.NewGuid();
 		var client = factory.CreateClient();
 
-		var request = new AddTransactionRequest(assetItemId, new DateOnly(2024, 6, 15), "Test transaction", TransactionType.Buy, 10m, 25m, 0m);
+		var request = new AddTransactionRequest(Guid.Empty, assetItemId, new DateOnly(2024, 6, 15), "Test transaction", TransactionType.Buy, 10m, 25m, 0m);
 		var response = await client.PostAsJsonAsync($"/api/asset-items/{assetItemId}/transactions", request, JsonOptions);
 
 		await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.Unauthorized);
@@ -62,7 +62,7 @@ public sealed class AddTransactionEndpointTests
 		client.DefaultRequestHeaders.Authorization =
 			new AuthenticationHeaderValue("Bearer", factory.CreateToken(userId));
 
-		var request = new AddTransactionRequest(assetItemId.Value, date, "SIP Buy", TransactionType.Buy, 10m, 25m, 0m);
+		var request = new AddTransactionRequest(Guid.Empty, assetItemId.Value, date, "SIP Buy", TransactionType.Buy, 10m, 25m, 0m);
 		var response = await client.PostAsJsonAsync($"/api/asset-items/{assetItemId.Value}/transactions", request, JsonOptions);
 
 		await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.Created);
@@ -97,7 +97,7 @@ public sealed class AddTransactionEndpointTests
 		client.DefaultRequestHeaders.Authorization =
 			new AuthenticationHeaderValue("Bearer", factory.CreateToken(userId));
 
-		var request = new AddTransactionRequest(assetItemId.Value, date, "Monthly deposit", TransactionType.Deposit, 0m, 0m, 500m);
+		var request = new AddTransactionRequest(Guid.Empty, assetItemId.Value, date, "Monthly deposit", TransactionType.Deposit, 0m, 0m, 500m);
 		var response = await client.PostAsJsonAsync($"/api/asset-items/{assetItemId.Value}/transactions", request, JsonOptions);
 
 		await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.Created);
