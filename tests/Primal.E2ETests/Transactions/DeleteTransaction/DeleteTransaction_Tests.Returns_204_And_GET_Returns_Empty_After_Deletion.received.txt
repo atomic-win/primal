@@ -1,0 +1,28 @@
+﻿System.Net.Http.HttpRequestException: Response status code does not indicate success: 404 (Not Found).
+   at System.Net.Http.HttpResponseMessage.EnsureSuccessStatusCode()
+   at System.Net.Http.HttpClient.GetStreamAsyncCore(HttpRequestMessage request, CancellationToken cancellationToken)
+   at Primal.Infrastructure.Investments.ExchangeRateApiClient.GetExchangeRatesAsync(Currency from, Currency to, CancellationToken cancellationToken) in {SolutionDirectory}src/Primal.Infrastructure/Investments/ExchangeRateApiClient.cs:line 33
+   at Primal.Infrastructure.Investments.CachedExchangeRateApiClient.<>c__DisplayClass3_0.<<GetExchangeRatesAsync>b__0>d.MoveNext() in {SolutionDirectory}src/Primal.Infrastructure/Investments/CachedExchangeRateApiClient.cs:line 33
+--- End of stack trace from previous location ---
+   at Microsoft.Extensions.Caching.Hybrid.Internal.DefaultHybridCache.StampedeState`2.BackgroundFetchAsync()
+   at Microsoft.Extensions.Caching.Hybrid.Internal.DefaultHybridCache.StampedeState`2.<JoinAsync>g__WithCancellationAsync|15_0(ILogger log, StampedeState`2 stampede, CancellationToken token)
+   at Primal.Infrastructure.Investments.CachedExchangeRateApiClient.GetExchangeRatesAsync(Currency fromCurrency, Currency toCurrency, CancellationToken cancellationToken) in {SolutionDirectory}src/Primal.Infrastructure/Investments/CachedExchangeRateApiClient.cs:line 31
+   at Primal.Infrastructure.Investments.CachedExchangeRateApiClient.GetOnOrBeforeExchangeRateInternalAsync(Currency fromCurrency, Currency toCurrency, DateOnly date, CancellationToken cancellationToken) in {SolutionDirectory}src/Primal.Infrastructure/Investments/CachedExchangeRateApiClient.cs:line 64
+   at Primal.Infrastructure.Investments.CachedExchangeRateApiClient.<>c__DisplayClass4_0.<<GetOnOrBeforeExchangeRateAsync>b__0>d.MoveNext() in {SolutionDirectory}src/Primal.Infrastructure/Investments/CachedExchangeRateApiClient.cs:line 54
+--- End of stack trace from previous location ---
+   at Microsoft.Extensions.Caching.Hybrid.Internal.DefaultHybridCache.StampedeState`2.BackgroundFetchAsync()
+   at Microsoft.Extensions.Caching.Hybrid.Internal.DefaultHybridCache.StampedeState`2.<JoinAsync>g__WithCancellationAsync|15_0(ILogger log, StampedeState`2 stampede, CancellationToken token)
+   at Primal.Infrastructure.Investments.CachedExchangeRateApiClient.GetOnOrBeforeExchangeRateAsync(Currency fromCurrency, Currency toCurrency, DateOnly date, CancellationToken cancellationToken) in {SolutionDirectory}src/Primal.Infrastructure/Investments/CachedExchangeRateApiClient.cs:line 52
+   at Primal.Application.Investments.TransactionAmountCalculator.CalculateAmountAsync(UserId userId, Transaction transaction, DateOnly date, Currency targetCurrency, CancellationToken cancellationToken) in {SolutionDirectory}src/Primal.Application/Investments/TransactionAmountCalculator.cs:line 42
+   at Primal.Api.Transactions.TransactionExtensions.ToResponse(Transaction transaction, UserId userId, ITransactionAmountCalculator transactionAmountCalculator, Currency targetCurrency, CancellationToken cancellationToken) in {SolutionDirectory}src/Primal.Api/Transactions/TransactionExtensions.cs:line 17
+   at Primal.Api.Transactions.GetTransactionByIdEndpoint.HandleAsync(GetTransactionByIdRequest req, CancellationToken cancellationToken) in {SolutionDirectory}src/Primal.Api/Transactions/GetTransactionById/GetTransactionByIdEndpoint.cs:line 36
+   at FastEndpoints.Endpoint`2.ExecAsync(CancellationToken ct)
+   at FastEndpoints.Endpoint`2.ExecAsync(CancellationToken ct)
+   at Microsoft.AspNetCore.Authorization.AuthorizationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware.Invoke(HttpContext context)
+   at Microsoft.AspNetCore.Diagnostics.DeveloperExceptionPageMiddlewareImpl.Invoke(HttpContext context)
+
+HEADERS
+=======
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjNmY4YzIxZC02OWEzLTQxNzItYjM3Ni0yMjRmZjZlMjgxMTIiLCJleHAiOjE3ODAyNDkxNDIsImlzcyI6IlRlc3RJc3N1ZXIiLCJhdWQiOiJUZXN0QXVkaWVuY2UifQ.SAF-M8EpXWBZkdImg31raaPzWw4d_Zo83jiSZyWiqIo
+Host: localhost

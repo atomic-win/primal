@@ -1,0 +1,1 @@
+﻿{"id":"Guid_1","date":"2026-01-15","name":"Buy Units","transactionType":"Buy","assetItemId":"Guid_2","units":10.0,"price":150.25,"amount":1502.500}

@@ -34,7 +34,6 @@ internal sealed class PrimalE2EFactory : WebApplicationFactory<Program>
 		var claims = new[]
 		{
 			new Claim(JwtRegisteredClaimNames.Sub, userId.Value.ToString("D")),
-			new Claim(ClaimTypes.NameIdentifier, userId.Value.ToString("D")),
 		};
 
 		var token = new JwtSecurityToken(
