@@ -1,6 +1,7 @@
 using FastEndpoints;
 using Primal.Application.Investments;
 using Primal.Domain.Investments;
+using Primal.Domain.Users;
 
 namespace Primal.Api.Transactions;
 
@@ -19,10 +20,11 @@ internal sealed class EditTransactionEndpoint : Endpoint<EditTransactionRequest>
 		EditTransactionRequest req,
 		CancellationToken cancellationToken)
 	{
-		var normalized = await this.NormalizeRequestAsync(req, cancellationToken);
+		var userId = new UserId(req.UserId);
+		var normalized = await this.NormalizeRequestAsync(userId, req, cancellationToken);
 
 		await this.transactionRepository.UpdateAsync(
-			this.GetUserId(),
+			userId,
 			new Transaction(
 				id: new TransactionId(req.TransactionId),
 				normalized.Date,
@@ -38,11 +40,12 @@ internal sealed class EditTransactionEndpoint : Endpoint<EditTransactionRequest>
 	}
 
 	private async Task<NormalizedTransaction> NormalizeRequestAsync(
+		UserId userId,
 		EditTransactionRequest req,
 		CancellationToken cancellationToken)
 	{
 		var existingTransaction = await this.transactionRepository.GetByIdAsync(
-			this.GetUserId(),
+			userId,
 			new AssetItemId(req.AssetItemId),
 			new TransactionId(req.TransactionId),
 			cancellationToken);

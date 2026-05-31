@@ -2,6 +2,7 @@ using FastEndpoints;
 using Primal.Application.Investments;
 using Primal.Domain.Investments;
 using Primal.Domain.Money;
+using Primal.Domain.Users;
 
 namespace Primal.Api.AssetItems;
 
@@ -37,7 +38,7 @@ internal sealed class AddAssetItemEndpoint : Endpoint<AddAssetItemRequest>
 		};
 
 		var assetItem = await this.assetItemRepository.AddAsync(
-			this.GetUserId(),
+			new UserId(req.UserId),
 			asset.Id,
 			req.Name,
 			ct);

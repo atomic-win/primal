@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using FastEndpoints;
 using Primal.Domain.Investments;
 using Primal.Domain.Money;
 
@@ -8,4 +10,8 @@ internal sealed record AddAssetItemRequest(
 	AssetClass AssetClass,
 	AssetType AssetType,
 	string ExternalId,
-	Currency Currency);
+	Currency Currency)
+{
+	[FromClaim(ClaimTypes.NameIdentifier)]
+	public Guid UserId { get; set; }
+}
