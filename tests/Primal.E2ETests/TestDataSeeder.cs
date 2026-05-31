@@ -1,13 +1,23 @@
 using System.Globalization;
 using System.Net.Http.Json;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Dapper;
 using Microsoft.Data.Sqlite;
+using Primal.Api.AssetItems;
+using Primal.Api.Transactions;
 using Primal.Domain.Users;
 
 namespace Primal.E2ETests;
 
 internal static class TestDataSeeder
 {
+	private static readonly JsonSerializerOptions JsonOptions = new()
+	{
+		PropertyNameCaseInsensitive = true,
+		Converters = { new JsonStringEnumConverter() },
+	};
+
 	internal static async Task<UserId> SeedUserAsync(PrimalE2EFactory factory)
 	{
 		// User creation requires Google OAuth which cannot be mocked at HTTP level.
@@ -51,16 +61,8 @@ internal static class TestDataSeeder
 		});
 
 		response.EnsureSuccessStatusCode();
-
-		if (response.Headers.Location is not null)
-		{
-			return Guid.Parse(response.Headers.Location.ToString().Split('/').Last());
-		}
-
-		// Fallback: get the ID from the list endpoint
-		var listResponse = await client.GetAsync("/api/asset-items");
-		var items = await listResponse.Content.ReadFromJsonAsync<List<AssetItemDto>>();
-		return items!.Last().Id;
+		var result = await response.Content.ReadFromJsonAsync<AssetItemResponse>(JsonOptions);
+		return result!.Id;
 	}
 
 	internal static async Task<Guid> SeedAssetItemViaFixedDepositAsync(HttpClient client)
@@ -75,15 +77,8 @@ internal static class TestDataSeeder
 		});
 
 		response.EnsureSuccessStatusCode();
-
-		if (response.Headers.Location is not null)
-		{
-			return Guid.Parse(response.Headers.Location.ToString().Split('/').Last());
-		}
-
-		var listResponse = await client.GetAsync("/api/asset-items");
-		var items = await listResponse.Content.ReadFromJsonAsync<List<AssetItemDto>>();
-		return items!.Last().Id;
+		var result = await response.Content.ReadFromJsonAsync<AssetItemResponse>(JsonOptions);
+		return result!.Id;
 	}
 
 	internal static async Task<Guid> SeedBuyTransactionAsync(
@@ -107,15 +102,8 @@ internal static class TestDataSeeder
 			throw new InvalidOperationException($"SeedBuyTransaction failed ({response.StatusCode}): {error}");
 		}
 
-		if (response.Headers.Location is not null)
-		{
-			return Guid.Parse(response.Headers.Location.ToString().Split('/').Last());
-		}
-
-		var listResponse = await client.GetAsync(
-			$"/api/asset-items/{assetItemId}/transactions?currency=INR");
-		var transactions = await listResponse.Content.ReadFromJsonAsync<List<TransactionDto>>();
-		return transactions!.Last().Id;
+		var result = await response.Content.ReadFromJsonAsync<TransactionResponse>(JsonOptions);
+		return result!.Id;
 	}
 
 	internal static async Task<Guid> SeedDepositTransactionAsync(
@@ -134,19 +122,7 @@ internal static class TestDataSeeder
 			});
 
 		response.EnsureSuccessStatusCode();
-
-		if (response.Headers.Location is not null)
-		{
-			return Guid.Parse(response.Headers.Location.ToString().Split('/').Last());
-		}
-
-		var listResponse = await client.GetAsync(
-			$"/api/asset-items/{assetItemId}/transactions?currency=INR");
-		var transactions = await listResponse.Content.ReadFromJsonAsync<List<TransactionDto>>();
-		return transactions!.Last().Id;
+		var result = await response.Content.ReadFromJsonAsync<TransactionResponse>(JsonOptions);
+		return result!.Id;
 	}
-
-	private sealed record AssetItemDto(Guid Id);
-
-	private sealed record TransactionDto(Guid Id);
 }
