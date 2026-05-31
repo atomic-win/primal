@@ -7,7 +7,7 @@ using Primal.Domain.Users;
 namespace Primal.Api.AssetItems;
 
 [HttpPost("/api/asset-items")]
-internal sealed class AddAssetItemEndpoint : Endpoint<AddAssetItemRequest>
+internal sealed class AddAssetItemEndpoint : Endpoint<AddAssetItemRequest, AssetItemResponse>
 {
 	private readonly IAssetApiClient<MutualFund> mutualFundApiClient;
 	private readonly IAssetApiClient<Stock> stockApiClient;
@@ -43,8 +43,11 @@ internal sealed class AddAssetItemEndpoint : Endpoint<AddAssetItemRequest>
 			req.Name,
 			ct);
 
+		var response = AssetItemResponse.From(assetItem, asset);
+
 		await this.Send.CreatedAtAsync(
 			$"/api/asset-items/{assetItem.Id.Value}",
+			responseBody: response,
 			cancellation: ct);
 	}
 

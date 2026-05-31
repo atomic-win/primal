@@ -6,7 +6,7 @@ using Primal.Domain.Users;
 namespace Primal.Api.Transactions;
 
 [HttpPost("/api/asset-items/{assetItemId:guid}/transactions")]
-internal sealed class AddTransactionEndpoint : Endpoint<AddTransactionRequest>
+internal sealed class AddTransactionEndpoint : Endpoint<AddTransactionRequest, TransactionResponse>
 {
 	private readonly ITransactionRepository transactionRepository;
 
@@ -33,8 +33,19 @@ internal sealed class AddTransactionEndpoint : Endpoint<AddTransactionRequest>
 			amount,
 			cancellationToken);
 
+		var response = new TransactionResponse(
+			transaction.Id.Value,
+			transaction.Date,
+			transaction.Name,
+			transaction.TransactionType,
+			transaction.AssetItemId.Value,
+			0,
+			0,
+			0);
+
 		await this.Send.CreatedAtAsync(
 			$"/api/asset-items/{req.AssetItemId}/transactions/{transaction.Id.Value}",
+			responseBody: response,
 			cancellation: cancellationToken);
 	}
 

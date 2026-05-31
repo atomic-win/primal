@@ -8,4 +8,8 @@ internal sealed record AssetItemResponse(
 	string Name,
 	AssetType AssetType,
 	AssetClass AssetClass,
-	Currency Currency);
+	Currency Currency)
+{
+	internal static AssetItemResponse From(AssetItem assetItem, Asset asset) =>
+		new(assetItem.Id.Value, assetItem.Name, asset.AssetType, asset.AssetClass, asset.Currency);
+}

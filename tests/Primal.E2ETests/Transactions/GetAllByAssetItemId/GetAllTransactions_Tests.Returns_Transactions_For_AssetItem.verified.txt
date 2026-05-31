@@ -1,0 +1,1 @@
+﻿[{"id":"Guid_1","date":"2026-01-15","name":"Buy Units Batch 1","transactionType":"Buy","assetItemId":"Guid_2","units":10.0,"price":150.25,"amount":1502.500},{"id":"Guid_3","date":"2026-01-16","name":"Buy Units Batch 2","transactionType":"Buy","assetItemId":"Guid_2","units":5.0,"price":151.00,"amount":755.000}]
