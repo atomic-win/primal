@@ -1,11 +1,12 @@
 using FastEndpoints;
 using Primal.Application.Investments;
 using Primal.Domain.Investments;
+using Primal.Domain.Users;
 
 namespace Primal.Api.AssetItems;
 
 [HttpGet("/api/asset-items/{id:guid}")]
-internal sealed class GetAssetItemEndpoint : EndpointWithoutRequest<AssetItemResponse>
+internal sealed class GetAssetItemEndpoint : Endpoint<GetAssetItemRequest, AssetItemResponse>
 {
 	private readonly IAssetItemRepository assetItemRepository;
 	private readonly IAssetRepository assetRepository;
@@ -18,10 +19,10 @@ internal sealed class GetAssetItemEndpoint : EndpointWithoutRequest<AssetItemRes
 		this.assetRepository = assetRepository;
 	}
 
-	public override async Task HandleAsync(CancellationToken ct)
+	public override async Task HandleAsync(GetAssetItemRequest req, CancellationToken ct)
 	{
-		var userId = this.GetUserId();
-		var assetItemId = new AssetItemId(this.Route<Guid>("id"));
+		var userId = new UserId(req.UserId);
+		var assetItemId = new AssetItemId(req.Id);
 
 		var assetItem = await this.assetItemRepository.GetByIdAsync(userId, assetItemId, ct);
 

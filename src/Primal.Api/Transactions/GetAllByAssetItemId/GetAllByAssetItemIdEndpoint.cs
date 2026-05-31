@@ -3,11 +3,12 @@ using FastEndpoints;
 using Primal.Application.Investments;
 using Primal.Domain.Investments;
 using Primal.Domain.Money;
+using Primal.Domain.Users;
 
 namespace Primal.Api.Transactions;
 
 [HttpGet("/api/asset-items/{assetItemId:guid}/transactions")]
-internal sealed class GetAllByAssetItemIdEndpoint : EndpointWithoutRequest<IAsyncEnumerable<TransactionResponse>>
+internal sealed class GetAllByAssetItemIdEndpoint : Endpoint<GetAllByAssetItemIdRequest, IAsyncEnumerable<TransactionResponse>>
 {
 	private readonly ITransactionRepository transactionRepository;
 	private readonly IAssetItemRepository assetItemRepository;
@@ -25,14 +26,15 @@ internal sealed class GetAllByAssetItemIdEndpoint : EndpointWithoutRequest<IAsyn
 	}
 
 	public override async Task HandleAsync(
+		GetAllByAssetItemIdRequest req,
 		CancellationToken cancellationToken)
 	{
-		Guid assetItemId = this.Route<Guid>("assetItemId");
-		Currency currency = this.Query<Currency>("currency");
+		var userId = new UserId(req.UserId);
+		var assetItemId = new AssetItemId(req.AssetItemId);
 
 		var assetItem = await this.assetItemRepository.GetByIdAsync(
-			this.GetUserId(),
-			new AssetItemId(assetItemId),
+			userId,
+			assetItemId,
 			cancellationToken);
 
 		if (assetItem.Id == AssetItemId.Empty)
@@ -42,14 +44,15 @@ internal sealed class GetAllByAssetItemIdEndpoint : EndpointWithoutRequest<IAsyn
 		}
 
 		var transactions = await this.transactionRepository.GetByAssetItemIdAsync(
-			this.GetUserId(),
-			new AssetItemId(assetItemId),
+			userId,
+			assetItemId,
 			cancellationToken);
 
-		await this.Send.OkAsync(this.MapToResponses(transactions, currency, cancellationToken), cancellationToken);
+		await this.Send.OkAsync(this.MapToResponses(userId, transactions, req.Currency, cancellationToken), cancellationToken);
 	}
 
 	private async IAsyncEnumerable<TransactionResponse> MapToResponses(
+		UserId userId,
 		IEnumerable<Transaction> transactions,
 		Currency currency,
 		[EnumeratorCancellation] CancellationToken cancellationToken)
@@ -57,7 +60,7 @@ internal sealed class GetAllByAssetItemIdEndpoint : EndpointWithoutRequest<IAsyn
 		foreach (var transaction in transactions)
 		{
 			yield return await transaction.ToResponse(
-				this.GetUserId(),
+				userId,
 				this.transactionAmountCalculator,
 				currency,
 				cancellationToken);

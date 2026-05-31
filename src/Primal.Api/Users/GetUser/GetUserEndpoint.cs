@@ -6,7 +6,7 @@ using Primal.Domain.Users;
 namespace Primal.Api.Users;
 
 [HttpGet("/api/users/me")]
-internal sealed class GetUserEndpoint : EndpointWithoutRequest<UserResponse>
+internal sealed class GetUserEndpoint : Endpoint<GetUserRequest, UserResponse>
 {
 	private readonly IUserRepository userRepository;
 
@@ -15,9 +15,9 @@ internal sealed class GetUserEndpoint : EndpointWithoutRequest<UserResponse>
 		this.userRepository = userRepository;
 	}
 
-	public override async Task HandleAsync(CancellationToken ct)
+	public override async Task HandleAsync(GetUserRequest req, CancellationToken ct)
 	{
-		var userId = this.GetUserId();
+		var userId = new UserId(req.UserId);
 		var user = await this.userRepository.GetUserAsync(userId, ct);
 
 		if (user.Id == UserId.Empty)
