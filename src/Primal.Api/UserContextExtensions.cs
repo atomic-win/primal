@@ -10,11 +10,6 @@ internal static class UserContextExtensions
 		return ep.User.GetUserId();
 	}
 
-	internal static UserId GetUserId(this IHttpContextAccessor httpContextAccessor)
-	{
-		return httpContextAccessor.HttpContext.User.GetUserId();
-	}
-
 	private static UserId GetUserId(this ClaimsPrincipal user)
 	{
 		var userIdClaim = user.Claims

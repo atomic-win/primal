@@ -1,6 +1,4 @@
-using System.Security.Claims;
 using FluentValidation.Results;
-using Microsoft.AspNetCore.Http;
 using NSubstitute;
 using Primal.Api.Transactions;
 using Primal.Application.Investments;
@@ -11,6 +9,8 @@ namespace Primal.Api.UnitTests.Api.Transactions.EditTransaction;
 
 public sealed class EditTransactionValidatorTests
 {
+	private static readonly Guid TestUserId = Guid.NewGuid();
+
 	[Test]
 	public async Task ValidateAsync_ReturnsValid_ForPartialUpdateWithoutOptionalFields()
 	{
@@ -222,8 +222,7 @@ public sealed class EditTransactionValidatorTests
 		return new EditTransactionValidator(
 			assetItemRepository,
 			assetRepository,
-			transactionRepository,
-			CreateMockHttpContextAccessor());
+			transactionRepository);
 	}
 
 	private static EditTransactionRequest CreateRequest(
@@ -242,19 +241,10 @@ public sealed class EditTransactionValidatorTests
 			transactionType,
 			units,
 			price,
-			amount);
-	}
-
-	private static IHttpContextAccessor CreateMockHttpContextAccessor()
-	{
-		var userId = Guid.NewGuid();
-		var claims = new[] { new Claim(ClaimTypes.NameIdentifier, userId.ToString()) };
-		var identity = new ClaimsIdentity(claims);
-		var principal = new ClaimsPrincipal(identity);
-		var httpContext = new DefaultHttpContext { User = principal };
-		var accessor = Substitute.For<IHttpContextAccessor>();
-		accessor.HttpContext.Returns(httpContext);
-		return accessor;
+			amount)
+		{
+			UserId = TestUserId,
+		};
 	}
 
 	private static async Task AssertHasError(ValidationResult result, string errorMessage)

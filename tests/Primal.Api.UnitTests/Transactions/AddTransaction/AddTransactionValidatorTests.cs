@@ -1,6 +1,4 @@
-using System.Security.Claims;
 using FluentValidation.Results;
-using Microsoft.AspNetCore.Http;
 using NSubstitute;
 using Primal.Api.Transactions;
 using Primal.Application.Investments;
@@ -11,6 +9,8 @@ namespace Primal.Api.UnitTests.Api.Transactions.AddTransaction;
 
 public sealed class AddTransactionValidatorTests
 {
+	private static readonly Guid TestUserId = Guid.NewGuid();
+
 	[Test]
 	public async Task ValidateAsync_ReturnsValid_ForStockBuyTransaction()
 	{
@@ -220,7 +220,7 @@ public sealed class AddTransactionValidatorTests
 		assetRepository.GetByIdAsync(Arg.Any<AssetId>(), Arg.Any<CancellationToken>())
 			.Returns(asset);
 
-		return new AddTransactionValidator(assetItemRepository, assetRepository, CreateMockHttpContextAccessor());
+		return new AddTransactionValidator(assetItemRepository, assetRepository);
 	}
 
 	private static AddTransactionRequest CreateRequest(
@@ -239,19 +239,10 @@ public sealed class AddTransactionValidatorTests
 			transactionType,
 			units,
 			price,
-			amount);
-	}
-
-	private static IHttpContextAccessor CreateMockHttpContextAccessor()
-	{
-		var userId = Guid.NewGuid();
-		var claims = new[] { new Claim(ClaimTypes.NameIdentifier, userId.ToString()) };
-		var identity = new ClaimsIdentity(claims);
-		var principal = new ClaimsPrincipal(identity);
-		var httpContext = new DefaultHttpContext { User = principal };
-		var accessor = Substitute.For<IHttpContextAccessor>();
-		accessor.HttpContext.Returns(httpContext);
-		return accessor;
+			amount)
+		{
+			UserId = TestUserId,
+		};
 	}
 
 	private static async Task AssertHasError(ValidationResult result, string errorMessage)
