@@ -11,8 +11,6 @@ public sealed class GetTransaction_NotFound_Tests
 		await using var factory = new PrimalE2EFactory();
 		_ = factory.CreateClient();
 
-		WireMockSetup.SetupExchangeRate(factory.ExchangeRateApi);
-
 		var userId = await TestDataSeeder.SeedUserAsync(factory);
 		var client = factory.CreateAuthenticatedClient(userId);
 
