@@ -1,1 +1,0 @@
-﻿{"id":"Guid_1","email":"test@example.com","firstName":"Test","lastName":"User","fullName":"Test User","preferredCurrency":"USD","preferredLocale":"EN_US"}

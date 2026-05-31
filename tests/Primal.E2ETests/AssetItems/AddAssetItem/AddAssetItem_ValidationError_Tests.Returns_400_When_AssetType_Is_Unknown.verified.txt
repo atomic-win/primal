@@ -1,1 +1,0 @@
-﻿{"statusCode":400,"message":"One or more errors occurred!","errors":{"assetType":["Asset type cannot be Unknown"]}}

@@ -1,1 +1,0 @@
-﻿{"statusCode":400,"message":"One or more errors occurred!","errors":{"assetItemId":["Asset item does not exist."],"name":["Transaction name must be at least 3 characters long."]}}
