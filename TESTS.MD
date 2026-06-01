@@ -199,8 +199,8 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 | # | Test | Input | Expected | Type | Present |
 |---|------|-------|----------|------|---------|
 | 28 | No transactions → XIRR = 0 | Empty transactions | XirrPercent = 0 | E2E | ✅ |
-| 29 | All < 1 year: YearDiff normalized | Single Buy transaction from 3 months ago | XIRR calculated with YearDiff=1.0 | E2E | ❌ |
-| 30 | Transactions > 1 year | Buy from 2 years ago | XIRR uses actual YearDiff | E2E | ❌ |
+| 29 | All < 1 year: YearDiff normalized | Single Buy transaction from 3 months ago | XIRR calculated with YearDiff=1.0 | E2E | ✅ |
+| 30 | Transactions > 1 year | Buy from 2 years ago | XIRR uses actual YearDiff | E2E | ✅ |
 | 31 | Positive return scenario | Buy low, current price higher | XirrPercent > 0 | E2E | ✅ |
 | 32 | Negative return scenario | Buy high, current price lower | XirrPercent < 0 | E2E | ✅ |
 | 33 | Same-date transactions grouped | Two Buy transactions on same date | YearDiff grouped, amounts summed | E2E | ✅ |
@@ -667,7 +667,7 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 | 5. GET /api/asset-items | 2 | 2 | 0 |
 | 6. GET /api/asset-items/{id} | 3 | 3 | 0 |
 | 7. DELETE /api/asset-items/{id} | 4 | 4 | 0 |
-| 8. GET /api/asset-items/valuations | 37 | 35 | 2 |
+| 8. GET /api/asset-items/valuations | 37 | 37 | 0 |
 | 9. POST .../transactions | 74 | 74 | 0 |
 | 10. GET .../transactions | 6 | 5 | 1 |
 | 11. GET .../transactions/{id} | 9 | 8 | 1 |
@@ -682,4 +682,4 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 | 20. Caching (Integration) | 15 | 2 | 13 |
 | 21. Repositories (Integration) | 25 | 5 | 20 |
 | 22. DB Schema (Integration) | 7 | 0 | 7 |
-| **Total** | **329** | **259** | **70** |
+| **Total** | **329** | **261** | **68** |
