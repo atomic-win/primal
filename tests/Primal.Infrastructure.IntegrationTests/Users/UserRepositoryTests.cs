@@ -10,7 +10,7 @@ public sealed class UserRepositoryTests
 	public async Task GetUserAsync_NonExistentUser_ReturnsEmptyUser()
 	{
 		var db = TestDbHelper.CreateTestDatabase();
-		var repository = new UserRepository(db);
+		var repository = new UserRepository(db, TimeProvider.System);
 
 		var result = await repository.GetUserAsync(new UserId(Guid.NewGuid()), CancellationToken.None);
 
@@ -24,7 +24,7 @@ public sealed class UserRepositoryTests
 	public async Task AddUserAsync_ThenGetUserAsync_ReturnsCorrectUser()
 	{
 		var db = TestDbHelper.CreateTestDatabase();
-		var repository = new UserRepository(db);
+		var repository = new UserRepository(db, TimeProvider.System);
 		var userId = new UserId(Guid.NewGuid());
 
 		await repository.AddUserAsync(
@@ -50,7 +50,7 @@ public sealed class UserRepositoryTests
 	public async Task UpdateUserProfileAsync_UpdatesPreferences()
 	{
 		var db = TestDbHelper.CreateTestDatabase();
-		var repository = new UserRepository(db);
+		var repository = new UserRepository(db, TimeProvider.System);
 		var userId = new UserId(Guid.NewGuid());
 
 		await repository.AddUserAsync(

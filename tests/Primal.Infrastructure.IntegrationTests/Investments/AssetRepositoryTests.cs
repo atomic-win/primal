@@ -10,7 +10,7 @@ public sealed class AssetRepositoryTests
 	public async Task GetByIdAsync_NonExistent_ReturnsEmptyAsset()
 	{
 		var db = TestDbHelper.CreateTestDatabase();
-		var repository = new AssetRepository(db);
+		var repository = new AssetRepository(db, TimeProvider.System);
 
 		var result = await repository.GetByIdAsync(new AssetId(Guid.NewGuid()), CancellationToken.None);
 
@@ -23,7 +23,7 @@ public sealed class AssetRepositoryTests
 	public async Task AddAsync_ThenGetByIdAsync_ReturnsCorrectAsset()
 	{
 		var db = TestDbHelper.CreateTestDatabase();
-		var repository = new AssetRepository(db);
+		var repository = new AssetRepository(db, TimeProvider.System);
 
 		var addedAsset = await repository.AddAsync(
 			"Global Equity Fund",
@@ -47,7 +47,7 @@ public sealed class AssetRepositoryTests
 	public async Task GetByExternalIdAsync_NonExistent_ReturnsEmptyAsset()
 	{
 		var db = TestDbHelper.CreateTestDatabase();
-		var repository = new AssetRepository(db);
+		var repository = new AssetRepository(db, TimeProvider.System);
 
 		var result = await repository.GetByExternalIdAsync("missing-id", CancellationToken.None);
 
@@ -59,7 +59,7 @@ public sealed class AssetRepositoryTests
 	public async Task AddAsync_ThenGetByExternalIdAsync_ReturnsCorrectAsset()
 	{
 		var db = TestDbHelper.CreateTestDatabase();
-		var repository = new AssetRepository(db);
+		var repository = new AssetRepository(db, TimeProvider.System);
 
 		await repository.AddAsync(
 			"US Equity ETF",

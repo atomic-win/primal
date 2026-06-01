@@ -54,6 +54,8 @@ var builder = WebApplication.CreateBuilder(args);
 				};
 			});
 
+	builder.Services.AddSingleton(TimeProvider.System);
+
 	builder.Services.AddAuthorization();
 
 	builder.Services

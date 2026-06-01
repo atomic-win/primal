@@ -10,10 +10,12 @@ namespace Primal.Infrastructure.Users;
 internal sealed class UserRepository : IUserRepository
 {
 	private readonly DbConnectionFactory connectionFactory;
+	private readonly TimeProvider timeProvider;
 
-	internal UserRepository(DbConnectionFactory connectionFactory)
+	internal UserRepository(DbConnectionFactory connectionFactory, TimeProvider timeProvider)
 	{
 		this.connectionFactory = connectionFactory;
+		this.timeProvider = timeProvider;
 	}
 
 	public async Task<User> GetUserAsync(
@@ -42,7 +44,7 @@ internal sealed class UserRepository : IUserRepository
 		string fullName,
 		CancellationToken cancellationToken)
 	{
-		var now = DateTimeOffset.UtcNow.ToString("O");
+		var now = this.timeProvider.GetUtcNow().ToString("O");
 
 		using var connection = this.connectionFactory.CreateConnection();
 
@@ -80,7 +82,7 @@ internal sealed class UserRepository : IUserRepository
 		Locale preferredLocale,
 		CancellationToken cancellationToken)
 	{
-		var now = DateTimeOffset.UtcNow.ToString("O");
+		var now = this.timeProvider.GetUtcNow().ToString("O");
 
 		using var connection = this.connectionFactory.CreateConnection();
 

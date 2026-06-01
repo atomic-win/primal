@@ -10,10 +10,12 @@ namespace Primal.Infrastructure.Investments;
 internal sealed class AssetRepository : IAssetRepository
 {
 	private readonly DbConnectionFactory connectionFactory;
+	private readonly TimeProvider timeProvider;
 
-	internal AssetRepository(DbConnectionFactory connectionFactory)
+	internal AssetRepository(DbConnectionFactory connectionFactory, TimeProvider timeProvider)
 	{
 		this.connectionFactory = connectionFactory;
+		this.timeProvider = timeProvider;
 	}
 
 	public async Task<Asset> GetByIdAsync(AssetId assetId, CancellationToken cancellationToken)
@@ -57,7 +59,7 @@ internal sealed class AssetRepository : IAssetRepository
 		CancellationToken cancellationToken)
 	{
 		var id = Guid.CreateVersion7();
-		var now = DateTimeOffset.UtcNow.ToString("O");
+		var now = this.timeProvider.GetUtcNow().ToString("O");
 
 		using var connection = this.connectionFactory.CreateConnection();
 

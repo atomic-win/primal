@@ -13,7 +13,7 @@ public sealed class AssetItemRepositoryTests
 	public async Task GetAllAsync_Empty_ReturnsEmpty()
 	{
 		var db = TestDbHelper.CreateTestDatabase();
-		var repository = new AssetItemRepository(db);
+		var repository = new AssetItemRepository(db, TimeProvider.System);
 		var userId = await AddUserAsync(db);
 
 		var result = await repository.GetAllAsync(userId, CancellationToken.None);
@@ -25,7 +25,7 @@ public sealed class AssetItemRepositoryTests
 	public async Task AddAsync_ThenGetAllAsync_ReturnsItem()
 	{
 		var db = TestDbHelper.CreateTestDatabase();
-		var repository = new AssetItemRepository(db);
+		var repository = new AssetItemRepository(db, TimeProvider.System);
 		var userId = await AddUserAsync(db);
 		var asset = await AddAssetAsync(db);
 
@@ -42,7 +42,7 @@ public sealed class AssetItemRepositoryTests
 	public async Task GetByIdAsync_NonExistent_ReturnsEmptyAssetItem()
 	{
 		var db = TestDbHelper.CreateTestDatabase();
-		var repository = new AssetItemRepository(db);
+		var repository = new AssetItemRepository(db, TimeProvider.System);
 		var userId = await AddUserAsync(db);
 
 		var result = await repository.GetByIdAsync(userId, new AssetItemId(Guid.NewGuid()), CancellationToken.None);
@@ -55,7 +55,7 @@ public sealed class AssetItemRepositoryTests
 	public async Task AddAsync_ThenGetByIdAsync_ReturnsCorrectItem()
 	{
 		var db = TestDbHelper.CreateTestDatabase();
-		var repository = new AssetItemRepository(db);
+		var repository = new AssetItemRepository(db, TimeProvider.System);
 		var userId = await AddUserAsync(db);
 		var asset = await AddAssetAsync(db);
 
@@ -71,7 +71,7 @@ public sealed class AssetItemRepositoryTests
 	public async Task DeleteAsync_ThenGetByIdAsync_ReturnsEmpty()
 	{
 		var db = TestDbHelper.CreateTestDatabase();
-		var repository = new AssetItemRepository(db);
+		var repository = new AssetItemRepository(db, TimeProvider.System);
 		var userId = await AddUserAsync(db);
 		var asset = await AddAssetAsync(db);
 		var addedItem = await repository.AddAsync(userId, asset.Id, "Disposable Account", CancellationToken.None);
@@ -85,7 +85,7 @@ public sealed class AssetItemRepositoryTests
 
 	private static async Task<UserId> AddUserAsync(DbConnectionFactory db)
 	{
-		var repository = new UserRepository(db);
+		var repository = new UserRepository(db, TimeProvider.System);
 		var userId = new UserId(Guid.NewGuid());
 		await repository.AddUserAsync(
 			userId,
@@ -99,7 +99,7 @@ public sealed class AssetItemRepositoryTests
 
 	private static Task<Asset> AddAssetAsync(DbConnectionFactory db)
 	{
-		var repository = new AssetRepository(db);
+		var repository = new AssetRepository(db, TimeProvider.System);
 		return repository.AddAsync(
 			"Index Fund",
 			AssetClass.Equity,
