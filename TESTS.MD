@@ -25,7 +25,7 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 
 ---
 
-## 3. GET /api/users/me
+## 2. GET /api/users/me
 
 | # | Test | Input | Expected | Type | Present |
 |---|------|-------|----------|------|---------|
@@ -39,7 +39,7 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 
 ---
 
-## 4. PATCH /api/users/me
+## 3. PATCH /api/users/me
 
 | # | Test | Input | Expected | Type | Present |
 |---|------|-------|----------|------|---------|
@@ -56,7 +56,7 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 
 ---
 
-## 5. POST /api/asset-items
+## 4. POST /api/asset-items
 
 ### Validation
 
@@ -115,7 +115,7 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 
 ---
 
-## 6. GET /api/asset-items
+## 5. GET /api/asset-items
 
 | # | Test | Input | Expected | Type | Present |
 |---|------|-------|----------|------|---------|
@@ -124,7 +124,7 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 
 ---
 
-## 7. GET /api/asset-items/{id}
+## 6. GET /api/asset-items/{id}
 
 | # | Test | Input | Expected | Type | Present |
 |---|------|-------|----------|------|---------|
@@ -134,7 +134,7 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 
 ---
 
-## 8. DELETE /api/asset-items/{id}
+## 7. DELETE /api/asset-items/{id}
 
 | # | Test | Input | Expected | Type | Present |
 |---|------|-------|----------|------|---------|
@@ -145,7 +145,7 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 
 ---
 
-## 9. GET /api/asset-items/valuations
+## 8. GET /api/asset-items/valuations
 
 ### Validation
 
@@ -221,7 +221,7 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 
 ---
 
-## 10. POST /api/asset-items/{assetItemId}/transactions
+## 9. POST /api/asset-items/{assetItemId}/transactions
 
 ### Validation — field rules
 
@@ -331,7 +331,7 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 
 ---
 
-## 11. GET /api/asset-items/{assetItemId}/transactions
+## 10. GET /api/asset-items/{assetItemId}/transactions
 
 | # | Test | Input | Expected | Type | Present |
 |---|------|-------|----------|------|---------|
@@ -344,7 +344,7 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 
 ---
 
-## 12. GET /api/asset-items/{assetItemId}/transactions/{transactionId}
+## 11. GET /api/asset-items/{assetItemId}/transactions/{transactionId}
 
 | # | Test | Input | Expected | Type | Present |
 |---|------|-------|----------|------|---------|
@@ -360,7 +360,7 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 
 ---
 
-## 13. PATCH /api/asset-items/{assetItemId}/transactions/{transactionId}
+## 12. PATCH /api/asset-items/{assetItemId}/transactions/{transactionId}
 
 ### Validation
 
@@ -425,7 +425,7 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 
 ---
 
-## 14. DELETE /api/asset-items/{assetItemId}/transactions/{transactionId}
+## 13. DELETE /api/asset-items/{assetItemId}/transactions/{transactionId}
 
 | # | Test | Input | Expected | Type | Present |
 |---|------|-------|----------|------|---------|
@@ -437,7 +437,7 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 
 ---
 
-## 15. Cross-Cutting (E2E)
+## 14. Cross-Cutting (E2E)
 
 | # | Test | Input | Expected | Type | Present |
 |---|------|-------|----------|------|---------|
@@ -455,7 +455,7 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 
 ---
 
-## 16. Domain Model — Entity\<TId\> (Unit)
+## 15. Domain Model — Entity\<TId\> (Unit)
 
 | # | Test | Input | Expected | Type | Present |
 |---|------|-------|----------|------|---------|
@@ -477,7 +477,7 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 
 ---
 
-## 17. Domain Model — Empty Sentinels (Unit)
+## 16. Domain Model — Empty Sentinels (Unit)
 
 | # | Test | Input | Expected | Type | Present |
 |---|------|-------|----------|------|---------|
@@ -488,7 +488,7 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 
 ---
 
-## 18. TransactionValidationExtensions (Unit)
+## 17. TransactionValidationExtensions (Unit)
 
 | # | Test | Input | Expected | Type | Present |
 |---|------|-------|----------|------|---------|
@@ -496,7 +496,7 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 
 ---
 
-## 19. RatesExtensions.GetOnOrBeforeValue (Unit)
+## 18. RatesExtensions.GetOnOrBeforeValue (Unit)
 
 | # | Test | Input | Expected | Type | Present |
 |---|------|-------|----------|------|---------|
@@ -508,7 +508,7 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 
 ---
 
-## 20. Infrastructure — API Clients (Integration)
+## 19. Infrastructure — API Clients (Integration)
 
 ### MutualFundApiClient
 
@@ -544,7 +544,7 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 
 ---
 
-## 21. Infrastructure — Caching (Integration)
+## 20. Infrastructure — Caching (Integration)
 
 ### CachedExchangeRateApiClient
 
@@ -588,7 +588,7 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 
 ---
 
-## 22. Infrastructure — Repositories (Integration)
+## 21. Infrastructure — Repositories (Integration)
 
 ### UserIdRepository
 
@@ -642,7 +642,7 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 
 ---
 
-## 23. Database Schema Constraints (Integration)
+## 22. Database Schema Constraints (Integration)
 
 | # | Test | Input | Expected | Type | Present |
 |---|------|-------|----------|------|---------|
@@ -662,24 +662,24 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 |---------|-------|---------|---------|
 | 1. POST /api/auth/login/google | 10 | 5 | 5 |
 | 2. GET /api/users/me | 7 | 7 | 0 |
-| 4. PATCH /api/users/me | 10 | 10 | 0 |
-| 5. POST /api/asset-items | 45 | 45 | 0 |
-| 6. GET /api/asset-items | 2 | 2 | 0 |
-| 7. GET /api/asset-items/{id} | 3 | 3 | 0 |
-| 8. DELETE /api/asset-items/{id} | 4 | 4 | 0 |
-| 9. GET /api/asset-items/valuations | 37 | 35 | 2 |
-| 10. POST .../transactions | 74 | 74 | 0 |
-| 11. GET .../transactions | 6 | 5 | 1 |
-| 12. GET .../transactions/{id} | 9 | 8 | 1 |
-| 13. PATCH .../transactions/{id} | 26 | 26 | 0 |
-| 14. DELETE .../transactions/{id} | 3 | 3 | 0 |
-| 15. Cross-Cutting | 9 | 9 | 0 |
-| 16. Entity\<TId\> (Unit) | 15 | 7 | 8 |
-| 17. Empty Sentinels (Unit) | 4 | 4 | 0 |
-| 18. TransactionValidationExtensions (Unit) | 1 | 0 | 1 |
-| 19. RatesExtensions (Unit) | 5 | 5 | 0 |
-| 20. API Clients (Integration) | 13 | 1 | 12 |
-| 21. Caching (Integration) | 15 | 2 | 13 |
-| 22. Repositories (Integration) | 25 | 5 | 20 |
-| 23. DB Schema (Integration) | 7 | 0 | 7 |
+| 3. PATCH /api/users/me | 10 | 10 | 0 |
+| 4. POST /api/asset-items | 45 | 45 | 0 |
+| 5. GET /api/asset-items | 2 | 2 | 0 |
+| 6. GET /api/asset-items/{id} | 3 | 3 | 0 |
+| 7. DELETE /api/asset-items/{id} | 4 | 4 | 0 |
+| 8. GET /api/asset-items/valuations | 37 | 35 | 2 |
+| 9. POST .../transactions | 74 | 74 | 0 |
+| 10. GET .../transactions | 6 | 5 | 1 |
+| 11. GET .../transactions/{id} | 9 | 8 | 1 |
+| 12. PATCH .../transactions/{id} | 26 | 26 | 0 |
+| 13. DELETE .../transactions/{id} | 3 | 3 | 0 |
+| 14. Cross-Cutting | 9 | 9 | 0 |
+| 15. Entity\<TId\> (Unit) | 15 | 7 | 8 |
+| 16. Empty Sentinels (Unit) | 4 | 4 | 0 |
+| 17. TransactionValidationExtensions (Unit) | 1 | 0 | 1 |
+| 18. RatesExtensions (Unit) | 5 | 5 | 0 |
+| 19. API Clients (Integration) | 13 | 1 | 12 |
+| 20. Caching (Integration) | 15 | 2 | 13 |
+| 21. Repositories (Integration) | 25 | 5 | 20 |
+| 22. DB Schema (Integration) | 7 | 0 | 7 |
 | **Total** | **329** | **259** | **70** |
