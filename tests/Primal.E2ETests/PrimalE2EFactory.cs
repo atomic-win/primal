@@ -3,6 +3,7 @@ using System.Security.Claims;
 using System.Text;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Primal.Domain.Users;
 using WireMock.Server;
@@ -13,6 +14,8 @@ namespace Primal.E2ETests;
 
 internal sealed class PrimalE2EFactory : WebApplicationFactory<Program>
 {
+	internal static readonly DateTimeOffset FrozenTime = new(2026, 6, 1, 12, 0, 0, TimeSpan.Zero);
+
 	private const string TestSecretKey = "super-secret-test-key-that-is-long-enough-for-hmac-sha256";
 
 	private readonly string dbPath = Path.Combine(Path.GetTempPath(), $"primal-e2e-{Guid.NewGuid()}.db");
@@ -67,6 +70,18 @@ internal sealed class PrimalE2EFactory : WebApplicationFactory<Program>
 		builder.UseSetting("InvestmentSettings:AlphaVantageApiKey", "test-alpha-key");
 		builder.UseSetting("InvestmentSettings:MutualFundApiBaseUrl", this.MutualFundApi.Url!);
 		builder.UseSetting("InvestmentSettings:StockApiBaseUrl", this.StockApi.Url!);
+		builder.UseSetting("InvestmentSettings:ExchangeRateApiBaseUrl", this.ExchangeRateApi.Url!);
+
+		builder.ConfigureServices(services =>
+		{
+			var descriptors = services.Where(d => d.ServiceType == typeof(TimeProvider)).ToList();
+			foreach (var descriptor in descriptors)
+			{
+				services.Remove(descriptor);
+			}
+
+			services.AddSingleton<TimeProvider>(new Microsoft.Extensions.Time.Testing.FakeTimeProvider(FrozenTime));
+		});
 		builder.UseSetting("InvestmentSettings:ExchangeRateApiBaseUrl", this.ExchangeRateApi.Url!);
 	}
 

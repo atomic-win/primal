@@ -1,19 +1,9 @@
 using System.Net;
-using System.Net.Http.Json;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using Primal.Api.Transactions;
 
 namespace Primal.E2ETests.Transactions.GetTransactionById;
 
 public sealed class Returns_Units_Multiplied_By_Exchange_Rate_For_BankAccount
 {
-	private static readonly JsonSerializerOptions JsonOptions = new()
-	{
-		PropertyNameCaseInsensitive = true,
-		Converters = { new JsonStringEnumConverter() },
-	};
-
 	[Test]
 	public async Task Test()
 	{
@@ -49,7 +39,7 @@ public sealed class Returns_Units_Multiplied_By_Exchange_Rate_For_BankAccount
 		// Assert — 50 USD * 2 = 100 INR
 		await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.OK);
 
-		var body = await response.Content.ReadFromJsonAsync<TransactionResponse>(JsonOptions);
-		await Assert.That(body!.Amount).IsEqualTo(100m);
+		var body = await response.Content.ReadAsStringAsync();
+		await Verifier.Verify(body);
 	}
 }
