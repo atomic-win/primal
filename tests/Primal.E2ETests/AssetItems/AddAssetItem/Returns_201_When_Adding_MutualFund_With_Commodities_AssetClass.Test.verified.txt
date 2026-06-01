@@ -1,0 +1,1 @@
+﻿{"id":"Guid_1","name":"My Commodities MF","assetType":"MutualFund","assetClass":"Commodities","currency":"INR"}

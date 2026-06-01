@@ -1,0 +1,1 @@
+﻿{"id":"Guid_1","name":"My Wallet","assetType":"Wallet","assetClass":"EmergencyFund","currency":"INR"}

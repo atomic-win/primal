@@ -1,0 +1,1 @@
+﻿{"id":"Guid_1","name":"My EPF","assetType":"EPF","assetClass":"Debt","currency":"INR"}

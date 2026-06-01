@@ -53,11 +53,11 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 | # | Test | Input | Expected | Type | Present |
 |---|------|-------|----------|------|---------|
 | 1 | Rejects both fields unknown | `{ PreferredCurrency: Unknown, PreferredLocale: Unknown }` | 400 `UPDATE_FIELDS_REQUIRED` | E2E | ✅ |
-| 2 | Rejects empty body | `{}` (both default to Unknown) | 400 `UPDATE_FIELDS_REQUIRED` | E2E | ❌ |
-| 3 | Rejects no body | No request body | 400 `UPDATE_FIELDS_REQUIRED` | E2E | ❌ |
+| 2 | Rejects empty body | `{}` (both default to Unknown) | 400 `UPDATE_FIELDS_REQUIRED` | E2E | ✅ |
+| 3 | Rejects no body | No request body | 400 `UPDATE_FIELDS_REQUIRED` | E2E | ✅ |
 | 4 | Returns 404 for missing user | Valid JWT; user not in DB; body `{ PreferredCurrency: "INR" }` | 404 `USER_NOT_FOUND` | E2E | ✅ |
-| 5 | Updates currency only | `{ PreferredCurrency: "INR" }` (locale key missing → Unknown) | 204; currency=INR, locale preserved | E2E | ❌ |
-| 6 | Updates locale only | `{ PreferredLocale: "EN_IN" }` (currency key missing → Unknown) | 204; locale=EN_IN, currency preserved | E2E | ❌ |
+| 5 | Updates currency only | `{ PreferredCurrency: "INR" }` (locale key missing → Unknown) | 204; currency=INR, locale preserved | E2E | ✅ |
+| 6 | Updates locale only | `{ PreferredLocale: "EN_IN" }` (currency key missing → Unknown) | 204; locale=EN_IN, currency preserved | E2E | ✅ |
 | 7 | Updates both fields | `{ PreferredCurrency: "INR", PreferredLocale: "EN_IN" }` | 204; both updated | E2E | ✅ |
 | 8 | No-op when values match existing | Currency=existing, Locale=existing | 204; no DB update | E2E | ✅ |
 | 9 | No-op when both unknown and existing match | Currency=Unknown (existing=USD), Locale=Unknown (existing=EN_US) | 204; no DB update | E2E | ❌ |
@@ -78,49 +78,49 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 | 5 | Rejects empty Name | `Name: ""` | 400 `NAME_REQUIRED` | E2E | ✅ |
 | 6 | Rejects missing Name | Name key absent | 400 `NAME_REQUIRED` | E2E | ❌ |
 | 7 | Rejects Unknown AssetClass for BankAccount | `AssetType: BankAccount, AssetClass: Unknown` | 400 `ASSET_CLASS_REQUIRED` | E2E | ✅ |
-| 8 | Rejects Unknown AssetClass for Wallet | `AssetType: Wallet, AssetClass: Unknown` | 400 `ASSET_CLASS_REQUIRED` | E2E | ❌ |
-| 9 | Rejects Unknown AssetClass for TradingAccount | `AssetType: TradingAccount, AssetClass: Unknown` | 400 `ASSET_CLASS_REQUIRED` | E2E | ❌ |
-| 10 | Rejects Unknown AssetClass for FixedDeposit | `AssetType: FixedDeposit, AssetClass: Unknown` | 400 `ASSET_CLASS_REQUIRED` | E2E | ❌ |
-| 11 | Rejects Unknown AssetClass for EPF | `AssetType: EPF, AssetClass: Unknown` | 400 `ASSET_CLASS_REQUIRED` | E2E | ❌ |
-| 12 | Rejects Unknown AssetClass for PPF | `AssetType: PPF, AssetClass: Unknown` | 400 `ASSET_CLASS_REQUIRED` | E2E | ❌ |
-| 13 | Rejects Unknown AssetClass for MutualFund | `AssetType: MutualFund, AssetClass: Unknown` | 400 `ASSET_CLASS_REQUIRED` | E2E | ❌ |
+| 8 | Rejects Unknown AssetClass for Wallet | `AssetType: Wallet, AssetClass: Unknown` | 400 `ASSET_CLASS_REQUIRED` | E2E | ✅ |
+| 9 | Rejects Unknown AssetClass for TradingAccount | `AssetType: TradingAccount, AssetClass: Unknown` | 400 `ASSET_CLASS_REQUIRED` | E2E | ✅ |
+| 10 | Rejects Unknown AssetClass for FixedDeposit | `AssetType: FixedDeposit, AssetClass: Unknown` | 400 `ASSET_CLASS_REQUIRED` | E2E | ✅ |
+| 11 | Rejects Unknown AssetClass for EPF | `AssetType: EPF, AssetClass: Unknown` | 400 `ASSET_CLASS_REQUIRED` | E2E | ✅ |
+| 12 | Rejects Unknown AssetClass for PPF | `AssetType: PPF, AssetClass: Unknown` | 400 `ASSET_CLASS_REQUIRED` | E2E | ✅ |
+| 13 | Rejects Unknown AssetClass for MutualFund | `AssetType: MutualFund, AssetClass: Unknown` | 400 `ASSET_CLASS_REQUIRED` | E2E | ✅ |
 | 14 | Rejects non-Unknown AssetClass for Stock | `AssetType: Stock, AssetClass: Equity` | 400 `ASSET_CLASS_NOT_ALLOWED` | E2E | ✅ |
-| 15 | Rejects non-Unknown AssetClass for Bond | `AssetType: Bond, AssetClass: Debt` | 400 `ASSET_CLASS_NOT_ALLOWED` | E2E | ❌ |
+| 15 | Rejects non-Unknown AssetClass for Bond | `AssetType: Bond, AssetClass: Debt` | 400 `ASSET_CLASS_NOT_ALLOWED` | E2E | ✅ |
 | 16 | Rejects EmergencyFund class for MutualFund | `AssetType: MutualFund, AssetClass: EmergencyFund` | 400 `ASSET_CLASS_INVALID` | E2E | ✅ |
 | 17 | Accepts Equity class for MutualFund | `AssetType: MutualFund, AssetClass: Equity` | Passes | E2E | ✅ |
-| 18 | Accepts Debt class for MutualFund | `AssetType: MutualFund, AssetClass: Debt` | Passes | E2E | ❌ |
-| 19 | Accepts Commodities class for MutualFund | `AssetType: MutualFund, AssetClass: Commodities` | Passes | E2E | ❌ |
+| 18 | Accepts Debt class for MutualFund | `AssetType: MutualFund, AssetClass: Debt` | Passes | E2E | ✅ |
+| 19 | Accepts Commodities class for MutualFund | `AssetType: MutualFund, AssetClass: Commodities` | Passes | E2E | ✅ |
 | 20 | Rejects empty ExternalId for MutualFund | `AssetType: MutualFund, ExternalId: ""` | 400 `EXTERNAL_ID_REQUIRED` | E2E | ✅ |
-| 21 | Rejects empty ExternalId for Stock | `AssetType: Stock, ExternalId: ""` | 400 `EXTERNAL_ID_REQUIRED` | E2E | ❌ |
+| 21 | Rejects empty ExternalId for Stock | `AssetType: Stock, ExternalId: ""` | 400 `EXTERNAL_ID_REQUIRED` | E2E | ✅ |
 | 22 | Rejects non-empty ExternalId for BankAccount | `AssetType: BankAccount, ExternalId: "x"` | 400 `EXTERNAL_ID_NOT_ALLOWED` | E2E | ✅ |
-| 23 | Rejects non-empty ExternalId for Wallet | `AssetType: Wallet, ExternalId: "x"` | 400 `EXTERNAL_ID_NOT_ALLOWED` | E2E | ❌ |
-| 24 | Rejects non-empty ExternalId for TradingAccount | `AssetType: TradingAccount, ExternalId: "x"` | 400 `EXTERNAL_ID_NOT_ALLOWED` | E2E | ❌ |
-| 25 | Rejects non-empty ExternalId for FixedDeposit | `AssetType: FixedDeposit, ExternalId: "x"` | 400 `EXTERNAL_ID_NOT_ALLOWED` | E2E | ❌ |
-| 26 | Rejects non-empty ExternalId for EPF | `AssetType: EPF, ExternalId: "x"` | 400 `EXTERNAL_ID_NOT_ALLOWED` | E2E | ❌ |
-| 27 | Rejects non-empty ExternalId for PPF | `AssetType: PPF, ExternalId: "x"` | 400 `EXTERNAL_ID_NOT_ALLOWED` | E2E | ❌ |
-| 28 | Rejects non-empty ExternalId for Bond | `AssetType: Bond, ExternalId: "x"` | 400 `EXTERNAL_ID_NOT_ALLOWED` | E2E | ❌ |
+| 23 | Rejects non-empty ExternalId for Wallet | `AssetType: Wallet, ExternalId: "x"` | 400 `EXTERNAL_ID_NOT_ALLOWED` | E2E | ✅ |
+| 24 | Rejects non-empty ExternalId for TradingAccount | `AssetType: TradingAccount, ExternalId: "x"` | 400 `EXTERNAL_ID_NOT_ALLOWED` | E2E | ✅ |
+| 25 | Rejects non-empty ExternalId for FixedDeposit | `AssetType: FixedDeposit, ExternalId: "x"` | 400 `EXTERNAL_ID_NOT_ALLOWED` | E2E | ✅ |
+| 26 | Rejects non-empty ExternalId for EPF | `AssetType: EPF, ExternalId: "x"` | 400 `EXTERNAL_ID_NOT_ALLOWED` | E2E | ✅ |
+| 27 | Rejects non-empty ExternalId for PPF | `AssetType: PPF, ExternalId: "x"` | 400 `EXTERNAL_ID_NOT_ALLOWED` | E2E | ✅ |
+| 28 | Rejects non-empty ExternalId for Bond | `AssetType: Bond, ExternalId: "x"` | 400 `EXTERNAL_ID_NOT_ALLOWED` | E2E | ✅ |
 | 29 | Rejects Unknown Currency for BankAccount | `AssetType: BankAccount, Currency: Unknown` | 400 `CURRENCY_REQUIRED` | E2E | ✅ |
 | 30 | Rejects non-Unknown Currency for MutualFund | `AssetType: MutualFund, Currency: INR` | 400 `CURRENCY_NOT_ALLOWED` | E2E | ✅ |
-| 31 | Rejects non-Unknown Currency for Stock | `AssetType: Stock, Currency: USD` | 400 `CURRENCY_NOT_ALLOWED` | E2E | ❌ |
+| 31 | Rejects non-Unknown Currency for Stock | `AssetType: Stock, Currency: USD` | 400 `CURRENCY_NOT_ALLOWED` | E2E | ✅ |
 
 ### Handler
 
 | # | Test | Input | Expected | Type | Present |
 |---|------|-------|----------|------|---------|
 | 32 | Creates MutualFund — new asset | Valid MF request; asset not in DB; MF API returns fund | 201 AssetItemResponse; asset created with Currency=INR | E2E | ✅ |
-| 33 | Creates MutualFund — existing asset | Valid MF request; asset already in DB by externalId | 201; reuses existing asset | E2E | ❌ |
+| 33 | Creates MutualFund — existing asset | Valid MF request; asset already in DB by externalId | 201; reuses existing asset | E2E | ✅ |
 | 34 | MutualFund not found in API | Valid MF request; MF API returns empty SchemeCode | 404 `MUTUAL_FUND_NOT_FOUND` | E2E | ✅ |
 | 35 | Creates Stock — new asset | Valid Stock request; asset not in DB; Stock API returns stock | 201; asset created with Currency=USD, AssetClass=Equity | E2E | ✅ |
-| 36 | Creates Stock — existing asset | Valid Stock request; asset already in DB | 201; reuses existing asset | E2E | ❌ |
+| 36 | Creates Stock — existing asset | Valid Stock request; asset already in DB | 201; reuses existing asset | E2E | ✅ |
 | 37 | Stock not found in API | Valid Stock request; Stock API returns empty Symbol | 404 `STOCK_NOT_FOUND` | E2E | ✅ |
-| 38 | Creates Bond asset item | Valid Bond request | 201; asset created with AssetClass=Debt override | E2E | ❌ |
+| 38 | Creates Bond asset item | Valid Bond request | 201; asset created with AssetClass=Debt override | E2E | ✅ |
 | 39 | Creates BankAccount — new asset | Valid BankAccount request; asset not in DB | 201; asset externalId = `default-{class}-BankAccount-{currency}` | E2E | ✅ |
-| 40 | Creates BankAccount — existing asset | Valid BankAccount request; matching default asset exists | 201; reuses existing asset | E2E | ❌ |
-| 41 | Creates Wallet asset item | Valid Wallet request | 201 | E2E | ❌ |
-| 42 | Creates TradingAccount asset item | Valid TradingAccount request | 201 | E2E | ❌ |
-| 43 | Creates FixedDeposit asset item | Valid FixedDeposit request | 201 | E2E | ❌ |
-| 44 | Creates EPF asset item | Valid EPF request | 201 | E2E | ❌ |
-| 45 | Creates PPF asset item | Valid PPF request | 201 | E2E | ❌ |
+| 40 | Creates BankAccount — existing asset | Valid BankAccount request; matching default asset exists | 201; reuses existing asset | E2E | ✅ |
+| 41 | Creates Wallet asset item | Valid Wallet request | 201 | E2E | ✅ |
+| 42 | Creates TradingAccount asset item | Valid TradingAccount request | 201 | E2E | ✅ |
+| 43 | Creates FixedDeposit asset item | Valid FixedDeposit request | 201 | E2E | ✅ |
+| 44 | Creates EPF asset item | Valid EPF request | 201 | E2E | ✅ |
+| 45 | Creates PPF asset item | Valid PPF request | 201 | E2E | ✅ |
 
 ---
 
@@ -149,7 +149,7 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 |---|------|-------|----------|------|---------|
 | 1 | Deletes existing item | Valid GUID; item exists | 204 | E2E | ✅ |
 | 2 | Returns 404 for missing item | Valid GUID; item not in DB | 404 `ASSET_ITEM_NOT_FOUND` | E2E | ✅ |
-| 3 | Cascades to transactions | Delete item that has transactions | 204; child transactions also deleted | E2E | ❌ |
+| 3 | Cascades to transactions | Delete item that has transactions | 204; child transactions also deleted | E2E | ✅ |
 | 4 | Rejects non-GUID route param | `/api/asset-items/not-a-guid` | 404 route not matched | E2E | ❌ |
 
 ---
@@ -239,13 +239,13 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 | 1 | Rejects empty body | `{}` or no body | 400 multiple errors (DATE_REQUIRED, NAME_REQUIRED, TRANSACTION_TYPE_REQUIRED) | E2E | ❌ |
 | 2 | Rejects default Date | `Date: "0001-01-01"` or Date key missing | 400 `DATE_REQUIRED` | E2E | ✅ |
 | 3 | Rejects future Date | `Date: tomorrow` | 400 `DATE_IN_FUTURE` | E2E | ✅ |
-| 4 | Accepts today's Date | `Date: today` | Passes | E2E | ❌ |
+| 4 | Accepts today's Date | `Date: today` | Passes | E2E | ✅ |
 | 5 | Accepts past Date | `Date: yesterday` | Passes | E2E | ✅ |
 | 6 | Rejects empty Name | `Name: ""` or Name key missing | 400 `NAME_REQUIRED` | E2E | ✅ |
 | 7 | Rejects short Name | `Name: "ab"` (2 chars) | 400 `NAME_TOO_SHORT` | E2E | ✅ |
 | 8 | Rejects long Name | `Name: "a" × 1001` | 400 `NAME_TOO_LONG` | E2E | ✅ |
-| 9 | Accepts min-length Name | `Name: "abc"` (3 chars) | Passes | E2E | ❌ |
-| 10 | Accepts max-length Name | `Name: "a" × 1000` | Passes | E2E | ❌ |
+| 9 | Accepts min-length Name | `Name: "abc"` (3 chars) | Passes | E2E | ✅ |
+| 10 | Accepts max-length Name | `Name: "a" × 1000` | Passes | E2E | ✅ |
 | 11 | Rejects Unknown TransactionType | `TransactionType: "Unknown"` or key missing | 400 `TRANSACTION_TYPE_REQUIRED` | E2E | ✅ |
 | 12 | Rejects non-GUID route param | `/api/asset-items/not-a-guid/transactions` | 404 route not matched | E2E | ❌ |
 
@@ -258,8 +258,8 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 | 15 | Rejects zero Price for Buy | `TransactionType: Buy, Units: 10, Price: 0` | 400 `PRICE_REQUIRED` | E2E | ✅ |
 | 16 | Rejects negative Price for Buy | `TransactionType: Buy, Units: 10, Price: -1` | 400 `PRICE_REQUIRED` | E2E | ✅ |
 | 17 | Accepts valid Buy | `Units: 10, Price: 100` | Passes | E2E | ✅ |
-| 18 | Rejects zero Units for Sell | `TransactionType: Sell, Units: 0` | 400 `UNITS_REQUIRED` | E2E | ❌ |
-| 19 | Accepts valid Sell | `Units: 5, Price: 100` | Passes | E2E | ❌ |
+| 18 | Rejects zero Units for Sell | `TransactionType: Sell, Units: 0` | 400 `UNITS_REQUIRED` | E2E | ✅ |
+| 19 | Accepts valid Sell | `Units: 5, Price: 100` | Passes | E2E | ✅ |
 | 20 | Buy ignores Amount field | `Buy, Units: 10, Price: 100, Amount: 500` | Passes; stored Amount=0 | E2E | ❌ |
 
 ### Validation — amount rules (non-Buy/Sell)
@@ -268,54 +268,54 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 |---|------|-------|----------|------|---------|
 | 21 | Rejects zero Amount for Deposit | `TransactionType: Deposit, Amount: 0` | 400 `AMOUNT_REQUIRED` | E2E | ✅ |
 | 22 | Rejects negative Amount for Deposit | `TransactionType: Deposit, Amount: -100` | 400 `AMOUNT_REQUIRED` | E2E | ✅ |
-| 23 | Accepts valid Deposit | `Amount: 1000` | Passes | E2E | ❌ |
-| 24 | Accepts valid Withdrawal | `Amount: 500` | Passes | E2E | ❌ |
-| 25 | Accepts valid Interest | `Amount: 50` | Passes | E2E | ❌ |
-| 26 | Accepts valid SelfInterest | `Amount: 50` | Passes | E2E | ❌ |
-| 27 | Accepts valid Dividend | `Amount: 25` | Passes | E2E | ❌ |
-| 28 | Accepts valid InterestPenalty | `Amount: 10` | Passes | E2E | ❌ |
+| 23 | Accepts valid Deposit | `Amount: 1000` | Passes | E2E | ✅ |
+| 24 | Accepts valid Withdrawal | `Amount: 500` | Passes | E2E | ✅ |
+| 25 | Accepts valid Interest | `Amount: 50` | Passes | E2E | ✅ |
+| 26 | Accepts valid SelfInterest | `Amount: 50` | Passes | E2E | ✅ |
+| 27 | Accepts valid Dividend | `Amount: 25` | Passes | E2E | ✅ |
+| 28 | Accepts valid InterestPenalty | `Amount: 10` | Passes | E2E | ✅ |
 | 29 | Deposit ignores Units/Price | `Deposit, Amount: 1000, Units: 5, Price: 100` | Passes; stored Units=0, Price=0 | E2E | ❌ |
 
 ### Validation — TransactionType per AssetType
 
 | # | Test | Input | Expected | Type | Present |
 |---|------|-------|----------|------|---------|
-| 30 | BankAccount + Deposit | BankAccount asset item, Deposit | Passes | E2E | ❌ |
-| 31 | BankAccount + Withdrawal | BankAccount, Withdrawal | Passes | E2E | ❌ |
-| 32 | BankAccount + Interest | BankAccount, Interest | Passes | E2E | ❌ |
-| 33 | BankAccount + SelfInterest | BankAccount, SelfInterest | Passes | E2E | ❌ |
-| 34 | BankAccount + InterestPenalty | BankAccount, InterestPenalty | Passes | E2E | ❌ |
+| 30 | BankAccount + Deposit | BankAccount asset item, Deposit | Passes | E2E | ✅ |
+| 31 | BankAccount + Withdrawal | BankAccount, Withdrawal | Passes | E2E | ✅ |
+| 32 | BankAccount + Interest | BankAccount, Interest | Passes | E2E | ✅ |
+| 33 | BankAccount + SelfInterest | BankAccount, SelfInterest | Passes | E2E | ✅ |
+| 34 | BankAccount + InterestPenalty | BankAccount, InterestPenalty | Passes | E2E | ✅ |
 | 35 | BankAccount + Buy | BankAccount, Buy | 400 `TRANSACTION_TYPE_INVALID` | E2E | ✅ |
-| 36 | BankAccount + Sell | BankAccount, Sell | 400 `TRANSACTION_TYPE_INVALID` | E2E | ❌ |
-| 37 | BankAccount + Dividend | BankAccount, Dividend | 400 `TRANSACTION_TYPE_INVALID` | E2E | ❌ |
-| 38 | FixedDeposit + Deposit | FixedDeposit, Deposit | Passes | E2E | ❌ |
-| 39 | FixedDeposit + Interest | FixedDeposit, Interest | Passes | E2E | ❌ |
-| 40 | FixedDeposit + SelfInterest | FixedDeposit, SelfInterest | Passes | E2E | ❌ |
-| 41 | FixedDeposit + InterestPenalty | FixedDeposit, InterestPenalty | Passes | E2E | ❌ |
-| 42 | FixedDeposit + Buy | FixedDeposit, Buy | 400 `TRANSACTION_TYPE_INVALID` | E2E | ❌ |
-| 43 | EPF + Deposit | EPF, Deposit | Passes | E2E | ❌ |
-| 44 | EPF + Buy | EPF, Buy | 400 `TRANSACTION_TYPE_INVALID` | E2E | ❌ |
-| 45 | PPF + Deposit | PPF, Deposit | Passes | E2E | ❌ |
-| 46 | PPF + Buy | PPF, Buy | 400 `TRANSACTION_TYPE_INVALID` | E2E | ❌ |
-| 47 | MutualFund + Buy | MutualFund, Buy | Passes | E2E | ❌ |
-| 48 | MutualFund + Sell | MutualFund, Sell | Passes | E2E | ❌ |
+| 36 | BankAccount + Sell | BankAccount, Sell | 400 `TRANSACTION_TYPE_INVALID` | E2E | ✅ |
+| 37 | BankAccount + Dividend | BankAccount, Dividend | 400 `TRANSACTION_TYPE_INVALID` | E2E | ✅ |
+| 38 | FixedDeposit + Deposit | FixedDeposit, Deposit | Passes | E2E | ✅ |
+| 39 | FixedDeposit + Interest | FixedDeposit, Interest | Passes | E2E | ✅ |
+| 40 | FixedDeposit + SelfInterest | FixedDeposit, SelfInterest | Passes | E2E | ✅ |
+| 41 | FixedDeposit + InterestPenalty | FixedDeposit, InterestPenalty | Passes | E2E | ✅ |
+| 42 | FixedDeposit + Buy | FixedDeposit, Buy | 400 `TRANSACTION_TYPE_INVALID` | E2E | ✅ |
+| 43 | EPF + Deposit | EPF, Deposit | Passes | E2E | ✅ |
+| 44 | EPF + Buy | EPF, Buy | 400 `TRANSACTION_TYPE_INVALID` | E2E | ✅ |
+| 45 | PPF + Deposit | PPF, Deposit | Passes | E2E | ✅ |
+| 46 | PPF + Buy | PPF, Buy | 400 `TRANSACTION_TYPE_INVALID` | E2E | ✅ |
+| 47 | MutualFund + Buy | MutualFund, Buy | Passes | E2E | ✅ |
+| 48 | MutualFund + Sell | MutualFund, Sell | Passes | E2E | ✅ |
 | 49 | MutualFund + Deposit | MutualFund, Deposit | 400 `TRANSACTION_TYPE_INVALID` | E2E | ✅ |
-| 50 | MutualFund + Dividend | MutualFund, Dividend | 400 `TRANSACTION_TYPE_INVALID` | E2E | ❌ |
-| 51 | Stock + Buy | Stock, Buy | Passes | E2E | ❌ |
-| 52 | Stock + Sell | Stock, Sell | Passes | E2E | ❌ |
-| 53 | Stock + Dividend | Stock, Dividend | Passes | E2E | ❌ |
+| 50 | MutualFund + Dividend | MutualFund, Dividend | 400 `TRANSACTION_TYPE_INVALID` | E2E | ✅ |
+| 51 | Stock + Buy | Stock, Buy | Passes | E2E | ✅ |
+| 52 | Stock + Sell | Stock, Sell | Passes | E2E | ✅ |
+| 53 | Stock + Dividend | Stock, Dividend | Passes | E2E | ✅ |
 | 54 | Stock + Deposit | Stock, Deposit | 400 `TRANSACTION_TYPE_INVALID` | E2E | ✅ |
-| 55 | Wallet + Deposit | Wallet, Deposit | Passes | E2E | ❌ |
-| 56 | Wallet + Withdrawal | Wallet, Withdrawal | Passes | E2E | ❌ |
-| 57 | Wallet + Interest | Wallet, Interest | 400 `TRANSACTION_TYPE_INVALID` | E2E | ❌ |
-| 58 | TradingAccount + Deposit | TradingAccount, Deposit | Passes | E2E | ❌ |
-| 59 | TradingAccount + Withdrawal | TradingAccount, Withdrawal | Passes | E2E | ❌ |
-| 60 | TradingAccount + Buy | TradingAccount, Buy | 400 `TRANSACTION_TYPE_INVALID` | E2E | ❌ |
-| 61 | Bond + Deposit | Bond, Deposit | Passes | E2E | ❌ |
-| 62 | Bond + Withdrawal | Bond, Withdrawal | Passes | E2E | ❌ |
-| 63 | Bond + Interest | Bond, Interest | Passes | E2E | ❌ |
-| 64 | Bond + Buy | Bond, Buy | 400 `TRANSACTION_TYPE_INVALID` | E2E | ❌ |
-| 65 | Bond + SelfInterest | Bond, SelfInterest | 400 `TRANSACTION_TYPE_INVALID` | E2E | ❌ |
+| 55 | Wallet + Deposit | Wallet, Deposit | Passes | E2E | ✅ |
+| 56 | Wallet + Withdrawal | Wallet, Withdrawal | Passes | E2E | ✅ |
+| 57 | Wallet + Interest | Wallet, Interest | 400 `TRANSACTION_TYPE_INVALID` | E2E | ✅ |
+| 58 | TradingAccount + Deposit | TradingAccount, Deposit | Passes | E2E | ✅ |
+| 59 | TradingAccount + Withdrawal | TradingAccount, Withdrawal | Passes | E2E | ✅ |
+| 60 | TradingAccount + Buy | TradingAccount, Buy | 400 `TRANSACTION_TYPE_INVALID` | E2E | ✅ |
+| 61 | Bond + Deposit | Bond, Deposit | Passes | E2E | ✅ |
+| 62 | Bond + Withdrawal | Bond, Withdrawal | Passes | E2E | ✅ |
+| 63 | Bond + Interest | Bond, Interest | Passes | E2E | ✅ |
+| 64 | Bond + Buy | Bond, Buy | 400 `TRANSACTION_TYPE_INVALID` | E2E | ✅ |
+| 65 | Bond + SelfInterest | Bond, SelfInterest | 400 `TRANSACTION_TYPE_INVALID` | E2E | ✅ |
 
 > **Note:** An existing test `Returns_400_When_Buy_Invalid_For_Wallet` covers Wallet + Buy (invalid) which is not listed above but is an additional valid scenario.
 
@@ -333,9 +333,9 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 |---|------|-------|----------|------|---------|
 | 69 | Returns 404 for missing asset item | Valid request; AssetItemId not in DB | 404 `ASSET_ITEM_NOT_FOUND` | E2E | ✅ |
 | 70 | Creates Buy transaction | MutualFund, Buy, Units=10, Price=100 | 201; stored Units=10, Price=100, Amount=0 | E2E | ✅ |
-| 71 | Creates Sell transaction | MutualFund, Sell, Units=5, Price=120 | 201; stored Units=5, Price=120, Amount=0 | E2E | ❌ |
-| 72 | Creates Deposit transaction | BankAccount, Deposit, Amount=5000 | 201; stored Units=0, Price=0, Amount=5000 | E2E | ❌ |
-| 73 | Creates Withdrawal transaction | BankAccount, Withdrawal, Amount=1000 | 201; stored Units=0, Price=0, Amount=1000 | E2E | ❌ |
+| 71 | Creates Sell transaction | MutualFund, Sell, Units=5, Price=120 | 201; stored Units=5, Price=120, Amount=0 | E2E | ✅ |
+| 72 | Creates Deposit transaction | BankAccount, Deposit, Amount=5000 | 201; stored Units=0, Price=0, Amount=5000 | E2E | ✅ |
+| 73 | Creates Withdrawal transaction | BankAccount, Withdrawal, Amount=1000 | 201; stored Units=0, Price=0, Amount=1000 | E2E | ✅ |
 | 74 | Response has zeroed amounts | Any valid creation | 201; response Units=0, Price=0, Amount=0 | E2E | ❌ |
 
 ---
@@ -345,7 +345,7 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 | # | Test | Input | Expected | Type | Present |
 |---|------|-------|----------|------|---------|
 | 1 | Returns 404 for missing asset item | Valid GUID; item not in DB | 404 `ASSET_ITEM_NOT_FOUND` | E2E | ✅ |
-| 2 | Returns empty list | Asset item exists; no transactions | 200 `[]` | E2E | ❌ |
+| 2 | Returns empty list | Asset item exists; no transactions | 200 `[]` | E2E | ✅ |
 | 3 | Returns transactions with calculated amounts | Asset item with multiple transactions; Currency=INR | 200 array with Amount calculated per transaction | E2E | ✅ |
 | 4 | Cross-currency amount calculation | INR asset; Currency=USD query param | 200; amounts converted to USD | E2E | ❌ |
 | 5 | Missing Currency defaults to Unknown | Currency query param absent | 200; amounts calculated with Unknown currency | E2E | ❌ |
@@ -385,7 +385,7 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 | 8 | Rejects negative Amount for Deposit | `TransactionType: Deposit, Amount: -1` | 400 `AMOUNT_INVALID` | E2E | ✅ |
 | 9 | Accepts zero Amount for Deposit | `TransactionType: Deposit, Amount: 0` | Passes; uses existing amount | E2E | ❌ |
 | 10 | Rejects invalid type for asset | `MutualFund asset, TransactionType: Deposit` | 400 `TRANSACTION_TYPE_INVALID` | E2E | ✅ |
-| 11 | Unknown type skips type check | `TransactionType: Unknown` | Passes type validation | E2E | ❌ |
+| 11 | Unknown type skips type check | `TransactionType: Unknown` | Passes type validation | E2E | ✅ |
 | 12 | Rejects non-GUID route params | Non-GUID in assetItemId or transactionId | 404 route not matched | E2E | ❌ |
 
 ### Handler
@@ -399,37 +399,37 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 
 | # | Test | Input | Expected | Type | Present |
 |---|------|-------|----------|------|---------|
-| 15 | Empty Name preserves existing | `Name: ""` or key missing; existing="Old Name" | Transaction name = "Old Name" | E2E | ❌ |
+| 15 | Empty Name preserves existing | `Name: ""` or key missing; existing="Old Name" | Transaction name = "Old Name" | E2E | ✅ |
 | 16 | New Name replaces existing | `Name: "New Name"` | Transaction name = "New Name" | E2E | ✅ |
 
 ### Normalize — TransactionType
 
 | # | Test | Input | Expected | Type | Present |
 |---|------|-------|----------|------|---------|
-| 17 | Unknown type preserves existing | `TransactionType: Unknown`; existing=Deposit | Transaction type = Deposit | E2E | ❌ |
-| 18 | New type replaces existing | `TransactionType: Withdrawal`; existing=Deposit | Transaction type = Withdrawal | E2E | ❌ |
+| 17 | Unknown type preserves existing | `TransactionType: Unknown`; existing=Deposit | Transaction type = Deposit | E2E | ✅ |
+| 18 | New type replaces existing | `TransactionType: Withdrawal`; existing=Deposit | Transaction type = Withdrawal | E2E | ✅ |
 
 ### Normalize — amounts (non-Buy/Sell type)
 
 | # | Test | Input | Expected | Type | Present |
 |---|------|-------|----------|------|---------|
-| 19 | Zero Amount preserves existing | `Amount: 0`; existing=5000 | Amount = 5000, Units=0, Price=0 | E2E | ❌ |
-| 20 | New Amount replaces existing | `Amount: 3000`; existing=5000 | Amount = 3000, Units=0, Price=0 | E2E | ❌ |
+| 19 | Zero Amount preserves existing | `Amount: 0`; existing=5000 | Amount = 5000, Units=0, Price=0 | E2E | ✅ |
+| 20 | New Amount replaces existing | `Amount: 3000`; existing=5000 | Amount = 3000, Units=0, Price=0 | E2E | ✅ |
 
 ### Normalize — amounts (Buy/Sell type)
 
 | # | Test | Input | Expected | Type | Present |
 |---|------|-------|----------|------|---------|
-| 21 | Zero Units preserves existing | `Units: 0`; existing Units=10 | Units = 10 | E2E | ❌ |
-| 22 | New Units replaces existing | `Units: 15`; existing Units=10 | Units = 15 | E2E | ❌ |
-| 23 | Zero Price preserves existing | `Price: 0`; existing Price=100 | Price = 100 | E2E | ❌ |
-| 24 | New Price replaces existing | `Price: 120`; existing Price=100 | Price = 120, Amount = 0 | E2E | ❌ |
+| 21 | Zero Units preserves existing | `Units: 0`; existing Units=10 | Units = 10 | E2E | ✅ |
+| 22 | New Units replaces existing | `Units: 15`; existing Units=10 | Units = 15 | E2E | ✅ |
+| 23 | Zero Price preserves existing | `Price: 0`; existing Price=100 | Price = 100 | E2E | ✅ |
+| 24 | New Price replaces existing | `Price: 120`; existing Price=100 | Price = 120, Amount = 0 | E2E | ✅ |
 
 ### Empty body
 
 | # | Test | Input | Expected | Type | Present |
 |---|------|-------|----------|------|---------|
-| 25 | No body preserves all fields | No body or `{}`; existing transaction unchanged | 204; all fields preserved | E2E | ❌ |
+| 25 | No body preserves all fields | No body or `{}`; existing transaction unchanged | 204; all fields preserved | E2E | ✅ |
 | 26 | Valid edit returns 204 | Any valid partial update | 204 No Content | E2E | ✅ |
 
 ---
@@ -672,16 +672,16 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 | 1. POST /api/auth/login/google | 10 | 0 | 10 |
 | 2. POST /api/auth/refresh-token | 4 | 0 | 4 |
 | 3. GET /api/users/me | 7 | 3 | 4 |
-| 4. PATCH /api/users/me | 10 | 5 | 5 |
-| 5. POST /api/asset-items | 45 | 14 | 31 |
+| 4. PATCH /api/users/me | 10 | 9 | 1 |
+| 5. POST /api/asset-items | 45 | 41 | 4 |
 | 6. GET /api/asset-items | 2 | 2 | 0 |
 | 7. GET /api/asset-items/{id} | 3 | 2 | 1 |
-| 8. DELETE /api/asset-items/{id} | 4 | 2 | 2 |
+| 8. DELETE /api/asset-items/{id} | 4 | 3 | 1 |
 | 9. GET /api/asset-items/valuations | 37 | 5 | 32 |
-| 10. POST .../transactions | 74 | 20 | 54 |
-| 11. GET .../transactions | 6 | 2 | 4 |
+| 10. POST .../transactions | 74 | 69 | 5 |
+| 11. GET .../transactions | 6 | 3 | 3 |
 | 12. GET .../transactions/{id} | 9 | 6 | 3 |
-| 13. PATCH .../transactions/{id} | 26 | 10 | 16 |
+| 13. PATCH .../transactions/{id} | 26 | 21 | 5 |
 | 14. DELETE .../transactions/{id} | 3 | 2 | 1 |
 | 15. Cross-Cutting | 9 | 1 | 8 |
 | 16. Entity\<TId\> (Unit) | 15 | 7 | 8 |

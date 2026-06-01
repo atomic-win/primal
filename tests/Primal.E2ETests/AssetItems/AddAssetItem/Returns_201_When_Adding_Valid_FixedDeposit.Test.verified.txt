@@ -1,0 +1,1 @@
+﻿{"id":"Guid_1","name":"My Fixed Deposit","assetType":"FixedDeposit","assetClass":"Debt","currency":"INR"}

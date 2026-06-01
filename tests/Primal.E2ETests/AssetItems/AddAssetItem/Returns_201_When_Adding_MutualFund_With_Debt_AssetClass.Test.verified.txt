@@ -1,0 +1,1 @@
+﻿{"id":"Guid_1","name":"My Debt MF","assetType":"MutualFund","assetClass":"Debt","currency":"INR"}

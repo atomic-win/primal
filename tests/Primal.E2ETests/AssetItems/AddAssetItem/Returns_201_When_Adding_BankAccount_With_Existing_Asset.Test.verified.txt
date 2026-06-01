@@ -1,0 +1,1 @@
+﻿{"id":"Guid_1","name":"Second Bank","assetType":"BankAccount","assetClass":"EmergencyFund","currency":"INR"}

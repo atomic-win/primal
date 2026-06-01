@@ -1,0 +1,1 @@
+﻿{"id":"Guid_1","name":"My Bond","assetType":"Bond","assetClass":"Debt","currency":"INR"}

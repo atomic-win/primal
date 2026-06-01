@@ -1,0 +1,1 @@
+﻿{"type":"https://www.rfc-editor.org/rfc/rfc7231#section-6.5.1","title":"Bad Request","status":400,"instance":"/api/asset-items/Guid_1/transactions","traceId":"Scrubbed","detail":"Transaction type 'Dividend' is not valid for the asset type","errors":[{"name":"","reason":"Transaction type 'Dividend' is not valid for the asset type","code":"TRANSACTION_TYPE_INVALID"}]}

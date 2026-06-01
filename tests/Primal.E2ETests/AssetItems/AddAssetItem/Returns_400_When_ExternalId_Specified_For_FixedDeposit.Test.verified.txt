@@ -1,0 +1,1 @@
+﻿{"type":"https://www.rfc-editor.org/rfc/rfc7231#section-6.5.1","title":"Bad Request","status":400,"instance":"/api/asset-items","traceId":"Scrubbed","detail":"ExternalId must not be specified for FixedDeposit asset type","errors":[{"name":"externalId","reason":"ExternalId must not be specified for FixedDeposit asset type","code":"EXTERNAL_ID_NOT_ALLOWED"}]}

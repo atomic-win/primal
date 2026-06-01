@@ -46,12 +46,18 @@ internal sealed class CachedAssetRepository : IAssetRepository
 		string externalId,
 		CancellationToken cancellationToken)
 	{
-		return await this.assetRepository.AddAsync(
+		var asset = await this.assetRepository.AddAsync(
 			name,
 			assetClass,
 			assetType,
 			currency,
 			externalId,
 			cancellationToken);
+
+		await this.hybridCache.RemoveAsync(
+			$"assets/external/{externalId}",
+			cancellationToken: cancellationToken);
+
+		return asset;
 	}
 }

@@ -1,0 +1,1 @@
+﻿{"id":"Guid_1","name":"My PPF","assetType":"PPF","assetClass":"Debt","currency":"INR"}

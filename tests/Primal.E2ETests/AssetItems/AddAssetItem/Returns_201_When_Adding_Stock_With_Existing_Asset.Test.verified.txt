@@ -1,0 +1,1 @@
+﻿{"id":"Guid_1","name":"Second AAPL","assetType":"Stock","assetClass":"Equity","currency":"USD"}
