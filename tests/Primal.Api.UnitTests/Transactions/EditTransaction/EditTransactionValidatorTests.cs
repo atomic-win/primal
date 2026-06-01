@@ -64,30 +64,6 @@ public sealed class EditTransactionValidatorTests
 	}
 
 	[Test]
-	public async Task ValidateAsync_ReturnsError_WhenAssetItemDoesNotExist()
-	{
-		var validator = CreateValidator(assetItemExists: false);
-		var request = CreateRequest();
-
-		var result = await validator.ValidateAsync(request);
-
-		await Assert.That(result.IsValid).IsFalse();
-		await AssertHasError(result, "Asset item does not exist.");
-	}
-
-	[Test]
-	public async Task ValidateAsync_ReturnsError_WhenTransactionDoesNotExist()
-	{
-		var validator = CreateValidator(transactionExists: false);
-		var request = CreateRequest();
-
-		var result = await validator.ValidateAsync(request);
-
-		await Assert.That(result.IsValid).IsFalse();
-		await AssertHasError(result, "Transaction does not exist.");
-	}
-
-	[Test]
 	public async Task ValidateAsync_ReturnsError_WhenNameIsTooShort()
 	{
 		var validator = CreateValidator();
@@ -183,16 +159,11 @@ public sealed class EditTransactionValidatorTests
 	}
 
 	private static EditTransactionValidator CreateValidator(
-		AssetType assetType = AssetType.Stock,
-		bool assetItemExists = true,
-		bool transactionExists = true)
+		AssetType assetType = AssetType.Stock)
 	{
 		var assetItemRepository = Substitute.For<IAssetItemRepository>();
 		var assetRepository = Substitute.For<IAssetRepository>();
-		var transactionRepository = Substitute.For<ITransactionRepository>();
-		var assetItem = assetItemExists
-			? new AssetItem(new AssetItemId(Guid.NewGuid()), new AssetId(Guid.NewGuid()), "Asset Item")
-			: AssetItem.Empty;
+		var assetItem = new AssetItem(new AssetItemId(Guid.NewGuid()), new AssetId(Guid.NewGuid()), "Asset Item");
 		var asset = new Asset(
 			assetItem.AssetId,
 			"Asset",
@@ -200,29 +171,15 @@ public sealed class EditTransactionValidatorTests
 			assetType,
 			assetType is AssetType.Stock or AssetType.MutualFund ? Currency.Unknown : Currency.USD,
 			assetType is AssetType.Stock or AssetType.MutualFund ? "EXT-123" : string.Empty);
-		var transaction = transactionExists
-			? new Transaction(
-				new TransactionId(Guid.NewGuid()),
-				DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-1)),
-				"Existing transaction",
-				TransactionType.Deposit,
-				assetItem.Id,
-				0m,
-				0m,
-				100m)
-			: Transaction.Empty;
 
 		assetItemRepository.GetByIdAsync(Arg.Any<Domain.Users.UserId>(), Arg.Any<AssetItemId>(), Arg.Any<CancellationToken>())
 			.Returns(assetItem);
 		assetRepository.GetByIdAsync(Arg.Any<AssetId>(), Arg.Any<CancellationToken>())
 			.Returns(asset);
-		transactionRepository.GetByIdAsync(Arg.Any<Domain.Users.UserId>(), Arg.Any<AssetItemId>(), Arg.Any<TransactionId>(), Arg.Any<CancellationToken>())
-			.Returns(transaction);
 
 		return new EditTransactionValidator(
 			assetItemRepository,
-			assetRepository,
-			transactionRepository);
+			assetRepository);
 	}
 
 	private static EditTransactionRequest CreateRequest(
