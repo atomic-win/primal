@@ -15,6 +15,7 @@ public sealed class InfrastructureModule : Module
 	{
 		this.RegisterInvestments(builder);
 		this.RegisterPersistence(builder);
+		this.RegisterAuth(builder);
 	}
 
 	private void RegisterInvestments(ContainerBuilder builder)
@@ -106,6 +107,13 @@ public sealed class InfrastructureModule : Module
 			c.Resolve<HybridCache>(),
 			c.Resolve<TransactionRepository>()))
 			.As<ITransactionRepository>()
+			.SingleInstance();
+	}
+
+	private void RegisterAuth(ContainerBuilder builder)
+	{
+		builder.RegisterType<GoogleIdTokenValidator>()
+			.As<IIdTokenValidator>()
 			.SingleInstance();
 	}
 }

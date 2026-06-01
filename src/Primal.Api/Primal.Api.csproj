@@ -19,7 +19,6 @@
 		<PackageReference Include="Autofac.Extensions.DependencyInjection" />
 		<PackageReference Include="FastEndpoints" />
 		<PackageReference Include="FastEndpoints.Security" />
-		<PackageReference Include="Google.Apis.Auth" />
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
 		<PackageReference Include="NeoSmart.Caching.Sqlite.AspNetCore" />
 	</ItemGroup>

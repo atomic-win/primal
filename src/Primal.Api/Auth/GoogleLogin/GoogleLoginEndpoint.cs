@@ -15,13 +15,16 @@ namespace Primal.Api.Auth;
 [AllowAnonymous]
 internal sealed class GoogleLoginEndpoint : Endpoint<GoogleLoginRequest, TokenResponse>
 {
+	private readonly IIdTokenValidator idTokenValidator;
 	private readonly IUserIdRepository userIdRepository;
 	private readonly IUserRepository userRepository;
 
 	public GoogleLoginEndpoint(
+		IIdTokenValidator idTokenValidator,
 		IUserIdRepository userIdRepository,
 		IUserRepository userRepository)
 	{
+		this.idTokenValidator = idTokenValidator;
 		this.userIdRepository = userIdRepository;
 		this.userRepository = userRepository;
 	}
@@ -30,26 +33,26 @@ internal sealed class GoogleLoginEndpoint : Endpoint<GoogleLoginRequest, TokenRe
 	{
 		try
 		{
-			GoogleJsonWebSignature.Payload payload = await GoogleJsonWebSignature.ValidateAsync(req.IdToken);
+			var identityProviderUser = await this.idTokenValidator.ValidateAsync(req.IdToken, ct);
 
 			var userId = await this.userIdRepository.GetUserId(
 				IdentityProvider.Google,
-				new IdentityProviderUserId(payload.Subject),
+				identityProviderUser.Id,
 				ct);
 
 			if (userId == UserId.Empty)
 			{
 				userId = await this.userIdRepository.AddUserId(
 					IdentityProvider.Google,
-					new IdentityProviderUserId(payload.Subject),
+					identityProviderUser.Id,
 					ct);
 
 				await this.userRepository.AddUserAsync(
 					userId,
-					payload.Email,
-					firstName: payload.GivenName,
-					lastName: payload.FamilyName,
-					fullName: payload.Name,
+					identityProviderUser.Email,
+					firstName: identityProviderUser.FirstName,
+					lastName: identityProviderUser.LastName,
+					fullName: identityProviderUser.FullName,
 					ct);
 			}
 
