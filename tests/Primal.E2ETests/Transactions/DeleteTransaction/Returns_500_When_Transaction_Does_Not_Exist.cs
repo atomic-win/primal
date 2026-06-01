@@ -27,5 +27,8 @@ public sealed class Returns_500_When_Transaction_Does_Not_Exist
 
 		// Assert
 		await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.NotFound);
+
+		var body = await response.Content.ReadAsStringAsync();
+		await Verifier.Verify(body);
 	}
 }

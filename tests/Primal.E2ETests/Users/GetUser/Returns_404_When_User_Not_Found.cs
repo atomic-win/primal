@@ -20,5 +20,8 @@ public sealed class Returns_404_When_User_Not_Found
 
 		// Assert
 		await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.NotFound);
+
+		var body = await response.Content.ReadAsStringAsync();
+		await Verifier.Verify(body);
 	}
 }

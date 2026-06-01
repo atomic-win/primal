@@ -1,1 +1,1 @@
-﻿{"statusCode":400,"message":"One or more errors occurred!","errors":{"name":["Name cannot be empty"]}}
+﻿{"type":"https://www.rfc-editor.org/rfc/rfc7231#section-6.5.1","title":"Bad Request","status":400,"instance":"/api/asset-items","traceId":"Scrubbed","detail":"Name cannot be empty","errors":[{"name":"name","reason":"Name cannot be empty"}]}

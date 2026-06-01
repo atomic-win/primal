@@ -1,1 +1,1 @@
-﻿{"statusCode":400,"message":"One or more errors occurred!","errors":{"assetItemId":["Asset item ID must be provided."]}}
+﻿{"type":"https://www.rfc-editor.org/rfc/rfc7231#section-6.5.1","title":"Bad Request","status":400,"instance":"/api/asset-items/Guid_Empty/transactions","traceId":"Scrubbed","detail":"Asset item ID must be provided","errors":[{"name":"assetItemId","reason":"Asset item ID must be provided"}]}
