@@ -23,15 +23,6 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 
 ---
 
-## 2. POST /api/auth/refresh-token
-
-| # | Test | Input | Expected | Type | Present |
-|---|------|-------|----------|------|---------|
-| 1 | Refreshes valid token | Valid refresh token in body | 200 new TokenResponse | E2E | ✅ |
-| 2 | Rejects invalid refresh token | Invalid/expired refresh token | 401 | E2E | ✅ |
-| 3 | Rejects missing body | No request body | 401/400 | E2E | ✅ |
-| 4 | Rejects empty JSON body | `{}` | 401/400 | E2E | ✅ |
-
 ---
 
 ## 3. GET /api/users/me
@@ -670,8 +661,7 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 | Section | Total | Present | Missing |
 |---------|-------|---------|---------|
 | 1. POST /api/auth/login/google | 10 | 5 | 5 |
-| 2. POST /api/auth/refresh-token | 4 | 4 | 0 |
-| 3. GET /api/users/me | 7 | 7 | 0 |
+| 2. GET /api/users/me | 7 | 7 | 0 |
 | 4. PATCH /api/users/me | 10 | 10 | 0 |
 | 5. POST /api/asset-items | 45 | 45 | 0 |
 | 6. GET /api/asset-items | 2 | 2 | 0 |
@@ -692,4 +682,4 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 | 21. Caching (Integration) | 15 | 2 | 13 |
 | 22. Repositories (Integration) | 25 | 5 | 20 |
 | 23. DB Schema (Integration) | 7 | 0 | 7 |
-| **Total** | **333** | **263** | **70** |
+| **Total** | **329** | **259** | **70** |

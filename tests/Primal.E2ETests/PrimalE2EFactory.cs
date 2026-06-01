@@ -65,7 +65,6 @@ internal sealed class PrimalE2EFactory : WebApplicationFactory<Program>
 		builder.UseSetting("TokenIssuerSettings:Issuer", "TestIssuer");
 		builder.UseSetting("TokenIssuerSettings:Audience", "TestAudience");
 		builder.UseSetting("TokenIssuerSettings:AccessTokenValidity", "60");
-		builder.UseSetting("TokenIssuerSettings:RefreshTokenValidity", "120");
 		builder.UseSetting("InvestmentSettings:FMPApiKey", "test-api-key");
 		builder.UseSetting("InvestmentSettings:AlphaVantageApiKey", "test-alpha-key");
 		builder.UseSetting("InvestmentSettings:MutualFundApiBaseUrl", this.MutualFundApi.Url!);

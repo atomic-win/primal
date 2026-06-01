@@ -46,6 +46,5 @@ internal static class ErrorMessages
 		internal const string IdTokenExpired = "ID token has expired";
 		internal const string IdTokenInvalid = "ID token is invalid";
 		internal const string UnexpectedError = "An unexpected error occurred";
-		internal const string RefreshTokenDisabled = "Refresh token endpoint is disabled";
 	}
 }

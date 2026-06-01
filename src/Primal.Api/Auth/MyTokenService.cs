@@ -13,7 +13,6 @@ internal sealed class MyTokenService : RefreshTokenService<TokenRequest, TokenRe
 			o.Issuer = config["TokenIssuerSettings:Issuer"] ?? throw new InvalidOperationException("TokenIssuerSettings:Issuer configuration is missing");
 			o.Audience = config["TokenIssuerSettings:Audience"] ?? throw new InvalidOperationException("TokenIssuerSettings:Audience configuration is missing");
 			o.AccessTokenValidity = TimeSpan.FromMinutes(config.GetValue<int>("TokenIssuerSettings:AccessTokenValidity"));
-			o.RefreshTokenValidity = TimeSpan.FromHours(config.GetValue<int>("TokenIssuerSettings:RefreshTokenValidity"));
 		});
 	}
 

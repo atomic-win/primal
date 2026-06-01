@@ -52,6 +52,5 @@ internal static class ErrorCodes
 		internal const string IdTokenExpired = "ID_TOKEN_EXPIRED";
 		internal const string IdTokenInvalid = "ID_TOKEN_INVALID";
 		internal const string UnexpectedError = "UNEXPECTED_ERROR";
-		internal const string RefreshTokenDisabled = "REFRESH_TOKEN_DISABLED";
 	}
 }

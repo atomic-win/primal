@@ -18,7 +18,4 @@ internal static class ErrorFactory
 
 	internal static ValidationFailure UserNotFound()
 		=> new("userId", ErrorMessages.User.NotFound) { ErrorCode = ErrorCodes.User.NotFound };
-
-	internal static ValidationFailure RefreshTokenDisabled()
-		=> new("refreshToken", ErrorMessages.Auth.RefreshTokenDisabled) { ErrorCode = ErrorCodes.Auth.RefreshTokenDisabled };
 }
