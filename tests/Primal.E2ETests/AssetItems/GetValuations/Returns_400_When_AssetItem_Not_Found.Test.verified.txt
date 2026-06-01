@@ -1,0 +1,1 @@
+﻿{"type":"https://www.rfc-editor.org/rfc/rfc7231#section-6.5.1","title":"Bad Request","status":400,"instance":"/api/asset-items/valuations","traceId":"Scrubbed","detail":"Asset item with ID 'Guid_1' not found","errors":[{"name":"generalErrors","reason":"Asset item with ID 'Guid_1' not found","code":"ASSET_ITEM_NOT_FOUND"}]}
