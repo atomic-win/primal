@@ -21,6 +21,12 @@ internal sealed class MyTokenService : RefreshTokenService<TokenRequest, TokenRe
 		});
 	}
 
+	public override async Task HandleAsync(TokenRequest req, CancellationToken ct)
+	{
+		// Instantly drops the request and sends a 404 Not Found or 410 Gone
+		await this.Send.NotFoundAsync(ct);
+	}
+
 	public override async Task PersistTokenAsync(TokenResponse response)
 	{
 		await Task.CompletedTask;

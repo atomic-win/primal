@@ -10,7 +10,7 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 |---|------|-------|----------|------|---------|
 | 1 | Rejects empty IdToken | `{ "IdToken": "" }` | 400 `ID_TOKEN_REQUIRED` | E2E | ✅ |
 | 2 | Rejects null IdToken | `{ "IdToken": null }` | 400 `ID_TOKEN_REQUIRED` | E2E | ✅ |
-| 3 | Rejects missing body | No request body | 400 `ID_TOKEN_REQUIRED` | E2E | ❌ |
+| 3 | Rejects missing body | No request body | 400 `ID_TOKEN_REQUIRED` | E2E | ✅ |
 | 4 | Rejects empty JSON body | `{}` | 400 `ID_TOKEN_REQUIRED` | E2E | ✅ |
 | 5 | Existing user logs in | Valid Google token; user already in DB | 200 TokenResponse (access + refresh) | E2E | ❌ |
 | 6 | New user registers and logs in | Valid Google token; user not in DB | 200 TokenResponse; user + userId rows created | E2E | ❌ |
@@ -27,10 +27,10 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 
 | # | Test | Input | Expected | Type | Present |
 |---|------|-------|----------|------|---------|
-| 1 | Refreshes valid token | Valid refresh token in body | 200 new TokenResponse | E2E | ❌ |
+| 1 | Refreshes valid token | Valid refresh token in body | 200 new TokenResponse | E2E | ✅ |
 | 2 | Rejects invalid refresh token | Invalid/expired refresh token | 401 | E2E | ❌ |
-| 3 | Rejects missing body | No request body | 401/400 | E2E | ❌ |
-| 4 | Rejects empty JSON body | `{}` | 401/400 | E2E | ❌ |
+| 3 | Rejects missing body | No request body | 401/400 | E2E | ✅ |
+| 4 | Rejects empty JSON body | `{}` | 401/400 | E2E | ✅ |
 
 ---
 
@@ -72,7 +72,7 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 | # | Test | Input | Expected | Type | Present |
 |---|------|-------|----------|------|---------|
 | 1 | Rejects empty body | `{}` | 400 multiple errors (ASSET_TYPE_UNKNOWN, NAME_REQUIRED, etc.) | E2E | ✅ |
-| 2 | Rejects no body | No request body | 400 multiple errors | E2E | ❌ |
+| 2 | Rejects no body | No request body | 400 multiple errors | E2E | ✅ |
 | 3 | Rejects Unknown AssetType | `AssetType: "Unknown"` | 400 `ASSET_TYPE_UNKNOWN` | E2E | ✅ |
 | 4 | Rejects missing AssetType | AssetType key absent (defaults to Unknown) | 400 `ASSET_TYPE_UNKNOWN` | E2E | ❌ |
 | 5 | Rejects empty Name | `Name: ""` | 400 `NAME_REQUIRED` | E2E | ✅ |
@@ -180,14 +180,14 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 
 | # | Test | Input | Expected | Type | Present |
 |---|------|-------|----------|------|---------|
-| 11 | Buy adds to CurrentValue | MutualFund with Buy transaction | CurrentValue includes units × current price | E2E | ❌ |
+| 11 | Buy adds to CurrentValue | MutualFund with Buy transaction | CurrentValue includes units × current price | E2E | ✅ |
 | 12 | Deposit adds to CurrentValue | BankAccount with Deposit | CurrentValue includes deposit amount | E2E | ✅ |
 | 13 | SelfInterest adds to CurrentValue | BankAccount with SelfInterest | CurrentValue includes amount | E2E | ✅ |
-| 14 | Sell subtracts from CurrentValue | MutualFund with Buy then Sell | CurrentValue reduced by sell (at original price) | E2E | ❌ |
+| 14 | Sell subtracts from CurrentValue | MutualFund with Buy then Sell | CurrentValue reduced by sell (at original price) | E2E | ✅ |
 | 15 | Withdrawal subtracts from CurrentValue | BankAccount with Deposit then Withdrawal | CurrentValue reduced | E2E | ✅ |
 | 16 | InterestPenalty subtracts from CurrentValue | BankAccount with Deposit then InterestPenalty | CurrentValue reduced | E2E | ✅ |
 | 17 | Interest does not affect CurrentValue | BankAccount with Deposit + Interest | Interest contributes 0 to CurrentValue | E2E | ✅ |
-| 18 | Dividend does not affect CurrentValue | Stock with Buy + Dividend | Dividend contributes 0 to CurrentValue | E2E | ❌ |
+| 18 | Dividend does not affect CurrentValue | Stock with Buy + Dividend | Dividend contributes 0 to CurrentValue | E2E | ✅ |
 
 ### Valuations — InvestedValue by AssetType
 
@@ -195,12 +195,12 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 |---|------|-------|----------|------|---------|
 | 19 | BankAccount: Invested = Current | BankAccount with deposits/withdrawals | InvestedValue equals CurrentValue | E2E | ✅ |
 | 20 | Wallet: Invested = Current | Wallet with deposits/withdrawals | InvestedValue equals CurrentValue | E2E | ✅ |
-| 21 | TradingAccount: Invested = Current | TradingAccount with deposits | InvestedValue equals CurrentValue | E2E | ❌ |
-| 22 | Bond: Invested = Current | Bond with deposits | InvestedValue equals CurrentValue | E2E | ❌ |
-| 23 | MutualFund: Invested from Buy minus Sell | MF with Buy(10u@100) then Sell(3u) | InvestedValue = remaining 7 units × buy price | E2E | ❌ |
+| 21 | TradingAccount: Invested = Current | TradingAccount with deposits | InvestedValue equals CurrentValue | E2E | ✅ |
+| 22 | Bond: Invested = Current | Bond with deposits | InvestedValue equals CurrentValue | E2E | ✅ |
+| 23 | MutualFund: Invested from Buy minus Sell | MF with Buy(10u@100) then Sell(3u) | InvestedValue = remaining 7 units × buy price | E2E | ✅ |
 | 24 | FixedDeposit: Invested from Deposit minus Withdrawal | FD with Deposit then partial Withdrawal | InvestedValue = remaining deposit amount | E2E | ✅ |
-| 25 | Stock: Invested from Buy minus Sell | Stock with Buy then partial Sell | InvestedValue = remaining units × buy price | E2E | ❌ |
-| 26 | Full offset → zero invested | Buy 10u then Sell 10u | InvestedValue = 0 | E2E | ❌ |
+| 25 | Stock: Invested from Buy minus Sell | Stock with Buy then partial Sell | InvestedValue = remaining units × buy price | E2E | ✅ |
+| 26 | Full offset → zero invested | Buy 10u then Sell 10u | InvestedValue = 0 | E2E | ✅ |
 | 27 | Partial offset | Buy 10u@100, Sell 3u | InvestedValue = 7u × buy price (adjusted) | E2E | ❌ |
 
 ### Valuations — XIRR
@@ -218,8 +218,8 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 
 | # | Test | Input | Expected | Type | Present |
 |---|------|-------|----------|------|---------|
-| 34 | Same currency → no exchange rate | INR asset, Currency=INR | Values computed without exchange rate conversion | E2E | ❌ |
-| 35 | Cross-currency conversion | INR asset, Currency=USD | Values converted using exchange rate | E2E | ❌ |
+| 34 | Same currency → no exchange rate | INR asset, Currency=INR | Values computed without exchange rate conversion | E2E | ✅ |
+| 35 | Cross-currency conversion | INR asset, Currency=USD | Values converted using exchange rate | E2E | ✅ |
 
 ### Valuations — CalculateInitialAmount date handling
 
@@ -336,7 +336,7 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 | 71 | Creates Sell transaction | MutualFund, Sell, Units=5, Price=120 | 201; stored Units=5, Price=120, Amount=0 | E2E | ✅ |
 | 72 | Creates Deposit transaction | BankAccount, Deposit, Amount=5000 | 201; stored Units=0, Price=0, Amount=5000 | E2E | ✅ |
 | 73 | Creates Withdrawal transaction | BankAccount, Withdrawal, Amount=1000 | 201; stored Units=0, Price=0, Amount=1000 | E2E | ✅ |
-| 74 | Response has zeroed amounts | Any valid creation | 201; response Units=0, Price=0, Amount=0 | E2E | ❌ |
+| 74 | Response has zeroed amounts | Any valid creation | 201; response Units=0, Price=0, Amount=0 | E2E | ✅ |
 
 ---
 
@@ -347,7 +347,7 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 | 1 | Returns 404 for missing asset item | Valid GUID; item not in DB | 404 `ASSET_ITEM_NOT_FOUND` | E2E | ✅ |
 | 2 | Returns empty list | Asset item exists; no transactions | 200 `[]` | E2E | ✅ |
 | 3 | Returns transactions with calculated amounts | Asset item with multiple transactions; Currency=INR | 200 array with Amount calculated per transaction | E2E | ✅ |
-| 4 | Cross-currency amount calculation | INR asset; Currency=USD query param | 200; amounts converted to USD | E2E | ❌ |
+| 4 | Cross-currency amount calculation | INR asset; Currency=USD query param | 200; amounts converted to USD | E2E | ✅ |
 | 5 | Missing Currency defaults to Unknown | Currency query param absent | 200; amounts calculated with Unknown currency | E2E | ❌ |
 | 6 | Rejects non-GUID route param | `/api/asset-items/not-a-guid/transactions` | 404 route not matched | E2E | ✅ |
 
@@ -365,7 +365,7 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 | 6 | Non-MF/Stock asset rate = 1 | BankAccount Buy; cross-currency | 200; units × 1 × exchange rate | E2E | ✅ |
 | 7 | Missing Currency defaults to Unknown | Currency query param absent | 200 | E2E | ❌ |
 | 8 | Rejects non-GUID transactionId | Non-GUID in route | 404 route not matched | E2E | ✅ |
-| 9 | Missing transactionId hits list endpoint | `/api/asset-items/{id}/transactions/` | Matches GET list endpoint instead | E2E | ❌ |
+| 9 | Missing transactionId hits list endpoint | `/api/asset-items/{id}/transactions/` | Matches GET list endpoint instead | E2E | ✅ |
 
 ---
 
@@ -669,18 +669,18 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 
 | Section | Total | Present | Missing |
 |---------|-------|---------|---------|
-| 1. POST /api/auth/login/google | 10 | 4 | 6 |
-| 2. POST /api/auth/refresh-token | 4 | 0 | 4 |
+| 1. POST /api/auth/login/google | 10 | 5 | 5 |
+| 2. POST /api/auth/refresh-token | 4 | 3 | 1 |
 | 3. GET /api/users/me | 7 | 7 | 0 |
 | 4. PATCH /api/users/me | 10 | 9 | 1 |
-| 5. POST /api/asset-items | 45 | 42 | 3 |
+| 5. POST /api/asset-items | 45 | 43 | 2 |
 | 6. GET /api/asset-items | 2 | 2 | 0 |
 | 7. GET /api/asset-items/{id} | 3 | 3 | 0 |
 | 8. DELETE /api/asset-items/{id} | 4 | 4 | 0 |
-| 9. GET /api/asset-items/valuations | 37 | 17 | 20 |
-| 10. POST .../transactions | 74 | 73 | 1 |
-| 11. GET .../transactions | 6 | 4 | 2 |
-| 12. GET .../transactions/{id} | 9 | 7 | 2 |
+| 9. GET /api/asset-items/valuations | 37 | 27 | 10 |
+| 10. POST .../transactions | 74 | 74 | 0 |
+| 11. GET .../transactions | 6 | 5 | 1 |
+| 12. GET .../transactions/{id} | 9 | 8 | 1 |
 | 13. PATCH .../transactions/{id} | 26 | 22 | 4 |
 | 14. DELETE .../transactions/{id} | 3 | 3 | 0 |
 | 15. Cross-Cutting | 9 | 5 | 4 |
@@ -692,4 +692,4 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 | 21. Caching (Integration) | 15 | 2 | 13 |
 | 22. Repositories (Integration) | 25 | 5 | 20 |
 | 23. DB Schema (Integration) | 7 | 0 | 7 |
-| **Total** | **333** | **133** | **200** |
+| **Total** | **333** | **243** | **90** |

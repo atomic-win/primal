@@ -94,6 +94,20 @@ internal static class WireMockServerExtensions
 				.WithBody("[]"));
 	}
 
+	internal static void SetupStockPrices(
+		this WireMockServer server,
+		IReadOnlyCollection<(string Date, decimal Price)> prices)
+	{
+		var priceEntries = string.Join(",\n\t\t\t\t\t", prices.Select(p => $$"""{ "date": "{{p.Date}}", "price": {{p.Price}} }"""));
+
+		server
+			.Given(Request.Create().WithPath("/stable/historical-price-eod/light").UsingGet())
+			.RespondWith(Response.Create()
+				.WithStatusCode(200)
+				.WithHeader("Content-Type", "application/json")
+				.WithBody($"[\n\t\t\t\t\t{priceEntries}\n\t\t\t\t]"));
+	}
+
 	internal static void SetupExchangeRate(
 		this WireMockServer server,
 		string date,
