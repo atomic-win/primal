@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Http.Json;
-using Primal.Api.AssetItems;
 
 namespace Primal.E2ETests.Transactions.AddTransaction;
 
@@ -18,15 +17,12 @@ public sealed class Returns_201_And_GET_Returns_Created_Transaction
 		var userId = await factory.CreateUserAsync();
 		var client = factory.CreateAuthenticatedClient(userId);
 
-		var createAssetResponse = await client.PostAsJsonAsync("/api/asset-items", new
-		{
-			Name = "Test Mutual Fund",
-			AssetClass = "Equity",
-			AssetType = "MutualFund",
-			ExternalId = "119551",
-			Currency = "Unknown",
-		});
-		var assetItem = await createAssetResponse.ReadJsonAsync<AssetItemResponse>();
+		var assetItem = await client.AddAssetItemAsync(
+			name: "Test Mutual Fund",
+			assetClass: "Equity",
+			assetType: "MutualFund",
+			externalId: "119551",
+			currency: "Unknown");
 
 		var response = await client.PostAsJsonAsync(
 			$"/api/asset-items/{assetItem.Id}/transactions", new

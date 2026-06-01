@@ -1,6 +1,4 @@
 using System.Net;
-using System.Net.Http.Json;
-using Primal.Api.AssetItems;
 
 namespace Primal.E2ETests.AssetItems.GetAssetItem;
 
@@ -17,15 +15,12 @@ public sealed class Returns_AssetItem_When_It_Exists
 		var userId = await factory.CreateUserAsync();
 		var client = factory.CreateAuthenticatedClient(userId);
 
-		var createResponse = await client.PostAsJsonAsync("/api/asset-items", new
-		{
-			Name = "Test Mutual Fund",
-			AssetClass = "Equity",
-			AssetType = "MutualFund",
-			ExternalId = "119551",
-			Currency = "Unknown",
-		});
-		var assetItem = await createResponse.ReadJsonAsync<AssetItemResponse>();
+		var assetItem = await client.AddAssetItemAsync(
+			name: "Test Mutual Fund",
+			assetClass: "Equity",
+			assetType: "MutualFund",
+			externalId: "119551",
+			currency: "Unknown");
 
 		var response = await client.GetAsync($"/api/asset-items/{assetItem.Id}");
 

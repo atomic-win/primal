@@ -1,7 +1,4 @@
 using System.Net;
-using System.Net.Http.Json;
-using Primal.Api.AssetItems;
-using Primal.Api.Transactions;
 
 namespace Primal.E2ETests.Transactions.GetTransactionById;
 
@@ -19,28 +16,21 @@ public sealed class Returns_Transaction_When_It_Exists
 		var userId = await factory.CreateUserAsync();
 		var client = factory.CreateAuthenticatedClient(userId);
 
-		var createAssetResponse = await client.PostAsJsonAsync("/api/asset-items", new
-		{
-			Name = "Test Mutual Fund",
-			AssetClass = "Equity",
-			AssetType = "MutualFund",
-			ExternalId = "119551",
-			Currency = "Unknown",
-		});
-		var assetItem = await createAssetResponse.ReadJsonAsync<AssetItemResponse>();
+		var assetItem = await client.AddAssetItemAsync(
+			name: "Test Mutual Fund",
+			assetClass: "Equity",
+			assetType: "MutualFund",
+			externalId: "119551",
+			currency: "Unknown");
 
-		var createTxResponse = await client.PostAsJsonAsync(
-			$"/api/asset-items/{assetItem.Id}/transactions", new
-			{
-				AssetItemId = assetItem.Id,
-				Date = "2026-01-15",
-				Name = "Buy Units",
-				TransactionType = "Buy",
-				Units = 10.0m,
-				Price = 150.25m,
-				Amount = 0,
-			});
-		var transaction = await createTxResponse.ReadJsonAsync<TransactionResponse>();
+		var transaction = await client.AddTransactionAsync(
+			assetItemId: assetItem.Id,
+			date: "2026-01-15",
+			name: "Buy Units",
+			transactionType: "Buy",
+			units: 10.0m,
+			price: 150.25m,
+			amount: 0);
 
 		var response = await client.GetAsync(
 			$"/api/asset-items/{assetItem.Id}/transactions/{transaction.Id}?currency=INR");

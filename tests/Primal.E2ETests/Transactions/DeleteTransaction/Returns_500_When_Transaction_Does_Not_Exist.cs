@@ -1,6 +1,4 @@
 using System.Net;
-using System.Net.Http.Json;
-using Primal.Api.AssetItems;
 
 namespace Primal.E2ETests.Transactions.DeleteTransaction;
 
@@ -15,15 +13,12 @@ public sealed class Returns_500_When_Transaction_Does_Not_Exist
 		var userId = await factory.CreateUserAsync();
 		var client = factory.CreateAuthenticatedClient(userId);
 
-		var createResponse = await client.PostAsJsonAsync("/api/asset-items", new
-		{
-			Name = "Test Fixed Deposit",
-			AssetClass = "Debt",
-			AssetType = "FixedDeposit",
-			ExternalId = string.Empty,
-			Currency = "INR",
-		});
-		var assetItem = await createResponse.ReadJsonAsync<AssetItemResponse>();
+		var assetItem = await client.AddAssetItemAsync(
+			name: "Test Fixed Deposit",
+			assetClass: "Debt",
+			assetType: "FixedDeposit",
+			externalId: string.Empty,
+			currency: "INR");
 
 		var response = await client.DeleteAsync(
 			$"/api/asset-items/{assetItem.Id}/transactions/{Guid.NewGuid()}");
