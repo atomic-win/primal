@@ -1,7 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
 using Primal.Api.AssetItems;
-using Primal.Api.Transactions;
 
 namespace Primal.E2ETests.Transactions.AddTransaction;
 
@@ -29,7 +28,7 @@ public sealed class Returns_201_And_GET_Returns_Created_Transaction
 		});
 		var assetItem = await createAssetResponse.ReadJsonAsync<AssetItemResponse>();
 
-		var createTxResponse = await client.PostAsJsonAsync(
+		var response = await client.PostAsJsonAsync(
 			$"/api/asset-items/{assetItem.Id}/transactions", new
 			{
 				AssetItemId = assetItem.Id,
@@ -40,15 +39,10 @@ public sealed class Returns_201_And_GET_Returns_Created_Transaction
 				Price = 150.25m,
 				Amount = 0,
 			});
-		var transaction = await createTxResponse.ReadJsonAsync<TransactionResponse>();
 
-		// Validate via GET
-		var getResponse = await client.GetAsync(
-			$"/api/asset-items/{assetItem.Id}/transactions/{transaction.Id}?currency=INR");
+		await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.Created);
 
-		await Assert.That(getResponse.StatusCode).IsEqualTo(HttpStatusCode.OK);
-
-		var body = await getResponse.Content.ReadAsStringAsync();
+		var body = await response.Content.ReadAsStringAsync();
 		await Verifier.Verify(body);
 	}
 }

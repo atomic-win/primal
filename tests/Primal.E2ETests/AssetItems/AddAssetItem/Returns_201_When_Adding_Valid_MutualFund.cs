@@ -26,5 +26,8 @@ public sealed class Returns_201_When_Adding_Valid_MutualFund
 		});
 
 		await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.Created);
+
+		var body = await response.Content.ReadAsStringAsync();
+		await Verifier.Verify(body);
 	}
 }

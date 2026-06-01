@@ -1,0 +1,1 @@
+﻿{"id":"Guid_1","name":"Apple Stock","assetType":"Stock","assetClass":"Equity","currency":"USD"}
