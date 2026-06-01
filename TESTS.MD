@@ -1,1024 +1,663 @@
 # Test Scenarios
 
-Comprehensive listing of every scenario, input, and parameter combination required for full path coverage of the Primal codebase.
+All scenarios grouped by endpoint. Each table includes the test type:
+- **E2E** — tested via HTTP request/response (preferred)
+- **Integration** — requires direct component testing (DB, HTTP client, cache internals)
+- **Unit** — pure logic not reachable via endpoints
 
 ---
 
-## 1. Domain Layer
+## 1. POST /api/auth/login/google
 
-### 1.1 Entity\<TId\> Equality
-
-| # | Scenario | Expected |
-|---|----------|----------|
-| 1 | Two entities with the same Id compared via `Equals(Entity<TId>)` | `true` |
-| 2 | Two entities with different Ids compared via `Equals(Entity<TId>)` | `false` |
-| 3 | `Equals(Entity<TId>)` with `null` | `false` |
-| 4 | `Equals(object)` with a matching entity | `true` |
-| 5 | `Equals(object)` with a non-entity object | `false` |
-| 6 | `Equals(object)` with `null` | `false` |
-| 7 | `==` operator: both non-null, same Id | `true` |
-| 8 | `==` operator: both non-null, different Id | `false` |
-| 9 | `==` operator: left is `null`, right is `null` | `true` |
-| 10 | `==` operator: left is `null`, right is non-null | `false` |
-| 11 | `==` operator: left is non-null, right is `null` | `false` |
-| 12 | `!=` operator: same Id | `false` |
-| 13 | `!=` operator: different Id | `true` |
-| 14 | `GetHashCode()` returns same value for entities with same Id | Equal hash codes |
-| 15 | `GetHashCode()` returns different value for entities with different Ids | Different hash codes (likely) |
-
-### 1.2 Domain Model `Empty` Sentinel Values
-
-| # | Scenario | Expected |
-|---|----------|----------|
-| 1 | `User.Empty` has `UserId.Empty`, empty strings, `Currency.Unknown`, `Locale.Unknown` | All fields match sentinel values |
-| 2 | `Transaction.Empty` has `TransactionId.Empty`, `DateOnly.MinValue`, empty name, `Buy`, `AssetItemId.Empty`, all zeros | All fields match sentinel values |
-| 3 | `AssetItem.Empty` has `AssetItemId.Empty`, `AssetId.Empty`, empty name | All fields match |
-| 4 | `Asset.Empty` has `AssetId.Empty`, empty strings, `Unknown` enums | All fields match |
-
-### 1.3 Enum Coverage
-
-Every enum value must be exercised at least once across all tests:
-
-- **Currency**: `Unknown`, `USD`, `INR`
-- **Locale**: `Unknown`, `EN_US`, `EN_IN`
-- **IdentityProvider**: `Google`
-- **AssetClass**: `Unknown`, `Equity`, `Debt`, `Commodities`, `EmergencyFund`
-- **AssetType**: `Unknown`, `BankAccount`, `Wallet`, `TradingAccount`, `FixedDeposit`, `EPF`, `PPF`, `MutualFund`, `Stock`, `Bond`
-- **TransactionType**: `Unknown`, `Buy`, `Sell`, `Deposit`, `Withdrawal`, `Dividend`, `Interest`, `SelfInterest`, `InterestPenalty`
+| # | Test | Input | Expected | Type |
+|---|------|-------|----------|------|
+| 1 | Rejects empty IdToken | `{ "IdToken": "" }` | 400 `ID_TOKEN_REQUIRED` | E2E |
+| 2 | Rejects null IdToken | `{ "IdToken": null }` | 400 `ID_TOKEN_REQUIRED` | E2E |
+| 3 | Rejects missing body | No request body | 400 `ID_TOKEN_REQUIRED` | E2E |
+| 4 | Rejects empty JSON body | `{}` | 400 `ID_TOKEN_REQUIRED` | E2E |
+| 5 | Existing user logs in | Valid Google token; user already in DB | 200 TokenResponse (access + refresh) | E2E |
+| 6 | New user registers and logs in | Valid Google token; user not in DB | 200 TokenResponse; user + userId rows created | E2E |
+| 7 | Rejects expired Google token | Expired Google ID token | 401 `ID_TOKEN_EXPIRED` | E2E |
+| 8 | Rejects invalid Google token | Malformed Google ID token | 401 `ID_TOKEN_INVALID` | E2E |
+| 9 | Returns 500 on unexpected error | Google validation throws non-JWT exception | 500 `UNEXPECTED_ERROR` | E2E |
+| 10 | Accessible without auth | No Authorization header | Endpoint reachable (AllowAnonymous) | E2E |
 
 ---
 
-## 2. Application Layer
+## 2. POST /api/auth/refresh-token
 
-### 2.1 TransactionAmountCalculator.CalculateAmountAsync
-
-#### Branch: Transaction type is NOT Buy/Sell (returns `transaction.Amount` directly)
-
-| # | TransactionType | date vs transaction.Date | Expected |
-|---|-----------------|--------------------------|----------|
-| 1 | `Deposit` | same date | `exchangeRate × transaction.Amount` |
-| 2 | `Withdrawal` | different date | `exchangeRate × transaction.Amount` |
-| 3 | `Interest` | any | `exchangeRate × transaction.Amount` |
-| 4 | `SelfInterest` | any | `exchangeRate × transaction.Amount` |
-| 5 | `Dividend` | any | `exchangeRate × transaction.Amount` |
-| 6 | `InterestPenalty` | any | `exchangeRate × transaction.Amount` |
-
-#### Branch: Transaction type IS Buy/Sell, date == transaction.Date
-
-| # | TransactionType | Expected |
-|---|-----------------|----------|
-| 7 | `Buy`, same date | `exchangeRate × (units × price)` |
-| 8 | `Sell`, same date | `exchangeRate × (units × price)` |
-
-#### Branch: Transaction type IS Buy/Sell, date != transaction.Date → GetAssetRateAsync
-
-| # | AssetType | Expected |
-|---|-----------|----------|
-| 9 | `MutualFund` | `exchangeRate × (units × mutualFundApiClient.GetOnOrBeforePriceAsync(symbol, date))` |
-| 10 | `Stock` | `exchangeRate × (units × stockApiClient.GetOnOrBeforePriceAsync(symbol, date))` |
-| 11 | `BankAccount` (not MF/Stock) | `exchangeRate × (units × 1m)` |
-| 12 | `FixedDeposit` (not MF/Stock) | `exchangeRate × (units × 1m)` |
-
-#### Branch: Exchange rate for same vs different currency
-
-| # | Scenario | Expected |
-|---|----------|----------|
-| 13 | Asset currency == target currency | Exchange rate = 1 (from CachedExchangeRateApiClient) |
-| 14 | Asset currency != target currency (e.g., INR → USD) | Exchange rate fetched from API |
-
-#### ExternalId parsing
-
-| # | Scenario | Expected |
-|---|----------|----------|
-| 15 | ExternalId = `"mf-123456"` for MutualFund | Symbol extracted as `"123456"` (split on `-`, index 1) |
-| 16 | ExternalId = `"stock-aapl"` for Stock | Symbol extracted as `"aapl"` |
+| # | Test | Input | Expected | Type |
+|---|------|-------|----------|------|
+| 1 | Refreshes valid token | Valid refresh token in body | 200 new TokenResponse | E2E |
+| 2 | Rejects invalid refresh token | Invalid/expired refresh token | 401 | E2E |
+| 3 | Rejects missing body | No request body | 401/400 | E2E |
+| 4 | Rejects empty JSON body | `{}` | 401/400 | E2E |
 
 ---
 
-## 3. API Layer — Auth
+## 3. GET /api/users/me
 
-### 3.1 POST /api/auth/login/google — GoogleLoginEndpoint
-
-#### Validation (GoogleLoginValidator)
-
-| # | Input | Expected |
-|---|-------|----------|
-| 1 | `IdToken` = `""` (empty) | 400 — `ID_TOKEN_REQUIRED` |
-| 2 | `IdToken` = `null` | 400 — `ID_TOKEN_REQUIRED` |
-
-#### Handler Paths
-
-| # | Scenario | Expected |
-|---|----------|----------|
-| 3 | Valid Google ID token, user already exists (`GetUserId` returns non-empty) | 200 — TokenResponse with access/refresh tokens |
-| 4 | Valid Google ID token, new user (`GetUserId` returns `UserId.Empty`) | Creates userId via `AddUserId`, creates user via `AddUserAsync`, returns 200 — TokenResponse |
-| 5 | Expired Google ID token (`InvalidJwtException` with message "JWT has expired.") | 401 — `ID_TOKEN_EXPIRED` |
-| 6 | Invalid Google ID token (other `InvalidJwtException`) | 401 — `ID_TOKEN_INVALID` |
-| 7 | Unexpected exception during processing | 500 — `UNEXPECTED_ERROR` |
-
-### 3.2 POST /api/auth/refresh-token — MyTokenService
-
-| # | Scenario | Expected |
-|---|----------|----------|
-| 1 | Valid refresh token | 200 — new TokenResponse |
-| 2 | Invalid/expired refresh token | 401 |
+| # | Test | Input | Expected | Type |
+|---|------|-------|----------|------|
+| 1 | Returns user profile | Valid JWT; user exists | 200 UserResponse with all fields | E2E |
+| 2 | Returns 404 for missing user | Valid JWT; user not in DB | 404 `USER_NOT_FOUND` | E2E |
+| 3 | Rejects missing auth | No Authorization header | 401 | E2E |
+| 4 | Rejects expired JWT | Expired JWT | 401 | E2E |
+| 5 | Rejects invalid JWT signature | Tampered JWT | 401 | E2E |
+| 6 | Rejects wrong audience | JWT with wrong audience | 401 | E2E |
+| 7 | Rejects wrong issuer | JWT with wrong issuer | 401 | E2E |
 
 ---
 
-## 4. API Layer — Users
+## 4. PATCH /api/users/me
 
-### 4.1 GET /api/users/me — GetUserEndpoint
-
-#### Validation (GetUserValidator)
-
-| # | Input | Expected |
-|---|-------|----------|
-| 1 | `UserId` = `Guid.Empty` (no/invalid JWT claim) | 400 — `USER_ID_REQUIRED` |
-
-#### Handler Paths
-
-| # | Scenario | Expected |
-|---|----------|----------|
-| 2 | Valid UserId, user exists | 200 — `UserResponse` with all fields |
-| 3 | Valid UserId, user does not exist (`User.Empty`) | 404 — `USER_NOT_FOUND` |
-
-#### Auth
-
-| # | Scenario | Expected |
-|---|----------|----------|
-| 4 | No Authorization header | 401 Unauthorized |
-| 5 | Invalid/expired JWT | 401 Unauthorized |
-
-### 4.2 PATCH /api/users/me — UpdateUserEndpoint
-
-#### Validation (UpdateUserValidator)
-
-| # | PreferredCurrency | PreferredLocale | Expected |
-|---|-------------------|-----------------|----------|
-| 1 | `Unknown` | `Unknown` | 400 — `UPDATE_FIELDS_REQUIRED` |
-| 2 | `USD` | `Unknown` | Passes validation |
-| 3 | `Unknown` | `EN_IN` | Passes validation |
-| 4 | `INR` | `EN_IN` | Passes validation |
-
-#### Handler Paths
-
-| # | Scenario | Expected |
-|---|----------|----------|
-| 5 | User not found | 404 — `USER_NOT_FOUND` |
-| 6 | Both fields same as existing (currency=Unknown matches existing, locale=Unknown matches existing) | 204 No Content (no DB update) |
-| 7 | `PreferredCurrency` = `Unknown`, new `PreferredLocale` | 204 — updates locale only, preserves existing currency |
-| 8 | New `PreferredCurrency`, `PreferredLocale` = `Unknown` | 204 — updates currency only, preserves existing locale |
-| 9 | Both fields are new values | 204 — updates both |
-| 10 | `PreferredCurrency` matches existing, `PreferredLocale` matches existing | 204 No Content (no DB update) |
+| # | Test | Input | Expected | Type |
+|---|------|-------|----------|------|
+| 1 | Rejects both fields unknown | `{ PreferredCurrency: Unknown, PreferredLocale: Unknown }` | 400 `UPDATE_FIELDS_REQUIRED` | E2E |
+| 2 | Rejects empty body | `{}` (both default to Unknown) | 400 `UPDATE_FIELDS_REQUIRED` | E2E |
+| 3 | Rejects no body | No request body | 400 `UPDATE_FIELDS_REQUIRED` | E2E |
+| 4 | Returns 404 for missing user | Valid JWT; user not in DB; body `{ PreferredCurrency: "INR" }` | 404 `USER_NOT_FOUND` | E2E |
+| 5 | Updates currency only | `{ PreferredCurrency: "INR" }` (locale key missing → Unknown) | 204; currency=INR, locale preserved | E2E |
+| 6 | Updates locale only | `{ PreferredLocale: "EN_IN" }` (currency key missing → Unknown) | 204; locale=EN_IN, currency preserved | E2E |
+| 7 | Updates both fields | `{ PreferredCurrency: "INR", PreferredLocale: "EN_IN" }` | 204; both updated | E2E |
+| 8 | No-op when values match existing | Currency=existing, Locale=existing | 204; no DB update | E2E |
+| 9 | No-op when both unknown and existing match | Currency=Unknown (existing=USD), Locale=Unknown (existing=EN_US) | 204; no DB update | E2E |
 
 ---
 
-## 5. API Layer — Asset Items
+## 5. POST /api/asset-items
 
-### 5.1 POST /api/asset-items — AddAssetItemEndpoint
+### Validation
 
-#### Validation (AddAssetItemValidator)
+| # | Test | Input | Expected | Type |
+|---|------|-------|----------|------|
+| 1 | Rejects empty body | `{}` | 400 multiple errors (ASSET_TYPE_UNKNOWN, NAME_REQUIRED, etc.) | E2E |
+| 2 | Rejects no body | No request body | 400 multiple errors | E2E |
+| 3 | Rejects Unknown AssetType | `AssetType: "Unknown"` | 400 `ASSET_TYPE_UNKNOWN` | E2E |
+| 4 | Rejects missing AssetType | AssetType key absent (defaults to Unknown) | 400 `ASSET_TYPE_UNKNOWN` | E2E |
+| 5 | Rejects empty Name | `Name: ""` | 400 `NAME_REQUIRED` | E2E |
+| 6 | Rejects missing Name | Name key absent | 400 `NAME_REQUIRED` | E2E |
+| 7 | Rejects Unknown AssetClass for BankAccount | `AssetType: BankAccount, AssetClass: Unknown` | 400 `ASSET_CLASS_REQUIRED` | E2E |
+| 8 | Rejects Unknown AssetClass for Wallet | `AssetType: Wallet, AssetClass: Unknown` | 400 `ASSET_CLASS_REQUIRED` | E2E |
+| 9 | Rejects Unknown AssetClass for TradingAccount | `AssetType: TradingAccount, AssetClass: Unknown` | 400 `ASSET_CLASS_REQUIRED` | E2E |
+| 10 | Rejects Unknown AssetClass for FixedDeposit | `AssetType: FixedDeposit, AssetClass: Unknown` | 400 `ASSET_CLASS_REQUIRED` | E2E |
+| 11 | Rejects Unknown AssetClass for EPF | `AssetType: EPF, AssetClass: Unknown` | 400 `ASSET_CLASS_REQUIRED` | E2E |
+| 12 | Rejects Unknown AssetClass for PPF | `AssetType: PPF, AssetClass: Unknown` | 400 `ASSET_CLASS_REQUIRED` | E2E |
+| 13 | Rejects Unknown AssetClass for MutualFund | `AssetType: MutualFund, AssetClass: Unknown` | 400 `ASSET_CLASS_REQUIRED` | E2E |
+| 14 | Rejects non-Unknown AssetClass for Stock | `AssetType: Stock, AssetClass: Equity` | 400 `ASSET_CLASS_NOT_ALLOWED` | E2E |
+| 15 | Rejects non-Unknown AssetClass for Bond | `AssetType: Bond, AssetClass: Debt` | 400 `ASSET_CLASS_NOT_ALLOWED` | E2E |
+| 16 | Rejects EmergencyFund class for MutualFund | `AssetType: MutualFund, AssetClass: EmergencyFund` | 400 `ASSET_CLASS_INVALID` | E2E |
+| 17 | Accepts Equity class for MutualFund | `AssetType: MutualFund, AssetClass: Equity` | Passes | E2E |
+| 18 | Accepts Debt class for MutualFund | `AssetType: MutualFund, AssetClass: Debt` | Passes | E2E |
+| 19 | Accepts Commodities class for MutualFund | `AssetType: MutualFund, AssetClass: Commodities` | Passes | E2E |
+| 20 | Rejects empty ExternalId for MutualFund | `AssetType: MutualFund, ExternalId: ""` | 400 `EXTERNAL_ID_REQUIRED` | E2E |
+| 21 | Rejects empty ExternalId for Stock | `AssetType: Stock, ExternalId: ""` | 400 `EXTERNAL_ID_REQUIRED` | E2E |
+| 22 | Rejects non-empty ExternalId for BankAccount | `AssetType: BankAccount, ExternalId: "x"` | 400 `EXTERNAL_ID_NOT_ALLOWED` | E2E |
+| 23 | Rejects non-empty ExternalId for Wallet | `AssetType: Wallet, ExternalId: "x"` | 400 `EXTERNAL_ID_NOT_ALLOWED` | E2E |
+| 24 | Rejects non-empty ExternalId for TradingAccount | `AssetType: TradingAccount, ExternalId: "x"` | 400 `EXTERNAL_ID_NOT_ALLOWED` | E2E |
+| 25 | Rejects non-empty ExternalId for FixedDeposit | `AssetType: FixedDeposit, ExternalId: "x"` | 400 `EXTERNAL_ID_NOT_ALLOWED` | E2E |
+| 26 | Rejects non-empty ExternalId for EPF | `AssetType: EPF, ExternalId: "x"` | 400 `EXTERNAL_ID_NOT_ALLOWED` | E2E |
+| 27 | Rejects non-empty ExternalId for PPF | `AssetType: PPF, ExternalId: "x"` | 400 `EXTERNAL_ID_NOT_ALLOWED` | E2E |
+| 28 | Rejects non-empty ExternalId for Bond | `AssetType: Bond, ExternalId: "x"` | 400 `EXTERNAL_ID_NOT_ALLOWED` | E2E |
+| 29 | Rejects Unknown Currency for BankAccount | `AssetType: BankAccount, Currency: Unknown` | 400 `CURRENCY_REQUIRED` | E2E |
+| 30 | Rejects non-Unknown Currency for MutualFund | `AssetType: MutualFund, Currency: INR` | 400 `CURRENCY_NOT_ALLOWED` | E2E |
+| 31 | Rejects non-Unknown Currency for Stock | `AssetType: Stock, Currency: USD` | 400 `CURRENCY_NOT_ALLOWED` | E2E |
 
-| # | Field | Condition | Expected |
-|---|-------|-----------|----------|
-| 1 | `AssetType` | `Unknown` | 400 — `ASSET_TYPE_UNKNOWN` |
-| 2 | `Name` | empty/null | 400 — `NAME_REQUIRED` |
-| 3 | `AssetClass` | `Unknown` when AssetType is NOT Stock/Bond (e.g., BankAccount) | 400 — `ASSET_CLASS_REQUIRED` |
-| 4 | `AssetClass` | non-Unknown when AssetType IS Stock | 400 — `ASSET_CLASS_NOT_ALLOWED` |
-| 5 | `AssetClass` | non-Unknown when AssetType IS Bond | 400 — `ASSET_CLASS_NOT_ALLOWED` |
-| 6 | `AssetClass` | `EmergencyFund` when AssetType is `MutualFund` | 400 — `ASSET_CLASS_INVALID` |
-| 7 | `AssetClass` | `Unknown` when AssetType is `MutualFund` | 400 — `ASSET_CLASS_REQUIRED` |
-| 8 | `AssetClass` | `Equity` when AssetType is `MutualFund` | Passes validation |
-| 9 | `AssetClass` | `Debt` when AssetType is `MutualFund` | Passes validation |
-| 10 | `AssetClass` | `Commodities` when AssetType is `MutualFund` | Passes validation |
-| 11 | `ExternalId` | empty when AssetType is `MutualFund` | 400 — `EXTERNAL_ID_REQUIRED` |
-| 12 | `ExternalId` | empty when AssetType is `Stock` | 400 — `EXTERNAL_ID_REQUIRED` |
-| 13 | `ExternalId` | non-empty when AssetType is `BankAccount` | 400 — `EXTERNAL_ID_NOT_ALLOWED` |
-| 14 | `ExternalId` | non-empty when AssetType is `Wallet` | 400 — `EXTERNAL_ID_NOT_ALLOWED` |
-| 15 | `ExternalId` | non-empty when AssetType is `TradingAccount` | 400 — `EXTERNAL_ID_NOT_ALLOWED` |
-| 16 | `ExternalId` | non-empty when AssetType is `FixedDeposit` | 400 — `EXTERNAL_ID_NOT_ALLOWED` |
-| 17 | `ExternalId` | non-empty when AssetType is `EPF` | 400 — `EXTERNAL_ID_NOT_ALLOWED` |
-| 18 | `ExternalId` | non-empty when AssetType is `PPF` | 400 — `EXTERNAL_ID_NOT_ALLOWED` |
-| 19 | `ExternalId` | non-empty when AssetType is `Bond` | 400 — `EXTERNAL_ID_NOT_ALLOWED` |
-| 20 | `Currency` | `Unknown` when AssetType is NOT MutualFund/Stock (e.g., BankAccount) | 400 — `CURRENCY_REQUIRED` |
-| 21 | `Currency` | non-Unknown when AssetType is `MutualFund` | 400 — `CURRENCY_NOT_ALLOWED` |
-| 22 | `Currency` | non-Unknown when AssetType is `Stock` | 400 — `CURRENCY_NOT_ALLOWED` |
+### Handler
 
-#### Handler — MutualFund Path
-
-| # | Scenario | Expected |
-|---|----------|----------|
-| 23 | Asset already exists by externalId `"mf-{ExternalId}"` | 201 — uses existing asset, creates asset item |
-| 24 | Asset doesn't exist, mutual fund API returns valid fund | 201 — creates asset with `Currency.INR`, creates asset item |
-| 25 | Asset doesn't exist, mutual fund API returns empty SchemeCode | 404 — `MUTUAL_FUND_NOT_FOUND` |
-
-#### Handler — Stock Path
-
-| # | Scenario | Expected |
-|---|----------|----------|
-| 26 | Asset already exists by externalId `"stock-{ExternalId.ToLower()}"` | 201 — uses existing asset, creates asset item |
-| 27 | Asset doesn't exist, stock API returns valid stock | 201 — creates asset with `Currency.USD`, `AssetClass.Equity`, creates asset item |
-| 28 | Asset doesn't exist, stock API returns empty Symbol | 404 — `STOCK_NOT_FOUND` |
-
-#### Handler — Bond Path
-
-| # | Scenario | Expected |
-|---|----------|----------|
-| 29 | Bond asset type | 201 — creates asset with `AssetClass.Debt` override (ignoring provided AssetClass) |
-
-#### Handler — Default Path (BankAccount, Wallet, TradingAccount, FixedDeposit, EPF, PPF)
-
-| # | Scenario | AssetType | Expected |
-|---|----------|-----------|----------|
-| 30 | Asset already exists by default externalId | BankAccount | 201 — uses existing asset |
-| 31 | Asset doesn't exist | BankAccount | 201 — creates new asset with `"default-{AssetClass}-{AssetType}-{Currency}"` |
-| 32 | Valid request | Wallet | 201 |
-| 33 | Valid request | TradingAccount | 201 |
-| 34 | Valid request | FixedDeposit | 201 |
-| 35 | Valid request | EPF | 201 |
-| 36 | Valid request | PPF | 201 |
-
-### 5.2 GET /api/asset-items — GetAllAssetItemsEndpoint
-
-#### Validation (GetAllAssetItemsValidator)
-
-| # | Input | Expected |
-|---|-------|----------|
-| 1 | `UserId` = `Guid.Empty` | 400 — `USER_ID_REQUIRED` |
-
-#### Handler Paths
-
-| # | Scenario | Expected |
-|---|----------|----------|
-| 2 | User has no asset items | 200 — empty array |
-| 3 | User has multiple asset items | 200 — array of `AssetItemResponse` with correct AssetType/AssetClass/Currency |
-
-### 5.3 GET /api/asset-items/{id} — GetAssetItemEndpoint
-
-#### Validation (GetAssetItemValidator)
-
-| # | Input | Expected |
-|---|-------|----------|
-| 1 | `Id` = `Guid.Empty` | 400 — `ASSET_ITEM_ID_REQUIRED` |
-
-#### Handler Paths
-
-| # | Scenario | Expected |
-|---|----------|----------|
-| 2 | Asset item exists | 200 — `AssetItemResponse` |
-| 3 | Asset item not found | 404 — `ASSET_ITEM_NOT_FOUND` |
-
-### 5.4 DELETE /api/asset-items/{id} — DeleteAssetItemEndpoint
-
-#### Validation (DeleteAssetItemValidator)
-
-| # | Input | Expected |
-|---|-------|----------|
-| 1 | `Id` = `Guid.Empty` | 400 — `ASSET_ITEM_ID_REQUIRED` |
-
-#### Handler Paths
-
-| # | Scenario | Expected |
-|---|----------|----------|
-| 2 | Asset item exists | 204 No Content |
-| 3 | Asset item not found | 404 — `ASSET_ITEM_NOT_FOUND` |
-
-### 5.5 GET /api/asset-items/valuations — GetValuationsEndpoint
-
-#### Validation (GetValuationsValidator)
-
-| # | Input | Expected |
-|---|-------|----------|
-| 1 | `AssetItemIds` = empty/null | 400 — `ASSET_ITEM_IDS_REQUIRED` |
-| 2 | `Currency` = `Unknown` | 400 — `CURRENCY_REQUIRED` |
-
-#### Handler — ValidateRequestParameters
-
-| # | Scenario | Expected |
-|---|----------|----------|
-| 3 | One or more AssetItemIds refer to non-existent items | 400 — `ASSET_ITEM_NOT_FOUND` (per missing item) |
-| 4 | Duplicate AssetItemIds in request | Deduplicated (`.Distinct()`) before processing |
-| 5 | All asset items exist | Proceeds to valuation calculation |
-
-#### Handler — CalculateValuationsAsync / Valuation Dates
-
-| # | Scenario | Expected |
-|---|----------|----------|
-| 6 | No transactions for any asset item on current date | Returns single entry `{Date: today, InvestedValue: 0, CurrentValue: 0, XirrPercent: 0}` |
-| 7 | No transactions before a historical end-of-month date | Stops yielding (returns `DateOnly.MinValue` sentinel → `yield break`) |
-| 8 | Transactions exist across multiple months | Returns valuation for today + each end-of-month going backwards until no transactions |
-
-#### Handler — CalculateCurrentValueAsync (per transaction type)
-
-| # | TransactionType | Expected effect on CurrentValue |
-|---|-----------------|--------------------------------|
-| 9 | `Buy` | `+CalculateCurrentAmountAsync` |
-| 10 | `Deposit` | `+CalculateCurrentAmountAsync` |
-| 11 | `SelfInterest` | `+CalculateCurrentAmountAsync` |
-| 12 | `Sell` | `-CalculateInitialAmountAsync` |
-| 13 | `Withdrawal` | `-CalculateCurrentAmountAsync` |
-| 14 | `InterestPenalty` | `-CalculateCurrentAmountAsync` |
-| 15 | Other (Interest, Dividend, Unknown) | `0` |
-
-#### Handler — CalculateInvestedValueAsync (per asset type)
-
-| # | AssetType | Expected |
-|---|-----------|----------|
-| 16 | `BankAccount`, `Wallet`, `TradingAccount`, `Bond` | InvestedValue = CurrentValue |
-| 17 | `FixedDeposit`, `EPF`, `PPF`, `MutualFund`, `Stock` | Invested value computed from Buy/Deposit transactions minus withdrawals/sells |
-| 18 | `Unknown` asset type | Throws `InvalidOperationException` |
-
-#### Handler — CalculateInvestedValueAsync reduction logic
-
-| # | Scenario | Expected |
-|---|----------|----------|
-| 19 | Buy transaction fully offset by sold units | Transaction skipped (continue) |
-| 20 | Deposit fully offset by withdrawals | Transaction skipped (continue) |
-| 21 | Partially offset Buy (some units sold) | Remaining units used for invested value |
-| 22 | Partially offset Deposit (partial withdrawal) | Remaining amount used for invested value |
-| 23 | No withdrawals/sells | Full Buy/Deposit amounts contribute to invested value |
-
-#### Handler — CalculateInitialAmountAsync
-
-| # | TransactionType | Date used |
-|---|-----------------|-----------|
-| 24 | `Deposit` | `valuationDate` (not `transaction.Date`) |
-| 25 | `Withdrawal` | `valuationDate` (not `transaction.Date`) |
-| 26 | `Buy` | `transaction.Date` |
-| 27 | `Sell` | `transaction.Date` |
-| 28 | Other types | `transaction.Date` |
-
-#### Handler — XIRR TransactionAmount (per type)
-
-| # | TransactionType | Expected sign |
-|---|-----------------|---------------|
-| 29 | `Buy` | `+` (positive / inflow) |
-| 30 | `Deposit` | `+` |
-| 31 | `InterestPenalty` | `+` |
-| 32 | `Sell` | `-` (negative / outflow) |
-| 33 | `Withdrawal` | `-` |
-| 34 | `Interest` | `-` |
-| 35 | `Dividend` | `-` |
-| 36 | Other (`SelfInterest`, `Unknown`) | `0` |
-
-#### Handler — XIRR BalanceAmount (per type)
-
-| # | TransactionType | Expected sign |
-|---|-----------------|---------------|
-| 37 | `Buy` | `+` |
-| 38 | `Deposit` | `+` |
-| 39 | `SelfInterest` | `+` |
-| 40 | `Sell` | `-` |
-| 41 | `Withdrawal` | `-` |
-| 42 | `InterestPenalty` | `-` |
-| 43 | Other (`Interest`, `Dividend`, `Unknown`) | `0` |
-
-#### Handler — CalculateXirr
-
-| # | Scenario | Expected |
-|---|----------|----------|
-| 44 | Empty xirrInputs | Returns `0` |
-| 45 | All transactions have `YearDiff < 1` and `balanceAmount != 0` | YearDiff normalized to `1.0` |
-| 46 | Transactions span over a year | YearDiff used as-is |
-| 47 | Multiple transactions on the same date | Grouped by `YearDiff`, amounts summed |
-| 48 | Positive NPV scenario | XIRR converges to a positive return |
-| 49 | Negative NPV scenario | XIRR converges to a negative return |
-
-#### Handler — GetValuationDates
-
-| # | Scenario | Expected |
-|---|----------|----------|
-| 50 | Current date is 2026-06-01 (frozen time) | First date = 2026-06-01, then 2026-05-31, 2026-04-30, etc. |
+| # | Test | Input | Expected | Type |
+|---|------|-------|----------|------|
+| 32 | Creates MutualFund — new asset | Valid MF request; asset not in DB; MF API returns fund | 201 AssetItemResponse; asset created with Currency=INR | E2E |
+| 33 | Creates MutualFund — existing asset | Valid MF request; asset already in DB by externalId | 201; reuses existing asset | E2E |
+| 34 | MutualFund not found in API | Valid MF request; MF API returns empty SchemeCode | 404 `MUTUAL_FUND_NOT_FOUND` | E2E |
+| 35 | Creates Stock — new asset | Valid Stock request; asset not in DB; Stock API returns stock | 201; asset created with Currency=USD, AssetClass=Equity | E2E |
+| 36 | Creates Stock — existing asset | Valid Stock request; asset already in DB | 201; reuses existing asset | E2E |
+| 37 | Stock not found in API | Valid Stock request; Stock API returns empty Symbol | 404 `STOCK_NOT_FOUND` | E2E |
+| 38 | Creates Bond asset item | Valid Bond request | 201; asset created with AssetClass=Debt override | E2E |
+| 39 | Creates BankAccount — new asset | Valid BankAccount request; asset not in DB | 201; asset externalId = `default-{class}-BankAccount-{currency}` | E2E |
+| 40 | Creates BankAccount — existing asset | Valid BankAccount request; matching default asset exists | 201; reuses existing asset | E2E |
+| 41 | Creates Wallet asset item | Valid Wallet request | 201 | E2E |
+| 42 | Creates TradingAccount asset item | Valid TradingAccount request | 201 | E2E |
+| 43 | Creates FixedDeposit asset item | Valid FixedDeposit request | 201 | E2E |
+| 44 | Creates EPF asset item | Valid EPF request | 201 | E2E |
+| 45 | Creates PPF asset item | Valid PPF request | 201 | E2E |
 
 ---
 
-## 6. API Layer — Transactions
+## 6. GET /api/asset-items
 
-### 6.1 POST /api/asset-items/{assetItemId}/transactions — AddTransactionEndpoint
-
-#### Validation (AddTransactionValidator)
-
-| # | Field | Condition | Expected |
-|---|-------|-----------|----------|
-| 1 | `AssetItemId` | `Guid.Empty` | 400 — `ASSET_ITEM_ID_REQUIRED` |
-| 2 | `Date` | `default(DateOnly)` (0001-01-01) | 400 — `DATE_REQUIRED` |
-| 3 | `Date` | Future date (> today) | 400 — `DATE_IN_FUTURE` |
-| 4 | `Date` | Today's date | Passes |
-| 5 | `Date` | Past date | Passes |
-| 6 | `Name` | empty/null | 400 — `NAME_REQUIRED` |
-| 7 | `Name` | 1–2 characters | 400 — `NAME_TOO_SHORT` |
-| 8 | `Name` | > 1000 characters | 400 — `NAME_TOO_LONG` |
-| 9 | `Name` | exactly 3 characters | Passes |
-| 10 | `Name` | exactly 1000 characters | Passes |
-| 11 | `TransactionType` | `Unknown` | 400 — `TRANSACTION_TYPE_REQUIRED` |
-
-##### Amount rules — units-based types (Buy, Sell)
-
-| # | TransactionType | Units | Price | Expected |
-|---|-----------------|-------|-------|----------|
-| 12 | `Buy` | `0` | `> 0` | 400 — `UNITS_REQUIRED` |
-| 13 | `Buy` | `< 0` | `> 0` | 400 — `UNITS_REQUIRED` |
-| 14 | `Buy` | `> 0` | `0` | 400 — `PRICE_REQUIRED` |
-| 15 | `Buy` | `> 0` | `< 0` | 400 — `PRICE_REQUIRED` |
-| 16 | `Buy` | `> 0` | `> 0` | Passes |
-| 17 | `Sell` | `0` | `> 0` | 400 — `UNITS_REQUIRED` |
-| 18 | `Sell` | `> 0` | `> 0` | Passes |
-
-##### Amount rules — amount-based types (all others except Unknown)
-
-| # | TransactionType | Amount | Expected |
-|---|-----------------|--------|----------|
-| 19 | `Deposit` | `0` | 400 — `AMOUNT_REQUIRED` |
-| 20 | `Deposit` | `< 0` | 400 — `AMOUNT_REQUIRED` |
-| 21 | `Deposit` | `> 0` | Passes |
-| 22 | `Withdrawal` | `> 0` | Passes |
-| 23 | `Interest` | `> 0` | Passes |
-| 24 | `SelfInterest` | `> 0` | Passes |
-| 25 | `Dividend` | `> 0` | Passes |
-| 26 | `InterestPenalty` | `> 0` | Passes |
-
-##### Transaction type validity per asset type
-
-| # | AssetType | TransactionType | Expected |
-|---|-----------|-----------------|----------|
-| 27 | `BankAccount` | `Deposit` | Passes |
-| 28 | `BankAccount` | `Withdrawal` | Passes |
-| 29 | `BankAccount` | `Interest` | Passes |
-| 30 | `BankAccount` | `SelfInterest` | Passes |
-| 31 | `BankAccount` | `InterestPenalty` | Passes |
-| 32 | `BankAccount` | `Buy` | 400 — `TRANSACTION_TYPE_INVALID` |
-| 33 | `BankAccount` | `Sell` | 400 — `TRANSACTION_TYPE_INVALID` |
-| 34 | `BankAccount` | `Dividend` | 400 — `TRANSACTION_TYPE_INVALID` |
-| 35 | `FixedDeposit` | `Deposit` | Passes |
-| 36 | `FixedDeposit` | `Withdrawal` | Passes |
-| 37 | `FixedDeposit` | `Interest` | Passes |
-| 38 | `FixedDeposit` | `SelfInterest` | Passes |
-| 39 | `FixedDeposit` | `InterestPenalty` | Passes |
-| 40 | `FixedDeposit` | `Buy` | 400 — `TRANSACTION_TYPE_INVALID` |
-| 41 | `EPF` | `Deposit` | Passes |
-| 42 | `EPF` | `Buy` | 400 — `TRANSACTION_TYPE_INVALID` |
-| 43 | `PPF` | `Deposit` | Passes |
-| 44 | `PPF` | `Buy` | 400 — `TRANSACTION_TYPE_INVALID` |
-| 45 | `MutualFund` | `Buy` | Passes |
-| 46 | `MutualFund` | `Sell` | Passes |
-| 47 | `MutualFund` | `Deposit` | 400 — `TRANSACTION_TYPE_INVALID` |
-| 48 | `MutualFund` | `Dividend` | 400 — `TRANSACTION_TYPE_INVALID` |
-| 49 | `Stock` | `Buy` | Passes |
-| 50 | `Stock` | `Sell` | Passes |
-| 51 | `Stock` | `Dividend` | Passes |
-| 52 | `Stock` | `Deposit` | 400 — `TRANSACTION_TYPE_INVALID` |
-| 53 | `Wallet` | `Deposit` | Passes |
-| 54 | `Wallet` | `Withdrawal` | Passes |
-| 55 | `Wallet` | `Interest` | 400 — `TRANSACTION_TYPE_INVALID` |
-| 56 | `TradingAccount` | `Deposit` | Passes |
-| 57 | `TradingAccount` | `Withdrawal` | Passes |
-| 58 | `TradingAccount` | `Buy` | 400 — `TRANSACTION_TYPE_INVALID` |
-| 59 | `Bond` | `Deposit` | Passes |
-| 60 | `Bond` | `Withdrawal` | Passes |
-| 61 | `Bond` | `Interest` | Passes |
-| 62 | `Bond` | `Buy` | 400 — `TRANSACTION_TYPE_INVALID` |
-| 63 | `Bond` | `SelfInterest` | 400 — `TRANSACTION_TYPE_INVALID` |
-
-##### Validation bypass when AssetItemId is Empty or TransactionType is Unknown
-
-| # | Scenario | Expected |
-|---|----------|----------|
-| 64 | `AssetItemId` = `Guid.Empty` AND `TransactionType` = `Buy` | Skips type-validity check (`.When` guard) |
-| 65 | `TransactionType` = `Unknown` AND `AssetItemId` valid | Skips type-validity check |
-| 66 | Asset item not found during validation lookup | Returns `true` (skips type-validity check) |
-
-#### Handler Paths
-
-| # | Scenario | Expected |
-|---|----------|----------|
-| 67 | Asset item not found | 404 — `ASSET_ITEM_NOT_FOUND` |
-| 68 | Valid Buy transaction | 201 — units/price from request, amount = 0 |
-| 69 | Valid Sell transaction | 201 — units/price from request, amount = 0 |
-| 70 | Valid Deposit transaction | 201 — units = 0, price = 0, amount from request |
-| 71 | Valid Withdrawal transaction | 201 — units = 0, price = 0, amount from request |
-| 72 | Response body always has Units/Price/Amount = 0 (response is skeleton) | Verify response shape |
-
-### 6.2 GET /api/asset-items/{assetItemId}/transactions — GetAllByAssetItemIdEndpoint
-
-#### Validation (GetAllByAssetItemIdValidator)
-
-| # | Input | Expected |
-|---|-------|----------|
-| 1 | `AssetItemId` = `Guid.Empty` | 400 — `ASSET_ITEM_ID_REQUIRED` |
-
-#### Handler Paths
-
-| # | Scenario | Expected |
-|---|----------|----------|
-| 2 | Asset item not found | 404 — `ASSET_ITEM_NOT_FOUND` |
-| 3 | Asset item exists, no transactions | 200 — empty array |
-| 4 | Asset item exists, multiple transactions | 200 — each transaction includes calculated `Amount` via `TransactionAmountCalculator` |
-| 5 | Currency parameter provided | Amount calculated in specified currency |
-| 6 | Currency = `Unknown` (default) | Amount calculated with unknown currency behavior |
-
-### 6.3 GET /api/asset-items/{assetItemId}/transactions/{transactionId} — GetTransactionByIdEndpoint
-
-#### Validation (GetTransactionByIdValidator)
-
-| # | Input | Expected |
-|---|-------|----------|
-| 1 | `AssetItemId` = `Guid.Empty` | 400 — `ASSET_ITEM_ID_REQUIRED` |
-| 2 | `TransactionId` = `Guid.Empty` | 400 — `TRANSACTION_ID_REQUIRED` |
-
-#### Handler Paths
-
-| # | Scenario | Expected |
-|---|----------|----------|
-| 3 | Transaction not found | 404 — `TRANSACTION_NOT_FOUND` |
-| 4 | Transaction found | 200 — `TransactionResponse` with calculated amount |
-
-### 6.4 PATCH /api/asset-items/{assetItemId}/transactions/{transactionId} — EditTransactionEndpoint
-
-#### Validation (EditTransactionValidator)
-
-| # | Field | Condition | Expected |
-|---|-------|-----------|----------|
-| 1 | `AssetItemId` | `Guid.Empty` | 400 — `ASSET_ITEM_ID_REQUIRED` |
-| 2 | `Name` | 1–2 characters (non-whitespace) | 400 — `NAME_TOO_SHORT` |
-| 3 | `Name` | > 1000 characters | 400 — `NAME_TOO_LONG` |
-| 4 | `Name` | empty/whitespace | Skips min/max length checks (`.When` guard) |
-| 5 | `Name` | 3–1000 characters | Passes |
-| 6 | `Units` | `< 0` when type is Buy/Sell | 400 — `UNITS_INVALID` |
-| 7 | `Units` | `0` when type is Buy/Sell | Passes (≥ 0 allowed for edit) |
-| 8 | `Price` | `< 0` when type is Buy/Sell | 400 — `PRICE_INVALID` |
-| 9 | `Price` | `0` when type is Buy/Sell | Passes |
-| 10 | `Amount` | `< 0` when type is Deposit/Withdrawal/etc. | 400 — `AMOUNT_INVALID` |
-| 11 | `Amount` | `0` when type is Deposit | Passes |
-| 12 | Transaction type validity | Same rules as AddTransaction (per asset type) | 400 — `TRANSACTION_TYPE_INVALID` |
-| 13 | `AssetItemId` = `Guid.Empty` or `TransactionType` = `Unknown` | Skips type-validity check |
-
-#### Handler Paths
-
-| # | Scenario | Expected |
-|---|----------|----------|
-| 14 | Asset item not found | 404 — `ASSET_ITEM_NOT_FOUND` |
-| 15 | Transaction not found | 404 — `TRANSACTION_NOT_FOUND` |
-
-##### NormalizeRequest — name handling
-
-| # | Scenario | Expected |
-|---|----------|----------|
-| 16 | `Name` is empty/whitespace in request | Uses existing transaction name |
-| 17 | `Name` is non-empty in request | Uses new name |
-
-##### NormalizeRequest — TransactionType handling
-
-| # | Scenario | Expected |
-|---|----------|----------|
-| 18 | `TransactionType` = `Unknown` in request | Uses existing transaction type |
-| 19 | `TransactionType` = valid value | Uses new transaction type |
-
-##### NormalizeRequest — amount-based type (not Buy/Sell)
-
-| # | Scenario | Expected |
-|---|----------|----------|
-| 20 | `Amount` = 0 in request | Uses existing amount |
-| 21 | `Amount` > 0 in request | Uses new amount; units/price set to 0 |
-
-##### NormalizeRequest — units-based type (Buy/Sell)
-
-| # | Scenario | Expected |
-|---|----------|----------|
-| 22 | `Units` = 0 in request | Uses existing units |
-| 23 | `Units` > 0 in request | Uses new units |
-| 24 | `Price` = 0 in request | Uses existing price |
-| 25 | `Price` > 0 in request | Uses new price; amount set to 0 |
-
-##### Success
-
-| # | Scenario | Expected |
-|---|----------|----------|
-| 26 | Valid edit request | 204 No Content, transaction updated in DB |
-
-### 6.5 DELETE /api/asset-items/{assetItemId}/transactions/{transactionId} — DeleteTransactionEndpoint
-
-#### Validation (DeleteTransactionValidator)
-
-| # | Input | Expected |
-|---|-------|----------|
-| 1 | `AssetItemId` = `Guid.Empty` | 400 — `ASSET_ITEM_ID_REQUIRED` |
-| 2 | `TransactionId` = `Guid.Empty` | 400 — `TRANSACTION_ID_REQUIRED` |
-
-#### Handler Paths
-
-| # | Scenario | Expected |
-|---|----------|----------|
-| 3 | Transaction not found | 404 — `TRANSACTION_NOT_FOUND` |
-| 4 | Transaction found | 204 No Content |
+| # | Test | Input | Expected | Type |
+|---|------|-------|----------|------|
+| 1 | Returns empty list | User has no asset items | 200 `[]` | E2E |
+| 2 | Returns all items with asset details | User has multiple asset items | 200 array of AssetItemResponse (Id, Name, AssetType, AssetClass, Currency) | E2E |
 
 ---
 
-## 7. Application — TransactionValidationExtensions
+## 7. GET /api/asset-items/{id}
 
-### 7.1 IsValidForAssetType
-
-Full matrix of `(AssetType, TransactionType)` → `bool`. All combinations in section 6.1 (scenarios 27–63) cover this.
-
-Additionally:
-
-| # | AssetType | Expected |
-|---|-----------|----------|
-| 1 | `Unknown` | Throws `InvalidOperationException` |
-
-### 7.2 IsUnitsRequired
-
-| # | TransactionType | Expected |
-|---|-----------------|----------|
-| 1 | `Buy` | `true` |
-| 2 | `Sell` | `true` |
-| 3 | `Deposit` | `false` |
-| 4 | `Withdrawal` | `false` |
-| 5 | `Interest` | `false` |
-| 6 | `SelfInterest` | `false` |
-| 7 | `Dividend` | `false` |
-| 8 | `InterestPenalty` | `false` |
-| 9 | `Unknown` | `false` |
+| # | Test | Input | Expected | Type |
+|---|------|-------|----------|------|
+| 1 | Returns asset item | Valid GUID; item exists | 200 AssetItemResponse | E2E |
+| 2 | Returns 404 for missing item | Valid GUID; item not in DB | 404 `ASSET_ITEM_NOT_FOUND` | E2E |
+| 3 | Rejects non-GUID route param | `/api/asset-items/not-a-guid` | 404 route not matched | E2E |
 
 ---
 
-## 8. Infrastructure Layer
+## 8. DELETE /api/asset-items/{id}
 
-### 8.1 RatesExtensions.GetOnOrBeforeValue
-
-| # | Scenario | Expected |
-|---|----------|----------|
-| 1 | Exact date exists in dictionary | Returns that rate |
-| 2 | Date-1 exists (weekend scenario) | Returns rate for date-1 |
-| 3 | Date-6 exists (long holiday) | Returns rate for date-6 |
-| 4 | No rate within 7-day lookback | Throws `InvalidOperationException` |
-| 5 | Empty dictionary | Throws `InvalidOperationException` |
-
-### 8.2 MutualFundApiClient
-
-#### GetBySymbolAsync
-
-| # | Scenario | Expected |
-|---|----------|----------|
-| 1 | API returns 404 | Returns empty `MutualFund` (SchemeCode = `""`) |
-| 2 | API returns valid response | Returns `MutualFund` with SchemeCode, Name, SchemeType, SchemeCategory, `Currency.INR` |
-
-#### GetPricesAsync
-
-| # | Scenario | Expected |
-|---|----------|----------|
-| 3 | API returns 404 | Returns empty dictionary |
-| 4 | API returns valid data | Returns `FrozenDictionary<DateOnly, decimal>` with parsed dates (dd-MM-yyyy) and NAV values |
-
-#### GetOnOrBeforePriceAsync
-
-| # | Scenario | Expected |
-|---|----------|----------|
-| 5 | Called directly | Throws `NotSupportedException` (delegated to `CachedAssetApiClient`) |
-
-### 8.3 StockApiClient
-
-#### GetBySymbolAsync
-
-| # | Scenario | Expected |
-|---|----------|----------|
-| 1 | API returns 404 | Returns empty `Stock` (Symbol = `""`) |
-| 2 | API returns empty array | Returns empty `Stock` |
-| 3 | API returns result with unrecognized Currency string | Returns empty `Stock` |
-| 4 | API returns valid result with recognized Currency (e.g., "USD") | Returns `Stock` with Symbol, Name, Currency |
-
-#### GetPricesAsync
-
-| # | Scenario | Expected |
-|---|----------|----------|
-| 5 | API returns 404 | Returns empty dictionary |
-| 6 | API returns empty array | Returns empty dictionary |
-| 7 | API returns valid data | Returns `FrozenDictionary<DateOnly, decimal>` |
-
-#### GetOnOrBeforePriceAsync
-
-| # | Scenario | Expected |
-|---|----------|----------|
-| 8 | Called directly | Throws `NotSupportedException` |
-
-### 8.4 ExchangeRateApiClient
-
-#### GetExchangeRatesAsync
-
-| # | Scenario | Expected |
-|---|----------|----------|
-| 1 | `from` == `to` | Returns empty dictionary |
-| 2 | `from` != `to`, API returns CSV data | Returns `FrozenDictionary<DateOnly, decimal>` using `close` column |
-
-#### GetOnOrBeforeExchangeRateAsync
-
-| # | Scenario | Expected |
-|---|----------|----------|
-| 3 | Called directly | Throws `NotSupportedException` |
-
-### 8.5 CachedExchangeRateApiClient
-
-#### GetExchangeRatesAsync
-
-| # | Scenario | Expected |
-|---|----------|----------|
-| 1 | `from` == `to` | Returns empty dictionary immediately (no cache/API call) |
-| 2 | `from` != `to`, first call | Fetches from API, caches result |
-| 3 | `from` != `to`, subsequent call | Returns from cache |
-
-#### GetOnOrBeforeExchangeRateAsync
-
-| # | Scenario | Expected |
-|---|----------|----------|
-| 4 | `from` == `to` | Returns `1m` immediately |
-| 5 | `from` != `to` | Fetches rates, calls `GetOnOrBeforeValue`, caches result |
-
-### 8.6 CachedAssetApiClient\<T\>
-
-| # | Scenario | Expected |
-|---|----------|----------|
-| 1 | `GetBySymbolAsync` — first call | Fetches from inner client, caches |
-| 2 | `GetBySymbolAsync` — repeat call | Returns cached value |
-| 3 | `GetPricesAsync` — first call | Fetches from inner client, caches |
-| 4 | `GetOnOrBeforePriceAsync` — first call | Fetches prices, uses `RatesExtensions.GetOnOrBeforeValue`, caches result |
-| 5 | `GetOnOrBeforePriceAsync` — repeat call same date | Returns cached value |
-
-### 8.7 Repository Tests (UserIdRepository, UserRepository, AssetRepository, AssetItemRepository, TransactionRepository)
-
-For each repository, standard CRUD path coverage:
-
-#### UserIdRepository
-
-| # | Scenario | Expected |
-|---|----------|----------|
-| 1 | `GetUserId` — entry exists | Returns `UserId` |
-| 2 | `GetUserId` — entry doesn't exist | Returns `UserId.Empty` |
-| 3 | `AddUserId` — new entry | Inserts row, returns new `UserId` |
-
-#### UserRepository
-
-| # | Scenario | Expected |
-|---|----------|----------|
-| 1 | `GetUserAsync` — user exists | Returns `User` with correct fields |
-| 2 | `GetUserAsync` — user doesn't exist | Returns `User.Empty` |
-| 3 | `AddUserAsync` — new user | Inserts with defaults (`USD`, `EN_US`), returns `User` |
-| 4 | `UpdateUserProfileAsync` | Updates currency/locale and `UpdatedAt` timestamp |
-
-#### AssetRepository
-
-| # | Scenario | Expected |
-|---|----------|----------|
-| 1 | `GetByIdAsync` — exists | Returns `Asset` |
-| 2 | `GetByIdAsync` — doesn't exist | Returns `Asset.Empty` |
-| 3 | `GetByExternalIdAsync` — exists | Returns `Asset` |
-| 4 | `GetByExternalIdAsync` — doesn't exist | Returns `Asset.Empty` |
-| 5 | `AddAsync` | Inserts row, returns `Asset` |
-
-#### AssetItemRepository
-
-| # | Scenario | Expected |
-|---|----------|----------|
-| 1 | `GetAllAsync` — user has items | Returns all items for that user |
-| 2 | `GetAllAsync` — user has no items | Returns empty collection |
-| 3 | `GetByIdAsync` — exists | Returns `AssetItem` |
-| 4 | `GetByIdAsync` — doesn't exist | Returns `AssetItem.Empty` |
-| 5 | `AddAsync` | Inserts row, returns `AssetItem` |
-| 6 | `DeleteAsync` | Deletes row |
-
-#### TransactionRepository
-
-| # | Scenario | Expected |
-|---|----------|----------|
-| 1 | `GetByAssetItemIdAsync` — has transactions | Returns all transactions for that asset item |
-| 2 | `GetByAssetItemIdAsync` — no transactions | Returns empty collection |
-| 3 | `GetByIdAsync` — exists | Returns `Transaction` |
-| 4 | `GetByIdAsync` — doesn't exist | Returns `Transaction.Empty` |
-| 5 | `AddAsync` | Inserts row, returns `Transaction` |
-| 6 | `UpdateAsync` | Updates all mutable fields and `UpdatedAt` |
-| 7 | `DeleteAsync` | Deletes row |
-
-### 8.8 Cached Repository Decorators (CachedUserRepository, CachedAssetRepository, CachedAssetItemRepository, CachedTransactionRepository)
-
-#### CachedUserRepository
-
-| # | Scenario | Expected |
-|---|----------|----------|
-| 1 | `GetUserAsync` — first call | Fetches from DB, caches |
-| 2 | `GetUserAsync` — repeat call | Returns cached value |
-| 3 | `AddUserAsync` | Delegates directly (no caching) |
-| 4 | `UpdateUserProfileAsync` | Updates DB, then invalidates cache key `users/{userId}` |
-
-#### CachedAssetRepository
-
-| # | Scenario | Expected |
-|---|----------|----------|
-| 1 | `GetByIdAsync` — first call | Fetches from DB, caches |
-| 2 | `GetByExternalIdAsync` — first call | Fetches from DB, caches |
-| 3 | `AddAsync` | Delegates directly (no caching) |
-
-#### CachedAssetItemRepository
-
-| # | Scenario | Expected |
-|---|----------|----------|
-| 1 | `GetAllAsync` — caches list | First fetches, subsequent returns cache |
-| 2 | `GetByIdAsync` — caches individual item | First fetches, subsequent returns cache |
-| 3 | `AddAsync` — invalidates list cache | After add, `users/{id}/assetItems` cache removed |
-| 4 | `DeleteAsync` — invalidates list AND item cache | Both keys removed |
-
-#### CachedTransactionRepository
-
-| # | Scenario | Expected |
-|---|----------|----------|
-| 1 | `GetByAssetItemIdAsync` — caches with tag | Cached under transactions tag |
-| 2 | `GetByIdAsync` — caches with tag | Cached under transactions tag |
-| 3 | `AddAsync` — invalidates transaction + valuation tags | Both tags cleared |
-| 4 | `UpdateAsync` — invalidates transaction + valuation tags | Both tags cleared |
-| 5 | `DeleteAsync` — invalidates transaction + valuation tags | Both tags cleared |
+| # | Test | Input | Expected | Type |
+|---|------|-------|----------|------|
+| 1 | Deletes existing item | Valid GUID; item exists | 204 | E2E |
+| 2 | Returns 404 for missing item | Valid GUID; item not in DB | 404 `ASSET_ITEM_NOT_FOUND` | E2E |
+| 3 | Cascades to transactions | Delete item that has transactions | 204; child transactions also deleted | E2E |
+| 4 | Rejects non-GUID route param | `/api/asset-items/not-a-guid` | 404 route not matched | E2E |
 
 ---
 
-## 9. Cross-Cutting Concerns
+## 9. GET /api/asset-items/valuations
 
-### 9.1 Authentication / Authorization
+### Validation
 
-| # | Scenario | Expected |
-|---|----------|----------|
-| 1 | Request to any protected endpoint without `Authorization` header | 401 |
-| 2 | Request with expired JWT | 401 |
-| 3 | Request with invalid JWT signature | 401 |
-| 4 | Request with valid JWT but wrong audience | 401 |
-| 5 | Request with valid JWT but wrong issuer | 401 |
-| 6 | `POST /api/auth/login/google` without auth | Allowed (AllowAnonymous) |
-| 7 | UserId from JWT claim matches request routing (user isolation) | Only own data accessible |
+| # | Test | Input | Expected | Type |
+|---|------|-------|----------|------|
+| 1 | Rejects empty AssetItemIds | `AssetItemIds: []` or missing | 400 `ASSET_ITEM_IDS_REQUIRED` | E2E |
+| 2 | Rejects Unknown Currency | `Currency: Unknown` or missing | 400 `CURRENCY_REQUIRED` | E2E |
+| 3 | Rejects no query params | No query params at all | 400 both errors | E2E |
+| 4 | Rejects non-existent asset item IDs | `AssetItemIds: [<non-existent-guid>]` | 400 `ASSET_ITEM_NOT_FOUND` | E2E |
+| 5 | Rejects malformed GUID | `AssetItemIds: ["not-a-guid"]` | 400 binding error | E2E |
+| 6 | Deduplicates AssetItemIds | Same GUID passed twice | Processes only once; valid response | E2E |
 
-### 9.2 Error Response Format
+### Valuations — basic
 
-| # | Scenario | Expected |
-|---|----------|----------|
-| 1 | Validation failure | ProblemDetails format with error codes |
-| 2 | Multiple validation failures on same request | All errors returned in response |
+| # | Test | Input | Expected | Type |
+|---|------|-------|----------|------|
+| 7 | No transactions → zero valuation | Asset item with no transactions; Currency=USD | 200 single entry: `{Date: today, Invested: 0, Current: 0, Xirr: 0}` | E2E |
+| 8 | Stops at month with no transactions | Transactions only in current month | Response yields today + end-of-last-month (zero) then stops | E2E |
+| 9 | Multi-month history | Transactions across 3+ months | Returns today + descending end-of-month entries | E2E |
 
-### 9.3 JSON Serialization
+### Valuations — CurrentValue by TransactionType
 
-| # | Scenario | Expected |
-|---|----------|----------|
-| 1 | Enum values in responses | Serialized as strings (JsonStringEnumConverter) |
-| 2 | `DateOnly` fields | Correctly serialized/deserialized |
-| 3 | `Guid` fields | Correctly serialized/deserialized |
-| 4 | `decimal` fields | Correctly serialized/deserialized |
+| # | Test | Input | Expected | Type |
+|---|------|-------|----------|------|
+| 10 | Buy adds to CurrentValue | MutualFund with Buy transaction | CurrentValue includes units × current price | E2E |
+| 11 | Deposit adds to CurrentValue | BankAccount with Deposit | CurrentValue includes deposit amount | E2E |
+| 12 | SelfInterest adds to CurrentValue | BankAccount with SelfInterest | CurrentValue includes amount | E2E |
+| 13 | Sell subtracts from CurrentValue | MutualFund with Buy then Sell | CurrentValue reduced by sell (at original price) | E2E |
+| 14 | Withdrawal subtracts from CurrentValue | BankAccount with Deposit then Withdrawal | CurrentValue reduced | E2E |
+| 15 | InterestPenalty subtracts from CurrentValue | BankAccount with Deposit then InterestPenalty | CurrentValue reduced | E2E |
+| 16 | Interest does not affect CurrentValue | BankAccount with Deposit + Interest | Interest contributes 0 to CurrentValue | E2E |
+| 17 | Dividend does not affect CurrentValue | Stock with Buy + Dividend | Dividend contributes 0 to CurrentValue | E2E |
+
+### Valuations — InvestedValue by AssetType
+
+| # | Test | Input | Expected | Type |
+|---|------|-------|----------|------|
+| 18 | BankAccount: Invested = Current | BankAccount with deposits/withdrawals | InvestedValue equals CurrentValue | E2E |
+| 19 | Wallet: Invested = Current | Wallet with deposits/withdrawals | InvestedValue equals CurrentValue | E2E |
+| 20 | TradingAccount: Invested = Current | TradingAccount with deposits | InvestedValue equals CurrentValue | E2E |
+| 21 | Bond: Invested = Current | Bond with deposits | InvestedValue equals CurrentValue | E2E |
+| 22 | MutualFund: Invested from Buy minus Sell | MF with Buy(10u@100) then Sell(3u) | InvestedValue = remaining 7 units × buy price | E2E |
+| 23 | FixedDeposit: Invested from Deposit minus Withdrawal | FD with Deposit then partial Withdrawal | InvestedValue = remaining deposit amount | E2E |
+| 24 | Stock: Invested from Buy minus Sell | Stock with Buy then partial Sell | InvestedValue = remaining units × buy price | E2E |
+| 25 | Full offset → zero invested | Buy 10u then Sell 10u | InvestedValue = 0 | E2E |
+| 26 | Partial offset | Buy 10u@100, Sell 3u | InvestedValue = 7u × buy price (adjusted) | E2E |
+
+### Valuations — XIRR
+
+| # | Test | Input | Expected | Type |
+|---|------|-------|----------|------|
+| 27 | No transactions → XIRR = 0 | Empty transactions | XirrPercent = 0 | E2E |
+| 28 | All < 1 year: YearDiff normalized | Single Buy transaction from 3 months ago | XIRR calculated with YearDiff=1.0 | E2E |
+| 29 | Transactions > 1 year | Buy from 2 years ago | XIRR uses actual YearDiff | E2E |
+| 30 | Positive return scenario | Buy low, current price higher | XirrPercent > 0 | E2E |
+| 31 | Negative return scenario | Buy high, current price lower | XirrPercent < 0 | E2E |
+| 32 | Same-date transactions grouped | Two Buy transactions on same date | YearDiff grouped, amounts summed | E2E |
+
+### Valuations — cross-currency
+
+| # | Test | Input | Expected | Type |
+|---|------|-------|----------|------|
+| 33 | Same currency → no exchange rate | INR asset, Currency=INR | Values computed without exchange rate conversion | E2E |
+| 34 | Cross-currency conversion | INR asset, Currency=USD | Values converted using exchange rate | E2E |
+
+### Valuations — CalculateInitialAmount date handling
+
+| # | Test | Input | Expected | Type |
+|---|------|-------|----------|------|
+| 35 | Deposit uses valuationDate | Deposit transaction | Amount calculated at valuation date exchange rate | E2E |
+| 36 | Buy uses transaction.Date | Buy transaction | Amount calculated at transaction date price | E2E |
 
 ---
 
-## 10. Database Schema Integrity
+## 10. POST /api/asset-items/{assetItemId}/transactions
 
-| # | Scenario | Expected |
-|---|----------|----------|
-| 1 | Delete user → cascades to `user_ids`, `asset_items`, `transactions` | All child records deleted |
-| 2 | Delete asset item → cascades to `transactions` | Child transactions deleted |
-| 3 | Delete asset that has asset items → restricted | FK violation (ON DELETE RESTRICT) |
-| 4 | Duplicate email in `users` table | Unique index violation |
-| 5 | Duplicate `ExternalId` in `assets` table | Unique index violation |
+### Validation — field rules
+
+| # | Test | Input | Expected | Type |
+|---|------|-------|----------|------|
+| 1 | Rejects empty body | `{}` or no body | 400 multiple errors (DATE_REQUIRED, NAME_REQUIRED, TRANSACTION_TYPE_REQUIRED) | E2E |
+| 2 | Rejects default Date | `Date: "0001-01-01"` or Date key missing | 400 `DATE_REQUIRED` | E2E |
+| 3 | Rejects future Date | `Date: tomorrow` | 400 `DATE_IN_FUTURE` | E2E |
+| 4 | Accepts today's Date | `Date: today` | Passes | E2E |
+| 5 | Accepts past Date | `Date: yesterday` | Passes | E2E |
+| 6 | Rejects empty Name | `Name: ""` or Name key missing | 400 `NAME_REQUIRED` | E2E |
+| 7 | Rejects short Name | `Name: "ab"` (2 chars) | 400 `NAME_TOO_SHORT` | E2E |
+| 8 | Rejects long Name | `Name: "a" × 1001` | 400 `NAME_TOO_LONG` | E2E |
+| 9 | Accepts min-length Name | `Name: "abc"` (3 chars) | Passes | E2E |
+| 10 | Accepts max-length Name | `Name: "a" × 1000` | Passes | E2E |
+| 11 | Rejects Unknown TransactionType | `TransactionType: "Unknown"` or key missing | 400 `TRANSACTION_TYPE_REQUIRED` | E2E |
+| 12 | Rejects non-GUID route param | `/api/asset-items/not-a-guid/transactions` | 404 route not matched | E2E |
+
+### Validation — amount rules (Buy/Sell)
+
+| # | Test | Input | Expected | Type |
+|---|------|-------|----------|------|
+| 13 | Rejects zero Units for Buy | `TransactionType: Buy, Units: 0` | 400 `UNITS_REQUIRED` | E2E |
+| 14 | Rejects negative Units for Buy | `TransactionType: Buy, Units: -1` | 400 `UNITS_REQUIRED` | E2E |
+| 15 | Rejects zero Price for Buy | `TransactionType: Buy, Units: 10, Price: 0` | 400 `PRICE_REQUIRED` | E2E |
+| 16 | Rejects negative Price for Buy | `TransactionType: Buy, Units: 10, Price: -1` | 400 `PRICE_REQUIRED` | E2E |
+| 17 | Accepts valid Buy | `Units: 10, Price: 100` | Passes | E2E |
+| 18 | Rejects zero Units for Sell | `TransactionType: Sell, Units: 0` | 400 `UNITS_REQUIRED` | E2E |
+| 19 | Accepts valid Sell | `Units: 5, Price: 100` | Passes | E2E |
+| 20 | Buy ignores Amount field | `Buy, Units: 10, Price: 100, Amount: 500` | Passes; stored Amount=0 | E2E |
+
+### Validation — amount rules (non-Buy/Sell)
+
+| # | Test | Input | Expected | Type |
+|---|------|-------|----------|------|
+| 21 | Rejects zero Amount for Deposit | `TransactionType: Deposit, Amount: 0` | 400 `AMOUNT_REQUIRED` | E2E |
+| 22 | Rejects negative Amount for Deposit | `TransactionType: Deposit, Amount: -100` | 400 `AMOUNT_REQUIRED` | E2E |
+| 23 | Accepts valid Deposit | `Amount: 1000` | Passes | E2E |
+| 24 | Accepts valid Withdrawal | `Amount: 500` | Passes | E2E |
+| 25 | Accepts valid Interest | `Amount: 50` | Passes | E2E |
+| 26 | Accepts valid SelfInterest | `Amount: 50` | Passes | E2E |
+| 27 | Accepts valid Dividend | `Amount: 25` | Passes | E2E |
+| 28 | Accepts valid InterestPenalty | `Amount: 10` | Passes | E2E |
+| 29 | Deposit ignores Units/Price | `Deposit, Amount: 1000, Units: 5, Price: 100` | Passes; stored Units=0, Price=0 | E2E |
+
+### Validation — TransactionType per AssetType
+
+| # | Test | Input | Expected | Type |
+|---|------|-------|----------|------|
+| 30 | BankAccount + Deposit | BankAccount asset item, Deposit | Passes | E2E |
+| 31 | BankAccount + Withdrawal | BankAccount, Withdrawal | Passes | E2E |
+| 32 | BankAccount + Interest | BankAccount, Interest | Passes | E2E |
+| 33 | BankAccount + SelfInterest | BankAccount, SelfInterest | Passes | E2E |
+| 34 | BankAccount + InterestPenalty | BankAccount, InterestPenalty | Passes | E2E |
+| 35 | BankAccount + Buy | BankAccount, Buy | 400 `TRANSACTION_TYPE_INVALID` | E2E |
+| 36 | BankAccount + Sell | BankAccount, Sell | 400 `TRANSACTION_TYPE_INVALID` | E2E |
+| 37 | BankAccount + Dividend | BankAccount, Dividend | 400 `TRANSACTION_TYPE_INVALID` | E2E |
+| 38 | FixedDeposit + Deposit | FixedDeposit, Deposit | Passes | E2E |
+| 39 | FixedDeposit + Interest | FixedDeposit, Interest | Passes | E2E |
+| 40 | FixedDeposit + SelfInterest | FixedDeposit, SelfInterest | Passes | E2E |
+| 41 | FixedDeposit + InterestPenalty | FixedDeposit, InterestPenalty | Passes | E2E |
+| 42 | FixedDeposit + Buy | FixedDeposit, Buy | 400 `TRANSACTION_TYPE_INVALID` | E2E |
+| 43 | EPF + Deposit | EPF, Deposit | Passes | E2E |
+| 44 | EPF + Buy | EPF, Buy | 400 `TRANSACTION_TYPE_INVALID` | E2E |
+| 45 | PPF + Deposit | PPF, Deposit | Passes | E2E |
+| 46 | PPF + Buy | PPF, Buy | 400 `TRANSACTION_TYPE_INVALID` | E2E |
+| 47 | MutualFund + Buy | MutualFund, Buy | Passes | E2E |
+| 48 | MutualFund + Sell | MutualFund, Sell | Passes | E2E |
+| 49 | MutualFund + Deposit | MutualFund, Deposit | 400 `TRANSACTION_TYPE_INVALID` | E2E |
+| 50 | MutualFund + Dividend | MutualFund, Dividend | 400 `TRANSACTION_TYPE_INVALID` | E2E |
+| 51 | Stock + Buy | Stock, Buy | Passes | E2E |
+| 52 | Stock + Sell | Stock, Sell | Passes | E2E |
+| 53 | Stock + Dividend | Stock, Dividend | Passes | E2E |
+| 54 | Stock + Deposit | Stock, Deposit | 400 `TRANSACTION_TYPE_INVALID` | E2E |
+| 55 | Wallet + Deposit | Wallet, Deposit | Passes | E2E |
+| 56 | Wallet + Withdrawal | Wallet, Withdrawal | Passes | E2E |
+| 57 | Wallet + Interest | Wallet, Interest | 400 `TRANSACTION_TYPE_INVALID` | E2E |
+| 58 | TradingAccount + Deposit | TradingAccount, Deposit | Passes | E2E |
+| 59 | TradingAccount + Withdrawal | TradingAccount, Withdrawal | Passes | E2E |
+| 60 | TradingAccount + Buy | TradingAccount, Buy | 400 `TRANSACTION_TYPE_INVALID` | E2E |
+| 61 | Bond + Deposit | Bond, Deposit | Passes | E2E |
+| 62 | Bond + Withdrawal | Bond, Withdrawal | Passes | E2E |
+| 63 | Bond + Interest | Bond, Interest | Passes | E2E |
+| 64 | Bond + Buy | Bond, Buy | 400 `TRANSACTION_TYPE_INVALID` | E2E |
+| 65 | Bond + SelfInterest | Bond, SelfInterest | 400 `TRANSACTION_TYPE_INVALID` | E2E |
+
+### Validation — guard bypass
+
+| # | Test | Input | Expected | Type |
+|---|------|-------|----------|------|
+| 66 | Empty AssetItemId skips type check | `AssetItemId: Guid.Empty, TransactionType: Buy` | 400 `ASSET_ITEM_ID_REQUIRED` only (no type error) | E2E |
+| 67 | Unknown type skips type check | `TransactionType: Unknown, valid AssetItemId` | 400 `TRANSACTION_TYPE_REQUIRED` only | E2E |
+| 68 | Missing asset item skips type check | AssetItemId not in DB | Validator passes type check; handler returns 404 | E2E |
+
+### Handler
+
+| # | Test | Input | Expected | Type |
+|---|------|-------|----------|------|
+| 69 | Returns 404 for missing asset item | Valid request; AssetItemId not in DB | 404 `ASSET_ITEM_NOT_FOUND` | E2E |
+| 70 | Creates Buy transaction | MutualFund, Buy, Units=10, Price=100 | 201; stored Units=10, Price=100, Amount=0 | E2E |
+| 71 | Creates Sell transaction | MutualFund, Sell, Units=5, Price=120 | 201; stored Units=5, Price=120, Amount=0 | E2E |
+| 72 | Creates Deposit transaction | BankAccount, Deposit, Amount=5000 | 201; stored Units=0, Price=0, Amount=5000 | E2E |
+| 73 | Creates Withdrawal transaction | BankAccount, Withdrawal, Amount=1000 | 201; stored Units=0, Price=0, Amount=1000 | E2E |
+| 74 | Response has zeroed amounts | Any valid creation | 201; response Units=0, Price=0, Amount=0 | E2E |
 
 ---
 
-## 11. Missing / Absent Request Properties
+## 11. GET /api/asset-items/{assetItemId}/transactions
 
-Tests for when properties are entirely absent from the JSON body, route URL, or query string — distinct from being present-but-empty.
+| # | Test | Input | Expected | Type |
+|---|------|-------|----------|------|
+| 1 | Returns 404 for missing asset item | Valid GUID; item not in DB | 404 `ASSET_ITEM_NOT_FOUND` | E2E |
+| 2 | Returns empty list | Asset item exists; no transactions | 200 `[]` | E2E |
+| 3 | Returns transactions with calculated amounts | Asset item with multiple transactions; Currency=INR | 200 array with Amount calculated per transaction | E2E |
+| 4 | Cross-currency amount calculation | INR asset; Currency=USD query param | 200; amounts converted to USD | E2E |
+| 5 | Missing Currency defaults to Unknown | Currency query param absent | 200; amounts calculated with Unknown currency | E2E |
+| 6 | Rejects non-GUID route param | `/api/asset-items/not-a-guid/transactions` | 404 route not matched | E2E |
 
-### 11.1 POST /api/auth/login/google (Body)
+---
 
-| # | Scenario | Expected |
-|---|----------|----------|
-| 1 | No request body at all | 400 — `ID_TOKEN_REQUIRED` (IdToken defaults to `null`) |
-| 2 | Empty JSON `{}` — `IdToken` key missing | 400 — `ID_TOKEN_REQUIRED` |
-| 3 | `{ "IdToken": null }` — key present, value null | 400 — `ID_TOKEN_REQUIRED` |
+## 12. GET /api/asset-items/{assetItemId}/transactions/{transactionId}
 
-### 11.2 PATCH /api/users/me (Body)
+| # | Test | Input | Expected | Type |
+|---|------|-------|----------|------|
+| 1 | Returns transaction with calculated amount | Valid IDs; transaction exists | 200 TransactionResponse | E2E |
+| 2 | Returns 404 for missing transaction | Valid asset item; transaction not in DB | 404 `TRANSACTION_NOT_FOUND` | E2E |
+| 3 | Cross-currency amount calculation | INR asset; Currency=USD query param | 200; amount in USD | E2E |
+| 4 | Missing Currency defaults to Unknown | Currency query param absent | 200 | E2E |
+| 5 | Rejects non-GUID transactionId | Non-GUID in route | 404 route not matched | E2E |
+| 6 | Missing transactionId hits list endpoint | `/api/asset-items/{id}/transactions/` | Matches GET list endpoint instead | E2E |
 
-`PreferredCurrency` and `PreferredLocale` are enums; missing keys deserialize to `0` → `Unknown`.
+---
 
-| # | Scenario | Expected |
-|---|----------|----------|
-| 1 | No request body at all | 400 — `UPDATE_FIELDS_REQUIRED` (both default to `Unknown`) |
-| 2 | Empty JSON `{}` | 400 — `UPDATE_FIELDS_REQUIRED` |
-| 3 | `{ "PreferredCurrency": "INR" }` — `PreferredLocale` key missing | Passes — locale defaults to `Unknown`, currency is provided |
-| 4 | `{ "PreferredLocale": "EN_IN" }` — `PreferredCurrency` key missing | Passes — currency defaults to `Unknown`, locale is provided |
+## 13. PATCH /api/asset-items/{assetItemId}/transactions/{transactionId}
 
-### 11.3 POST /api/asset-items (Body)
+### Validation
 
-| # | Missing property | Default value | Expected |
-|---|-----------------|---------------|----------|
-| 1 | No body at all | All defaults | 400 — multiple errors (`ASSET_TYPE_UNKNOWN`, `NAME_REQUIRED`, etc.) |
-| 2 | Empty JSON `{}` | All defaults | 400 — multiple errors |
-| 3 | `Name` key missing | `null` | 400 — `NAME_REQUIRED` |
-| 4 | `AssetType` key missing | `Unknown` (0) | 400 — `ASSET_TYPE_UNKNOWN` |
-| 5 | `AssetClass` key missing | `Unknown` (0) | Depends on AssetType — `ASSET_CLASS_REQUIRED` for non-Stock/Bond types |
-| 6 | `ExternalId` key missing | `null` | `EXTERNAL_ID_REQUIRED` when AssetType is MutualFund/Stock; passes for others |
-| 7 | `Currency` key missing | `Unknown` (0) | `CURRENCY_REQUIRED` when AssetType is not MutualFund/Stock; passes for MutualFund/Stock |
-| 8 | Only `Name` + `AssetType=MutualFund` provided, all other keys missing | ExternalId=null, AssetClass=Unknown, Currency=Unknown | 400 — `EXTERNAL_ID_REQUIRED`, `ASSET_CLASS_REQUIRED` |
-| 9 | Only `Name` + `AssetType=BankAccount` provided, other keys missing | ExternalId=null, AssetClass=Unknown, Currency=Unknown | 400 — `ASSET_CLASS_REQUIRED`, `CURRENCY_REQUIRED` |
+| # | Test | Input | Expected | Type |
+|---|------|-------|----------|------|
+| 1 | Rejects short Name | `Name: "ab"` (2 chars, non-whitespace) | 400 `NAME_TOO_SHORT` | E2E |
+| 2 | Rejects long Name | `Name: "a" × 1001` | 400 `NAME_TOO_LONG` | E2E |
+| 3 | Accepts empty/whitespace Name | `Name: ""` or key missing | Passes; uses existing name | E2E |
+| 4 | Rejects negative Units for Buy | `TransactionType: Buy, Units: -1` | 400 `UNITS_INVALID` | E2E |
+| 5 | Accepts zero Units for Buy | `TransactionType: Buy, Units: 0` | Passes; uses existing units | E2E |
+| 6 | Rejects negative Price for Buy | `TransactionType: Buy, Price: -1` | 400 `PRICE_INVALID` | E2E |
+| 7 | Accepts zero Price for Buy | `TransactionType: Buy, Price: 0` | Passes; uses existing price | E2E |
+| 8 | Rejects negative Amount for Deposit | `TransactionType: Deposit, Amount: -1` | 400 `AMOUNT_INVALID` | E2E |
+| 9 | Accepts zero Amount for Deposit | `TransactionType: Deposit, Amount: 0` | Passes; uses existing amount | E2E |
+| 10 | Rejects invalid type for asset | `MutualFund asset, TransactionType: Deposit` | 400 `TRANSACTION_TYPE_INVALID` | E2E |
+| 11 | Unknown type skips type check | `TransactionType: Unknown` | Passes type validation | E2E |
+| 12 | Rejects non-GUID route params | Non-GUID in assetItemId or transactionId | 404 route not matched | E2E |
 
-### 11.4 GET /api/asset-items/{id} (Route)
+### Handler
 
-| # | Scenario | Expected |
-|---|----------|----------|
-| 1 | `GET /api/asset-items/` — no id segment | 404 route not matched (hits `/api/asset-items` list endpoint instead) |
-| 2 | `GET /api/asset-items/not-a-guid` — non-GUID in route | 404 route not matched (`:guid` constraint rejects) |
+| # | Test | Input | Expected | Type |
+|---|------|-------|----------|------|
+| 13 | Returns 404 for missing asset item | AssetItemId not in DB | 404 `ASSET_ITEM_NOT_FOUND` | E2E |
+| 14 | Returns 404 for missing transaction | TransactionId not in DB | 404 `TRANSACTION_NOT_FOUND` | E2E |
 
-### 11.5 DELETE /api/asset-items/{id} (Route)
+### Normalize — Name
 
-| # | Scenario | Expected |
-|---|----------|----------|
-| 1 | `DELETE /api/asset-items/` — no id segment | 404/405 route not matched |
-| 2 | `DELETE /api/asset-items/not-a-guid` | 404 route not matched |
+| # | Test | Input | Expected | Type |
+|---|------|-------|----------|------|
+| 15 | Empty Name preserves existing | `Name: ""` or key missing; existing="Old Name" | Transaction name = "Old Name" | E2E |
+| 16 | New Name replaces existing | `Name: "New Name"` | Transaction name = "New Name" | E2E |
 
-### 11.6 GET /api/asset-items/valuations (Query)
+### Normalize — TransactionType
 
-| # | Scenario | Expected |
-|---|----------|----------|
-| 1 | No query parameters at all | 400 — `ASSET_ITEM_IDS_REQUIRED` + `CURRENCY_REQUIRED` |
-| 2 | `?Currency=USD` — `AssetItemIds` missing | 400 — `ASSET_ITEM_IDS_REQUIRED` |
-| 3 | `?AssetItemIds=...` — `Currency` missing | Defaults to `Unknown` (0) → 400 — `CURRENCY_REQUIRED` |
-| 4 | `?AssetItemIds=not-a-guid&Currency=USD` — malformed GUID in list | 400 binding error |
-| 5 | `?AssetItemIds=&Currency=USD` — empty AssetItemIds value | 400 — `ASSET_ITEM_IDS_REQUIRED` |
+| # | Test | Input | Expected | Type |
+|---|------|-------|----------|------|
+| 17 | Unknown type preserves existing | `TransactionType: Unknown`; existing=Deposit | Transaction type = Deposit | E2E |
+| 18 | New type replaces existing | `TransactionType: Withdrawal`; existing=Deposit | Transaction type = Withdrawal | E2E |
 
-### 11.7 POST /api/asset-items/{assetItemId}/transactions (Route + Body)
+### Normalize — amounts (non-Buy/Sell type)
 
-#### Route
+| # | Test | Input | Expected | Type |
+|---|------|-------|----------|------|
+| 19 | Zero Amount preserves existing | `Amount: 0`; existing=5000 | Amount = 5000, Units=0, Price=0 | E2E |
+| 20 | New Amount replaces existing | `Amount: 3000`; existing=5000 | Amount = 3000, Units=0, Price=0 | E2E |
 
-| # | Scenario | Expected |
-|---|----------|----------|
-| 1 | `POST /api/asset-items//transactions` — empty assetItemId | 404 route not matched |
-| 2 | `POST /api/asset-items/not-a-guid/transactions` | 404 route not matched |
+### Normalize — amounts (Buy/Sell type)
 
-#### Body
+| # | Test | Input | Expected | Type |
+|---|------|-------|----------|------|
+| 21 | Zero Units preserves existing | `Units: 0`; existing Units=10 | Units = 10 | E2E |
+| 22 | New Units replaces existing | `Units: 15`; existing Units=10 | Units = 15 | E2E |
+| 23 | Zero Price preserves existing | `Price: 0`; existing Price=100 | Price = 100 | E2E |
+| 24 | New Price replaces existing | `Price: 120`; existing Price=100 | Price = 120, Amount = 0 | E2E |
 
-| # | Missing property | Default value | Expected |
-|---|-----------------|---------------|----------|
-| 3 | No body at all | All defaults | 400 — multiple errors (`DATE_REQUIRED`, `NAME_REQUIRED`, `TRANSACTION_TYPE_REQUIRED`) |
-| 4 | Empty JSON `{}` | All defaults | 400 — multiple errors |
-| 5 | `Date` key missing | `default(DateOnly)` = 0001-01-01 | 400 — `DATE_REQUIRED` |
-| 6 | `Name` key missing | `null` | 400 — `NAME_REQUIRED` |
-| 7 | `TransactionType` key missing | `Unknown` (0) | 400 — `TRANSACTION_TYPE_REQUIRED` |
-| 8 | `Units` key missing (Buy type) | `0` | 400 — `UNITS_REQUIRED` |
-| 9 | `Price` key missing (Buy type) | `0` | 400 — `PRICE_REQUIRED` |
-| 10 | `Amount` key missing (Deposit type) | `0` | 400 — `AMOUNT_REQUIRED` |
-| 11 | `Units` key missing (Deposit type) | `0` | Passes — units not required for Deposit |
-| 12 | `Price` key missing (Deposit type) | `0` | Passes — price not required for Deposit |
-| 13 | `Amount` key missing (Buy type) | `0` | Passes — amount not required for Buy |
+### Empty body
 
-### 11.8 GET /api/asset-items/{assetItemId}/transactions (Route + Query)
+| # | Test | Input | Expected | Type |
+|---|------|-------|----------|------|
+| 25 | No body preserves all fields | No body or `{}`; existing transaction unchanged | 204; all fields preserved | E2E |
+| 26 | Valid edit returns 204 | Any valid partial update | 204 No Content | E2E |
 
-| # | Scenario | Expected |
-|---|----------|----------|
-| 1 | Empty assetItemId in route | 404 route not matched |
-| 2 | Non-GUID assetItemId in route | 404 route not matched |
-| 3 | `Currency` query param missing | Defaults to `Unknown` (0) — endpoint still processes |
+---
 
-### 11.9 GET /api/asset-items/{assetItemId}/transactions/{transactionId} (Route + Query)
+## 14. DELETE /api/asset-items/{assetItemId}/transactions/{transactionId}
 
-| # | Scenario | Expected |
-|---|----------|----------|
-| 1 | Missing assetItemId in route | 404 route not matched |
-| 2 | Missing transactionId in route | 404 route not matched (matches list endpoint instead) |
-| 3 | Non-GUID assetItemId | 404 route not matched |
-| 4 | Non-GUID transactionId | 404 route not matched |
-| 5 | `Currency` query param missing | Defaults to `Unknown` (0) |
+| # | Test | Input | Expected | Type |
+|---|------|-------|----------|------|
+| 1 | Deletes existing transaction | Valid IDs; transaction exists | 204 | E2E |
+| 2 | Returns 404 for missing transaction | Valid asset item; transaction not in DB | 404 `TRANSACTION_NOT_FOUND` | E2E |
+| 3 | Rejects non-GUID route params | Non-GUID in route | 404 route not matched | E2E |
 
-### 11.10 PATCH /api/asset-items/{assetItemId}/transactions/{transactionId} (Route + Body)
+---
 
-#### Route
+## 15. Cross-Cutting (E2E)
 
-| # | Scenario | Expected |
-|---|----------|----------|
-| 1 | Missing assetItemId | 404 route not matched |
-| 2 | Missing transactionId | 404/405 route not matched |
-| 3 | Non-GUID route params | 404 route not matched |
+| # | Test | Input | Expected | Type |
+|---|------|-------|----------|------|
+| 1 | Auth required on all protected endpoints | Any protected endpoint without Authorization header | 401 | E2E |
+| 2 | Expired JWT rejected | Any protected endpoint with expired JWT | 401 | E2E |
+| 3 | Wrong audience rejected | JWT with wrong audience | 401 | E2E |
+| 4 | Wrong issuer rejected | JWT with wrong issuer | 401 | E2E |
+| 5 | Invalid signature rejected | Tampered JWT | 401 | E2E |
+| 6 | Enums serialized as strings | Any response with enum field | Enum rendered as string, not integer | E2E |
+| 7 | ProblemDetails format on validation error | Any validation failure | Response body is ProblemDetails with errorCode | E2E |
+| 8 | Multiple validation errors returned | Request triggering 2+ validation rules | All errors present in response | E2E |
+| 9 | User isolation | User A's JWT used to access User B's asset item | 404 (item not found for User A) | E2E |
 
-#### Body — all fields are optional for edit (partial update semantics)
+---
 
-| # | Scenario | Expected |
-|---|----------|----------|
-| 4 | No body at all | All defaults (Name=null, TransactionType=Unknown, Units=0, Price=0, Amount=0) → uses all existing values via NormalizeRequest |
-| 5 | Empty JSON `{}` | Same as above — all existing values preserved |
-| 6 | Only `Name` provided | Only name updated; type/units/price/amount from existing |
-| 7 | Only `TransactionType` provided | Only type updated; name/amounts from existing |
-| 8 | Only `Units` provided (Buy/Sell type) | Only units updated; price from existing |
-| 9 | Only `Price` provided (Buy/Sell type) | Only price updated; units from existing |
-| 10 | Only `Amount` provided (non-Buy/Sell type) | Only amount updated |
-| 11 | `TransactionType` key missing + `Name` key missing | Both default to existing — no effective change, still returns 204 |
+## 16. Domain Model — Entity\<TId\> (Unit)
 
-### 11.11 DELETE /api/asset-items/{assetItemId}/transactions/{transactionId} (Route)
+Cannot be tested via E2E — pure domain equality logic.
 
-| # | Scenario | Expected |
-|---|----------|----------|
-| 1 | Missing assetItemId | 404 route not matched |
-| 2 | Missing transactionId | 404/405 route not matched |
-| 3 | Non-GUID route params | 404 route not matched |
+| # | Test | Input | Expected | Type |
+|---|------|-------|----------|------|
+| 1 | Equals(Entity) — same Id | Two entities, same Id | `true` | Unit |
+| 2 | Equals(Entity) — different Id | Two entities, different Ids | `false` | Unit |
+| 3 | Equals(Entity) — null | Entity vs null | `false` | Unit |
+| 4 | Equals(object) — matching entity | Entity as object | `true` | Unit |
+| 5 | Equals(object) — non-entity | Entity vs random object | `false` | Unit |
+| 6 | Equals(object) — null | Entity vs null object | `false` | Unit |
+| 7 | == both non-null same Id | Same Id | `true` | Unit |
+| 8 | == both non-null different Id | Different Ids | `false` | Unit |
+| 9 | == both null | null == null | `true` | Unit |
+| 10 | == left null, right non-null | null == entity | `false` | Unit |
+| 11 | == left non-null, right null | entity == null | `false` | Unit |
+| 12 | != same Id | Same Id | `false` | Unit |
+| 13 | != different Id | Different Ids | `true` | Unit |
+| 14 | GetHashCode consistent | Same Id entities | Equal hash codes | Unit |
+| 15 | GetHashCode distinct | Different Id entities | Different hash codes | Unit |
 
-### 11.12 POST /api/auth/refresh-token (Body)
+---
 
-| # | Scenario | Expected |
-|---|----------|----------|
-| 1 | No body at all | 401/400 — missing refresh token |
-| 2 | Empty JSON `{}` | 401/400 — missing refresh token |
-| 3 | `UserId` key missing | 401/400 — depends on FastEndpoints TokenService validation |
+## 17. Domain Model — Empty Sentinels (Unit)
+
+| # | Test | Input | Expected | Type |
+|---|------|-------|----------|------|
+| 1 | User.Empty fields | `User.Empty` | Id=Empty, Email="", Currency=Unknown, Locale=Unknown | Unit |
+| 2 | Transaction.Empty fields | `Transaction.Empty` | Id=Empty, Date=MinValue, Name="", Type=Buy, Units=0, Price=0, Amount=0 | Unit |
+| 3 | AssetItem.Empty fields | `AssetItem.Empty` | Id=Empty, AssetId=Empty, Name="" | Unit |
+| 4 | Asset.Empty fields | `Asset.Empty` | Id=Empty, AssetClass=Unknown, AssetType=Unknown, Currency=Unknown | Unit |
+
+---
+
+## 18. TransactionValidationExtensions (Unit)
+
+`IsValidForAssetType` and `IsUnitsRequired` are exercised via E2E (section 10), except:
+
+| # | Test | Input | Expected | Type |
+|---|------|-------|----------|------|
+| 1 | IsValidForAssetType with Unknown AssetType | `AssetType.Unknown`, any TransactionType | Throws `InvalidOperationException` | Unit |
+
+---
+
+## 19. RatesExtensions.GetOnOrBeforeValue (Unit)
+
+Lookback logic cannot be cleanly tested via E2E (error cases would produce unhandled 500s).
+
+| # | Test | Input | Expected | Type |
+|---|------|-------|----------|------|
+| 1 | Exact date match | Dictionary has rate on requested date | Returns that rate | Unit |
+| 2 | 1-day lookback (weekend) | Rate exists on date-1 only | Returns rate for date-1 | Unit |
+| 3 | 6-day lookback (long holiday) | Rate exists on date-6 only | Returns rate for date-6 | Unit |
+| 4 | No rate in 7-day window | No rates within date to date-6 | Throws `InvalidOperationException` | Unit |
+| 5 | Empty dictionary | Empty rates dictionary | Throws `InvalidOperationException` | Unit |
+
+---
+
+## 20. Infrastructure — API Clients (Integration)
+
+Tested with WireMock / HTTP stubbing against the actual HttpClient pipeline.
+
+### MutualFundApiClient
+
+| # | Test | Input | Expected | Type |
+|---|------|-------|----------|------|
+| 1 | GetBySymbol — API 404 | Stub returns 404 | Empty MutualFund (SchemeCode="") | Integration |
+| 2 | GetBySymbol — valid response | Stub returns JSON with meta+data | MutualFund with Name, SchemeCode, Currency=INR | Integration |
+| 3 | GetPrices — API 404 | Stub returns 404 | Empty dictionary | Integration |
+| 4 | GetPrices — valid response | Stub returns JSON with date/NAV data | FrozenDictionary with parsed dd-MM-yyyy dates | Integration |
+
+### StockApiClient
+
+| # | Test | Input | Expected | Type |
+|---|------|-------|----------|------|
+| 5 | GetBySymbol — API 404 | Stub returns 404 | Empty Stock (Symbol="") | Integration |
+| 6 | GetBySymbol — empty array | Stub returns `[]` | Empty Stock | Integration |
+| 7 | GetBySymbol — unrecognized currency | Stub returns `[{ Currency: "XYZ" }]` | Empty Stock | Integration |
+| 8 | GetBySymbol — valid response | Stub returns `[{ Symbol, Name, Currency: "USD" }]` | Stock with parsed fields | Integration |
+| 9 | GetPrices — API 404 | Stub returns 404 | Empty dictionary | Integration |
+| 10 | GetPrices — empty array | Stub returns `[]` | Empty dictionary | Integration |
+| 11 | GetPrices — valid response | Stub returns price array | FrozenDictionary with yyyy-MM-dd dates | Integration |
+
+### ExchangeRateApiClient
+
+| # | Test | Input | Expected | Type |
+|---|------|-------|----------|------|
+| 12 | GetExchangeRates — same currency | from=USD, to=USD | Empty dictionary (short-circuit) | Integration |
+| 13 | GetExchangeRates — valid CSV | Stub returns CSV with timestamp/close columns | FrozenDictionary using close column | Integration |
+
+---
+
+## 21. Infrastructure — Caching (Integration)
+
+Verifying cache hit/miss/invalidation behavior requires observing internal state.
+
+### CachedExchangeRateApiClient
+
+| # | Test | Input | Expected | Type |
+|---|------|-------|----------|------|
+| 1 | Same currency short-circuits | from=USD, to=USD | Returns 1m without API/cache call | Integration |
+| 2 | First call fetches and caches | from=INR, to=USD, first call | Fetches from API; subsequent call returns cached | Integration |
+
+### CachedAssetApiClient\<T\>
+
+| # | Test | Input | Expected | Type |
+|---|------|-------|----------|------|
+| 3 | GetBySymbol caches result | Same symbol called twice | Second call doesn't hit inner client | Integration |
+| 4 | GetPrices caches result | Same symbol called twice | Second call from cache | Integration |
+| 5 | GetOnOrBeforePrice caches | Same symbol+date called twice | Second call from cache | Integration |
+
+### CachedUserRepository
+
+| # | Test | Input | Expected | Type |
+|---|------|-------|----------|------|
+| 6 | GetUser caches result | Same userId called twice | Second call from cache | Integration |
+| 7 | Update invalidates cache | Update then Get | Get returns fresh data | Integration |
+
+### CachedAssetItemRepository
+
+| # | Test | Input | Expected | Type |
+|---|------|-------|----------|------|
+| 8 | GetAll caches list | Same userId called twice | Second call from cache | Integration |
+| 9 | Add invalidates list cache | Add then GetAll | GetAll returns updated list | Integration |
+| 10 | Delete invalidates list + item cache | Delete then GetAll + GetById | Both return updated data | Integration |
+
+### CachedTransactionRepository
+
+| # | Test | Input | Expected | Type |
+|---|------|-------|----------|------|
+| 11 | GetByAssetItemId caches | Same IDs called twice | Second call from cache | Integration |
+| 12 | Add invalidates txn + valuation tags | Add then Get | Get returns updated list | Integration |
+| 13 | Update invalidates txn + valuation tags | Update then Get | Get returns updated data | Integration |
+| 14 | Delete invalidates txn + valuation tags | Delete then Get | Get returns updated list | Integration |
+
+---
+
+## 22. Infrastructure — Repositories (Integration)
+
+Direct DB operations. Most paths are covered by E2E, but listed here for isolated DB testing.
+
+### UserIdRepository
+
+| # | Test | Input | Expected | Type |
+|---|------|-------|----------|------|
+| 1 | GetUserId — exists | Existing identity provider + ID | Returns UserId | Integration |
+| 2 | GetUserId — not found | Non-existent entry | Returns UserId.Empty | Integration |
+| 3 | AddUserId | New identity provider + ID | Inserts row; returns new UserId | Integration |
+
+### UserRepository
+
+| # | Test | Input | Expected | Type |
+|---|------|-------|----------|------|
+| 4 | GetUser — exists | Existing userId | Returns User with all fields | Integration |
+| 5 | GetUser — not found | Non-existent userId | Returns User.Empty | Integration |
+| 6 | AddUser | New user data | Inserts with defaults (USD, EN_US) | Integration |
+| 7 | UpdateUserProfile | Existing userId, new currency/locale | Updates fields + UpdatedAt timestamp | Integration |
+
+### AssetRepository
+
+| # | Test | Input | Expected | Type |
+|---|------|-------|----------|------|
+| 8 | GetById — exists | Existing assetId | Returns Asset | Integration |
+| 9 | GetById — not found | Non-existent assetId | Returns Asset.Empty | Integration |
+| 10 | GetByExternalId — exists | Existing externalId | Returns Asset | Integration |
+| 11 | GetByExternalId — not found | Non-existent externalId | Returns Asset.Empty | Integration |
+| 12 | Add | New asset data | Inserts row; returns Asset | Integration |
+
+### AssetItemRepository
+
+| # | Test | Input | Expected | Type |
+|---|------|-------|----------|------|
+| 13 | GetAll — has items | UserId with items | Returns all items for user | Integration |
+| 14 | GetAll — empty | UserId with no items | Returns empty collection | Integration |
+| 15 | GetById — exists | Existing userId + assetItemId | Returns AssetItem | Integration |
+| 16 | GetById — not found | Non-existent IDs | Returns AssetItem.Empty | Integration |
+| 17 | Add | New item data | Inserts row; returns AssetItem | Integration |
+| 18 | Delete | Existing item | Deletes row | Integration |
+
+### TransactionRepository
+
+| # | Test | Input | Expected | Type |
+|---|------|-------|----------|------|
+| 19 | GetByAssetItemId — has transactions | AssetItemId with transactions | Returns all transactions | Integration |
+| 20 | GetByAssetItemId — empty | AssetItemId with no transactions | Returns empty collection | Integration |
+| 21 | GetById — exists | Existing IDs | Returns Transaction | Integration |
+| 22 | GetById — not found | Non-existent IDs | Returns Transaction.Empty | Integration |
+| 23 | Add | New transaction data | Inserts row; returns Transaction | Integration |
+| 24 | Update | Existing transaction | Updates all mutable fields + UpdatedAt | Integration |
+| 25 | Delete | Existing IDs | Deletes row | Integration |
+
+---
+
+## 23. Database Schema Constraints (Integration)
+
+Cannot be triggered via normal API flow — the code prevents these conditions.
+
+| # | Test | Input | Expected | Type |
+|---|------|-------|----------|------|
+| 1 | User delete cascades to user_ids | Delete user row directly | user_ids rows deleted | Integration |
+| 2 | User delete cascades to asset_items | Delete user row directly | asset_items rows deleted | Integration |
+| 3 | User delete cascades to transactions | Delete user row directly | transactions rows deleted | Integration |
+| 4 | Asset item delete cascades to transactions | Delete asset_item row directly | transactions rows deleted | Integration |
+| 5 | Asset delete restricted when items exist | Delete asset with linked asset_items | FK violation error | Integration |
+| 6 | Duplicate email rejected | Insert two users with same email | Unique constraint violation | Integration |
+| 7 | Duplicate ExternalId rejected | Insert two assets with same ExternalId | Unique constraint violation | Integration |
