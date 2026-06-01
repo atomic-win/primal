@@ -1,0 +1,48 @@
+using System.Net;
+
+namespace Primal.E2ETests.Transactions.GetTransactionById;
+
+public sealed class Returns_Transaction_When_It_Exists
+{
+	[Test]
+	public async Task Test()
+	{
+		// Arrange
+		await using var factory = new PrimalE2EFactory();
+		_ = factory.CreateClient();
+
+		factory.MutualFundApi.SetupMutualFundLatest(schemeCode: "119551");
+		factory.MutualFundApi.SetupMutualFundPrices(
+			schemeCode: "119551",
+			prices: [("15-01-2026", "150.25"), ("16-01-2026", "151.00")]);
+
+		var userId = await factory.CreateUserAsync();
+		var client = factory.CreateAuthenticatedClient(userId);
+
+		var assetItem = await client.AddAssetItemAsync(
+			name: "Test Mutual Fund",
+			assetClass: "Equity",
+			assetType: "MutualFund",
+			externalId: "119551",
+			currency: "Unknown");
+
+		var transaction = await client.AddTransactionAsync(
+			assetItemId: assetItem.Id,
+			date: "2026-01-15",
+			name: "Buy Units",
+			transactionType: "Buy",
+			units: 10.0m,
+			price: 150.25m,
+			amount: 0);
+
+		// Act
+		var response = await client.GetAsync(
+			$"/api/asset-items/{assetItem.Id}/transactions/{transaction.Id}?currency=INR");
+
+		// Assert
+		await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.OK);
+
+		var body = await response.Content.ReadAsStringAsync();
+		await Verifier.Verify(body);
+	}
+}

@@ -1,6 +1,5 @@
 using FastEndpoints;
 using Primal.Application.Users;
-using Primal.Domain.Money;
 using Primal.Domain.Users;
 
 namespace Primal.Api.Users;

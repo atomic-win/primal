@@ -2,7 +2,6 @@ using System.Runtime.CompilerServices;
 using FastEndpoints;
 using Primal.Application.Investments;
 using Primal.Domain.Investments;
-using Primal.Domain.Money;
 using Primal.Domain.Users;
 
 namespace Primal.Api.AssetItems;
