@@ -2,10 +2,10 @@ using System.Net;
 
 namespace Primal.E2ETests.AssetItems.DeleteAssetItem;
 
-public sealed class DeleteAssetItem_Tests
+public sealed class Returns_204_And_GET_Returns_404_After_Deletion
 {
 	[Test]
-	public async Task Returns_204_And_GET_Returns_404_After_Deletion()
+	public async Task Test()
 	{
 		await using var factory = new PrimalE2EFactory();
 		_ = factory.CreateClient();
@@ -23,19 +23,5 @@ public sealed class DeleteAssetItem_Tests
 		// Validate via GET
 		var getResponse = await client.GetAsync($"/api/asset-items/{assetItemId}");
 		await Assert.That(getResponse.StatusCode).IsEqualTo(HttpStatusCode.NotFound);
-	}
-
-	[Test]
-	public async Task Returns_404_When_AssetItem_Does_Not_Exist()
-	{
-		await using var factory = new PrimalE2EFactory();
-		_ = factory.CreateClient();
-
-		var userId = await factory.CreateUserAsync();
-		var client = factory.CreateAuthenticatedClient(userId);
-
-		var response = await client.DeleteAsync($"/api/asset-items/{Guid.NewGuid()}");
-
-		await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.NotFound);
 	}
 }

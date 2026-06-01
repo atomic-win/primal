@@ -1,16 +1,16 @@
 using System.Net;
 
-namespace Primal.E2ETests.Users.GetUser;
+namespace Primal.E2ETests.AssetItems.GetAllAssetItems;
 
-public sealed class GetUser_Unauthenticated_Tests
+public sealed class Returns_401_When_Unauthenticated
 {
 	[Test]
-	public async Task Returns_401_When_No_Token_Provided()
+	public async Task Test()
 	{
 		await using var factory = new PrimalE2EFactory();
 		var client = factory.CreateClient();
 
-		var response = await client.GetAsync("/api/users/me");
+		var response = await client.GetAsync("/api/asset-items");
 
 		await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.Unauthorized);
 	}

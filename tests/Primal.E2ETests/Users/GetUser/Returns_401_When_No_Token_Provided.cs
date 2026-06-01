@@ -1,0 +1,17 @@
+using System.Net;
+
+namespace Primal.E2ETests.Users.GetUser;
+
+public sealed class Returns_401_When_No_Token_Provided
+{
+	[Test]
+	public async Task Test()
+	{
+		await using var factory = new PrimalE2EFactory();
+		var client = factory.CreateClient();
+
+		var response = await client.GetAsync("/api/users/me");
+
+		await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.Unauthorized);
+	}
+}
