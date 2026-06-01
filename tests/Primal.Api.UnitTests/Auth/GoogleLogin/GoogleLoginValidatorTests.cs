@@ -25,7 +25,7 @@ public sealed class GoogleLoginValidatorTests
 		var result = await validator.ValidateAsync(request);
 
 		await Assert.That(result.IsValid).IsFalse();
-		await AssertHasError(result, "ID token must be provided.");
+		await AssertHasError(result, "ID token must be provided");
 	}
 
 	private static async Task AssertHasError(ValidationResult result, string errorMessage)

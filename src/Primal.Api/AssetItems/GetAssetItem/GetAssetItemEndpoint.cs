@@ -28,8 +28,7 @@ internal sealed class GetAssetItemEndpoint : Endpoint<GetAssetItemRequest, Asset
 
 		if (assetItem.Id == AssetItemId.Empty)
 		{
-			await this.Send.NotFoundAsync();
-			return;
+			this.ThrowError("Asset item not found", StatusCodes.Status404NotFound);
 		}
 
 		var asset = await this.assetRepository.GetByIdAsync(assetItem.AssetId, ct);

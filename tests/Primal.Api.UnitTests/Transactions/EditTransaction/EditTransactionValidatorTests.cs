@@ -60,7 +60,7 @@ public sealed class EditTransactionValidatorTests
 		var result = await validator.ValidateAsync(request);
 
 		await Assert.That(result.IsValid).IsFalse();
-		await AssertHasError(result, "Asset item ID must be provided.");
+		await AssertHasError(result, "Asset item ID must be provided");
 	}
 
 	[Test]
@@ -72,7 +72,7 @@ public sealed class EditTransactionValidatorTests
 		var result = await validator.ValidateAsync(request);
 
 		await Assert.That(result.IsValid).IsFalse();
-		await AssertHasError(result, "Transaction name must be at least 3 characters long.");
+		await AssertHasError(result, "Transaction name must be at least 3 characters long");
 	}
 
 	[Test]
@@ -84,7 +84,7 @@ public sealed class EditTransactionValidatorTests
 		var result = await validator.ValidateAsync(request);
 
 		await Assert.That(result.IsValid).IsFalse();
-		await AssertHasError(result, "Transaction name must not exceed 1000 characters.");
+		await AssertHasError(result, "Transaction name must not exceed 1000 characters");
 	}
 
 	[Test]
@@ -96,7 +96,7 @@ public sealed class EditTransactionValidatorTests
 		var result = await validator.ValidateAsync(request);
 
 		await Assert.That(result.IsValid).IsFalse();
-		await AssertHasError(result, "Transaction type 'Buy' is not valid for the asset type.");
+		await AssertHasError(result, "Transaction type 'Buy' is not valid for the asset type");
 	}
 
 	[Test]
@@ -116,7 +116,7 @@ public sealed class EditTransactionValidatorTests
 		var result = await validator.ValidateAsync(request);
 
 		await Assert.That(result.IsValid).IsFalse();
-		await AssertHasError(result, "Transaction units must be greater than or equal to zero.");
+		await AssertHasError(result, "Transaction units must be greater than or equal to zero");
 	}
 
 	[Test]
@@ -136,7 +136,7 @@ public sealed class EditTransactionValidatorTests
 		var result = await validator.ValidateAsync(request);
 
 		await Assert.That(result.IsValid).IsFalse();
-		await AssertHasError(result, "Transaction price must be greater than or equal to zero.");
+		await AssertHasError(result, "Transaction price must be greater than or equal to zero");
 	}
 
 	[Test]
@@ -155,7 +155,7 @@ public sealed class EditTransactionValidatorTests
 		var result = await validator.ValidateAsync(request);
 
 		await Assert.That(result.IsValid).IsFalse();
-		await AssertHasError(result, "Transaction amount must be greater than or equal to zero.");
+		await AssertHasError(result, "Transaction amount must be greater than or equal to zero");
 	}
 
 	private static EditTransactionValidator CreateValidator(

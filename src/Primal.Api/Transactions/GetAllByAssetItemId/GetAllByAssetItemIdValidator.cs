@@ -9,6 +9,6 @@ internal sealed class GetAllByAssetItemIdValidator : Validator<GetAllByAssetItem
 	{
 		this.RuleFor(x => x.AssetItemId)
 			.NotEqual(Guid.Empty)
-			.WithMessage("Asset item ID must be provided.");
+			.WithMessage("Asset item ID must be provided");
 	}
 }

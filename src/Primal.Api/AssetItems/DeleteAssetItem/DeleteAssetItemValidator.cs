@@ -9,6 +9,6 @@ internal sealed class DeleteAssetItemValidator : Validator<DeleteAssetItemReques
 	{
 		this.RuleFor(x => x.Id)
 			.NotEqual(Guid.Empty)
-			.WithMessage("Asset item ID must be provided.");
+			.WithMessage("Asset item ID must be provided");
 	}
 }

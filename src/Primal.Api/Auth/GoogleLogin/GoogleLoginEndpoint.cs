@@ -61,12 +61,12 @@ internal sealed class GoogleLoginEndpoint : Endpoint<GoogleLoginRequest, TokenRe
 		}
 		catch (InvalidJwtException ex) when (string.Equals(ex.Message, "JWT has expired.", StringComparison.OrdinalIgnoreCase))
 		{
-			this.AddError("IdToken", "ID token has expired.");
+			this.AddError("IdToken", "ID token has expired");
 			await this.Send.ErrorsAsync(statusCode: 401, cancellation: ct);
 		}
 		catch (InvalidJwtException)
 		{
-			this.AddError("IdToken", "ID token is invalid.");
+			this.AddError("IdToken", "ID token is invalid");
 			await this.Send.ErrorsAsync(statusCode: 401, cancellation: ct);
 		}
 		catch (Exception ex)

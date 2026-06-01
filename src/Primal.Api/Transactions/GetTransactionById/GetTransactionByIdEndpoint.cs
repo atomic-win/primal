@@ -34,8 +34,7 @@ internal sealed class GetTransactionByIdEndpoint : Endpoint<GetTransactionByIdRe
 
 		if (transaction.Id == TransactionId.Empty)
 		{
-			await this.Send.NotFoundAsync(cancellationToken);
-			return;
+			this.ThrowError("Transaction not found", StatusCodes.Status404NotFound);
 		}
 
 		var response = await transaction.ToResponse(

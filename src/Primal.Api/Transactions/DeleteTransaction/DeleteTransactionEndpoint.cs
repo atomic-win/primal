@@ -29,7 +29,7 @@ internal sealed class DeleteTransactionEndpoint : Endpoint<DeleteTransactionRequ
 
 		if (transaction.Id == TransactionId.Empty)
 		{
-			this.ThrowError("Transaction does not exist.", StatusCodes.Status404NotFound);
+			this.ThrowError("Transaction not found", StatusCodes.Status404NotFound);
 		}
 
 		await this.transactionRepository.DeleteAsync(

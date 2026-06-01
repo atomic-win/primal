@@ -27,7 +27,7 @@ internal sealed class EditTransactionValidator : Validator<EditTransactionReques
 	{
 		this.RuleFor(x => x.AssetItemId)
 			.NotEqual(Guid.Empty)
-			.WithMessage("Asset item ID must be provided.");
+			.WithMessage("Asset item ID must be provided");
 	}
 
 	private void ConfigureFieldRules()
@@ -35,12 +35,12 @@ internal sealed class EditTransactionValidator : Validator<EditTransactionReques
 		this.RuleFor(x => x.Name)
 			.MinimumLength(3)
 			.When(x => !string.IsNullOrWhiteSpace(x.Name))
-			.WithMessage("Transaction name must be at least 3 characters long.");
+			.WithMessage("Transaction name must be at least 3 characters long");
 
 		this.RuleFor(x => x.Name)
 			.MaximumLength(1000)
 			.When(x => !string.IsNullOrWhiteSpace(x.Name))
-			.WithMessage("Transaction name must not exceed 1000 characters.");
+			.WithMessage("Transaction name must not exceed 1000 characters");
 
 		this.RuleFor(x => x)
 			.MustAsync(async (req, ct) =>
@@ -56,7 +56,7 @@ internal sealed class EditTransactionValidator : Validator<EditTransactionReques
 				return TransactionValidationExtensions.IsValidForAssetType(req.TransactionType, asset);
 			})
 			.When(x => x.AssetItemId != Guid.Empty && x.TransactionType != TransactionType.Unknown)
-			.WithMessage(req => $"Transaction type '{req.TransactionType}' is not valid for the asset type.");
+			.WithMessage(req => $"Transaction type '{req.TransactionType}' is not valid for the asset type");
 	}
 
 	private void ConfigureAmountRules()
@@ -64,16 +64,16 @@ internal sealed class EditTransactionValidator : Validator<EditTransactionReques
 		this.RuleFor(x => x.Units)
 			.GreaterThanOrEqualTo(0)
 			.When(x => TransactionValidationExtensions.IsUnitsRequired(x.TransactionType))
-			.WithMessage("Transaction units must be greater than or equal to zero.");
+			.WithMessage("Transaction units must be greater than or equal to zero");
 
 		this.RuleFor(x => x.Price)
 			.GreaterThanOrEqualTo(0)
 			.When(x => TransactionValidationExtensions.IsUnitsRequired(x.TransactionType))
-			.WithMessage("Transaction price must be greater than or equal to zero.");
+			.WithMessage("Transaction price must be greater than or equal to zero");
 
 		this.RuleFor(x => x.Amount)
 			.GreaterThanOrEqualTo(0)
 			.When(x => !TransactionValidationExtensions.IsUnitsRequired(x.TransactionType) && x.TransactionType != TransactionType.Unknown)
-			.WithMessage("Transaction amount must be greater than or equal to zero.");
+			.WithMessage("Transaction amount must be greater than or equal to zero");
 	}
 }

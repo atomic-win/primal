@@ -39,8 +39,7 @@ internal sealed class GetAllByAssetItemIdEndpoint : Endpoint<GetAllByAssetItemId
 
 		if (assetItem.Id == AssetItemId.Empty)
 		{
-			await this.Send.NotFoundAsync(cancellationToken);
-			return;
+			this.ThrowError("Asset item not found", StatusCodes.Status404NotFound);
 		}
 
 		var transactions = await this.transactionRepository.GetByAssetItemIdAsync(
