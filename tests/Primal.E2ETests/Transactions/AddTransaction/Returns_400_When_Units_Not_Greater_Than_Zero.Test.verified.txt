@@ -1,0 +1,1 @@
+﻿{"type":"https://www.rfc-editor.org/rfc/rfc7231#section-6.5.1","title":"Bad Request","status":400,"instance":"/api/asset-items/Guid_1/transactions","traceId":"Scrubbed","detail":"Transaction units must be greater than zero","errors":[{"name":"units","reason":"Transaction units must be greater than zero","code":"UNITS_REQUIRED"}]}

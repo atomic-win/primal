@@ -1,0 +1,1 @@
+﻿{"type":"https://www.rfc-editor.org/rfc/rfc7231#section-6.5.1","title":"Bad Request","status":400,"instance":"/api/asset-items","traceId":"Scrubbed","detail":"Asset class must not be specified for Stock asset type","errors":[{"name":"assetClass","reason":"Asset class must not be specified for Stock asset type","code":"ASSET_CLASS_NOT_ALLOWED"}]}

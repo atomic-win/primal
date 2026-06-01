@@ -1,0 +1,1 @@
+﻿{"type":"https://www.rfc-editor.org/rfc/rfc7231#section-6.5.1","title":"Bad Request","status":400,"instance":"/api/asset-items","traceId":"Scrubbed","detail":"Currency must not be specified for MutualFund asset type","errors":[{"name":"currency","reason":"Currency must not be specified for MutualFund asset type","code":"CURRENCY_NOT_ALLOWED"}]}

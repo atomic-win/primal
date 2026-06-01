@@ -7,10 +7,8 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Primal.Domain.UnitTests/Primal.Domain.UnitTests.csproj" />
-    <Project Path="tests/Primal.Application.UnitTests/Primal.Application.UnitTests.csproj" />
     <Project Path="tests/Primal.Api.UnitTests/Primal.Api.UnitTests.csproj" />
     <Project Path="tests/Primal.Infrastructure.IntegrationTests/Primal.Infrastructure.IntegrationTests.csproj" />
-    <Project Path="tests/Primal.Api.IntegrationTests/Primal.Api.IntegrationTests.csproj" />
     <Project Path="tests/Primal.E2ETests/Primal.E2ETests.csproj" />
   </Folder>
 </Solution>
