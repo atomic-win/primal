@@ -1,0 +1,1 @@
+﻿{"type":"https://www.rfc-editor.org/rfc/rfc7231#section-6.5.1","title":"Bad Request","status":400,"instance":"/api/asset-items/Guid_1/transactions","traceId":"Scrubbed","detail":"Transaction date must be provided","errors":[{"name":"date","reason":"Transaction date must be provided","code":"DATE_REQUIRED"}]}
