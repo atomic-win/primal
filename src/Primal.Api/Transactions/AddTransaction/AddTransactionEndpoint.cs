@@ -8,11 +8,14 @@ namespace Primal.Api.Transactions;
 [HttpPost("/api/asset-items/{assetItemId:guid}/transactions")]
 internal sealed class AddTransactionEndpoint : Endpoint<AddTransactionRequest, TransactionResponse>
 {
+	private readonly IAssetItemRepository assetItemRepository;
 	private readonly ITransactionRepository transactionRepository;
 
 	public AddTransactionEndpoint(
+		IAssetItemRepository assetItemRepository,
 		ITransactionRepository transactionRepository)
 	{
+		this.assetItemRepository = assetItemRepository;
 		this.transactionRepository = transactionRepository;
 	}
 
@@ -20,11 +23,21 @@ internal sealed class AddTransactionEndpoint : Endpoint<AddTransactionRequest, T
 		AddTransactionRequest req,
 		CancellationToken cancellationToken)
 	{
+		var userId = new UserId(req.UserId);
+		var assetItemId = new AssetItemId(req.AssetItemId);
+
+		var assetItem = await this.assetItemRepository.GetByIdAsync(userId, assetItemId, cancellationToken);
+		if (assetItem.Id == AssetItemId.Empty)
+		{
+			await this.Send.NotFoundAsync(cancellationToken);
+			return;
+		}
+
 		var (units, price, amount) = this.NormalizeAmounts(req);
 
 		var transaction = await this.transactionRepository.AddAsync(
-			new UserId(req.UserId),
-			new AssetItemId(req.AssetItemId),
+			userId,
+			assetItemId,
 			req.Date,
 			req.Name,
 			req.TransactionType,

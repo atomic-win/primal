@@ -51,18 +51,6 @@ public sealed class AddTransactionValidatorTests
 	}
 
 	[Test]
-	public async Task ValidateAsync_ReturnsError_WhenAssetItemDoesNotExist()
-	{
-		var validator = CreateValidator(assetItemExists: false);
-		var request = CreateRequest();
-
-		var result = await validator.ValidateAsync(request);
-
-		await Assert.That(result.IsValid).IsFalse();
-		await AssertHasError(result, "Asset item does not exist.");
-	}
-
-	[Test]
 	public async Task ValidateAsync_ReturnsError_WhenDateIsDefault()
 	{
 		var validator = CreateValidator();

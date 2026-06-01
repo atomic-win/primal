@@ -8,11 +8,14 @@ namespace Primal.Api.Transactions;
 [HttpPatch("/api/asset-items/{assetItemId:guid}/transactions/{transactionId:guid}")]
 internal sealed class EditTransactionEndpoint : Endpoint<EditTransactionRequest>
 {
+	private readonly IAssetItemRepository assetItemRepository;
 	private readonly ITransactionRepository transactionRepository;
 
 	public EditTransactionEndpoint(
+		IAssetItemRepository assetItemRepository,
 		ITransactionRepository transactionRepository)
 	{
+		this.assetItemRepository = assetItemRepository;
 		this.transactionRepository = transactionRepository;
 	}
 
@@ -21,16 +24,34 @@ internal sealed class EditTransactionEndpoint : Endpoint<EditTransactionRequest>
 		CancellationToken cancellationToken)
 	{
 		var userId = new UserId(req.UserId);
-		var normalized = await this.NormalizeRequestAsync(userId, req, cancellationToken);
+		var assetItemId = new AssetItemId(req.AssetItemId);
+		var transactionId = new TransactionId(req.TransactionId);
+
+		var assetItem = await this.assetItemRepository.GetByIdAsync(userId, assetItemId, cancellationToken);
+		if (assetItem.Id == AssetItemId.Empty)
+		{
+			await this.Send.NotFoundAsync(cancellationToken);
+			return;
+		}
+
+		var existingTransaction = await this.transactionRepository.GetByIdAsync(
+			userId, assetItemId, transactionId, cancellationToken);
+		if (existingTransaction.Id == TransactionId.Empty)
+		{
+			await this.Send.NotFoundAsync(cancellationToken);
+			return;
+		}
+
+		var normalized = this.NormalizeRequest(req, existingTransaction);
 
 		await this.transactionRepository.UpdateAsync(
 			userId,
 			new Transaction(
-				id: new TransactionId(req.TransactionId),
+				id: transactionId,
 				normalized.Date,
 				normalized.Name,
 				normalized.TransactionType,
-				assetItemId: new AssetItemId(req.AssetItemId),
+				assetItemId: assetItemId,
 				units: normalized.Units,
 				price: normalized.Price,
 				amount: normalized.Amount),
@@ -39,17 +60,10 @@ internal sealed class EditTransactionEndpoint : Endpoint<EditTransactionRequest>
 		await this.Send.NoContentAsync(cancellation: cancellationToken);
 	}
 
-	private async Task<NormalizedTransaction> NormalizeRequestAsync(
-		UserId userId,
+	private NormalizedTransaction NormalizeRequest(
 		EditTransactionRequest req,
-		CancellationToken cancellationToken)
+		Transaction existingTransaction)
 	{
-		var existingTransaction = await this.transactionRepository.GetByIdAsync(
-			userId,
-			new AssetItemId(req.AssetItemId),
-			new TransactionId(req.TransactionId),
-			cancellationToken);
-
 		var name = string.IsNullOrWhiteSpace(req.Name) ? existingTransaction.Name : req.Name;
 		var transactionType = req.TransactionType == TransactionType.Unknown
 			? existingTransaction.TransactionType

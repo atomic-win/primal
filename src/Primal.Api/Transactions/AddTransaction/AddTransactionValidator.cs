@@ -32,16 +32,6 @@ internal sealed class AddTransactionValidator : Validator<AddTransactionRequest>
 		this.RuleFor(x => x.AssetItemId)
 			.NotEqual(Guid.Empty)
 			.WithMessage("Asset item ID must be provided.");
-
-		this.RuleFor(x => x.AssetItemId)
-			.MustAsync(async (req, assetItemId, ct) =>
-			{
-				var userId = new UserId(req.UserId);
-				var assetItem = await this.assetItemRepository.GetByIdAsync(userId, new AssetItemId(assetItemId), ct);
-				return assetItem.Id != AssetItemId.Empty;
-			})
-			.When(x => x.AssetItemId != Guid.Empty)
-			.WithMessage("Asset item does not exist.");
 	}
 
 	private void ConfigureFieldRules()

@@ -10,19 +10,15 @@ internal sealed class EditTransactionValidator : Validator<EditTransactionReques
 {
 	private readonly IAssetItemRepository assetItemRepository;
 	private readonly IAssetRepository assetRepository;
-	private readonly ITransactionRepository transactionRepository;
 
 	public EditTransactionValidator(
 		IAssetItemRepository assetItemRepository,
-		IAssetRepository assetRepository,
-		ITransactionRepository transactionRepository)
+		IAssetRepository assetRepository)
 	{
 		this.assetItemRepository = assetItemRepository;
 		this.assetRepository = assetRepository;
-		this.transactionRepository = transactionRepository;
 
 		this.ConfigureAssetItemRules();
-		this.ConfigureTransactionExistsRule();
 		this.ConfigureFieldRules();
 		this.ConfigureAmountRules();
 	}
@@ -32,33 +28,6 @@ internal sealed class EditTransactionValidator : Validator<EditTransactionReques
 		this.RuleFor(x => x.AssetItemId)
 			.NotEqual(Guid.Empty)
 			.WithMessage("Asset item ID must be provided.");
-
-		this.RuleFor(x => x.AssetItemId)
-			.MustAsync(async (req, assetItemId, ct) =>
-			{
-				var userId = new UserId(req.UserId);
-				var assetItem = await this.assetItemRepository.GetByIdAsync(userId, new AssetItemId(assetItemId), ct);
-				return assetItem.Id != AssetItemId.Empty;
-			})
-			.When(x => x.AssetItemId != Guid.Empty)
-			.WithMessage("Asset item does not exist.");
-	}
-
-	private void ConfigureTransactionExistsRule()
-	{
-		this.RuleFor(x => x)
-			.MustAsync(async (req, ct) =>
-			{
-				var userId = new UserId(req.UserId);
-				var existingTransaction = await this.transactionRepository.GetByIdAsync(
-					userId,
-					new AssetItemId(req.AssetItemId),
-					new TransactionId(req.TransactionId),
-					ct);
-				return existingTransaction.Id != TransactionId.Empty;
-			})
-			.When(x => x.AssetItemId != Guid.Empty && x.TransactionId != Guid.Empty)
-			.WithMessage("Transaction does not exist.");
 	}
 
 	private void ConfigureFieldRules()
