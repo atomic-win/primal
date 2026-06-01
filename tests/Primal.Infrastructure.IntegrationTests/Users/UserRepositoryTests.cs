@@ -1,4 +1,3 @@
-using Primal.Domain.Money;
 using Primal.Domain.Users;
 using Primal.Infrastructure.Users;
 
@@ -23,12 +22,6 @@ public sealed class UserRepositoryTests
 
 		var result = await repository.GetUserAsync(userId, CancellationToken.None);
 
-		await Assert.That(result.Id == userId).IsTrue();
-		await Assert.That(string.Equals(result.Email, "ada@example.com", StringComparison.Ordinal)).IsTrue();
-		await Assert.That(string.Equals(result.FirstName, "Ada", StringComparison.Ordinal)).IsTrue();
-		await Assert.That(string.Equals(result.LastName, "Lovelace", StringComparison.Ordinal)).IsTrue();
-		await Assert.That(string.Equals(result.FullName, "Ada Lovelace", StringComparison.Ordinal)).IsTrue();
-		await Assert.That(result.PreferredCurrency == Currency.USD).IsTrue();
-		await Assert.That(result.PreferredLocale == Locale.EN_US).IsTrue();
+		await Verifier.Verify(result);
 	}
 }

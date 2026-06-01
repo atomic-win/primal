@@ -9,9 +9,7 @@ public sealed class AssetItemTests
 	{
 		var assetItem = AssetItem.Empty;
 
-		await Assert.That(assetItem.Id == AssetItemId.Empty).IsTrue();
-		await Assert.That(assetItem.AssetId == AssetId.Empty).IsTrue();
-		await Assert.That(string.Equals(assetItem.Name, string.Empty, StringComparison.Ordinal)).IsTrue();
+		await Verifier.Verify(assetItem);
 	}
 
 	[Test]
@@ -21,8 +19,6 @@ public sealed class AssetItemTests
 		var assetId = new AssetId(Guid.NewGuid());
 		var assetItem = new AssetItem(id, assetId, "Primary Account");
 
-		await Assert.That(assetItem.Id == id).IsTrue();
-		await Assert.That(assetItem.AssetId == assetId).IsTrue();
-		await Assert.That(string.Equals(assetItem.Name, "Primary Account", StringComparison.Ordinal)).IsTrue();
+		await Verifier.Verify(assetItem);
 	}
 }

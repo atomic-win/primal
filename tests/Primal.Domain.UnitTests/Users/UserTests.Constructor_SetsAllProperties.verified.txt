@@ -1,0 +1,9 @@
+﻿{
+  Email: ada@example.com,
+  FirstName: Ada,
+  LastName: Lovelace,
+  FullName: Ada Lovelace,
+  PreferredCurrency: USD,
+  PreferredLocale: EN_US,
+  Id: Guid_1
+}

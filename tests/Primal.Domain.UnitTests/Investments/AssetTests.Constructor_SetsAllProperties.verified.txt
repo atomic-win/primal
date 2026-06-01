@@ -1,0 +1,8 @@
+﻿{
+  Name: Global Equity Fund,
+  AssetClass: Equity,
+  AssetType: MutualFund,
+  Currency: USD,
+  ExternalId: mf-12345,
+  Id: Guid_1
+}

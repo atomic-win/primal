@@ -1,0 +1,6 @@
+﻿{
+  Email: ,
+  FirstName: ,
+  LastName: ,
+  FullName: 
+}

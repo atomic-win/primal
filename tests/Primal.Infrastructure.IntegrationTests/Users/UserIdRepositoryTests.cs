@@ -16,7 +16,7 @@ public sealed class UserIdRepositoryTests
 			new IdentityProviderUserId("non-existent"),
 			CancellationToken.None);
 
-		await Assert.That(result == UserId.Empty).IsTrue();
+		await Verifier.Verify(result);
 	}
 
 	[Test]
@@ -36,6 +36,10 @@ public sealed class UserIdRepositoryTests
 			identityProviderUserId,
 			CancellationToken.None);
 
-		await Assert.That(result == addedUserId).IsTrue();
+		await Verifier.Verify(new
+		{
+			addedUserId,
+			result,
+		});
 	}
 }

@@ -1,0 +1,10 @@
+﻿{
+  Date: 2024-02-29,
+  Name: Monthly Purchase,
+  TransactionType: Buy,
+  AssetItemId: Guid_1,
+  Units: 10.5,
+  Price: 25.75,
+  Amount: 270.375,
+  Id: Guid_2
+}

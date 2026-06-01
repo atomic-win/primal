@@ -1,0 +1,8 @@
+﻿{
+  Email: ada@example.com,
+  FirstName: Ada,
+  LastName: Lovelace,
+  FullName: Ada Lovelace,
+  ProfilePictureUrl: https://example.com/photo.jpg,
+  Id: google-123
+}

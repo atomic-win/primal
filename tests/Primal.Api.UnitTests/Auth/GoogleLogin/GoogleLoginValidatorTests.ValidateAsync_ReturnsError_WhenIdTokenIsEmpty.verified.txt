@@ -1,0 +1,19 @@
+﻿{
+  IsValid: false,
+  Errors: [
+    {
+      PropertyName: IdToken,
+      ErrorMessage: ID token must be provided,
+      AttemptedValue: ,
+      ErrorCode: ID_TOKEN_REQUIRED,
+      FormattedMessagePlaceholderValues: {
+        PropertyName: Id Token,
+        PropertyPath: IdToken,
+        PropertyValue: 
+      }
+    }
+  ],
+  RuleSetsExecuted: [
+    default
+  ]
+}

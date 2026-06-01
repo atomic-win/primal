@@ -9,14 +9,7 @@ public sealed class TransactionTests
 	{
 		var transaction = Transaction.Empty;
 
-		await Assert.That(transaction.Id == TransactionId.Empty).IsTrue();
-		await Assert.That(transaction.Date == DateOnly.MinValue).IsTrue();
-		await Assert.That(string.Equals(transaction.Name, string.Empty, StringComparison.Ordinal)).IsTrue();
-		await Assert.That(transaction.TransactionType == TransactionType.Buy).IsTrue();
-		await Assert.That(transaction.AssetItemId == AssetItemId.Empty).IsTrue();
-		await Assert.That(transaction.Units == 0m).IsTrue();
-		await Assert.That(transaction.Price == 0m).IsTrue();
-		await Assert.That(transaction.Amount == 0m).IsTrue();
+		await Verifier.Verify(transaction);
 	}
 
 	[Test]
@@ -35,13 +28,6 @@ public sealed class TransactionTests
 			25.75m,
 			270.375m);
 
-		await Assert.That(transaction.Id == id).IsTrue();
-		await Assert.That(transaction.Date == date).IsTrue();
-		await Assert.That(string.Equals(transaction.Name, "Monthly Purchase", StringComparison.Ordinal)).IsTrue();
-		await Assert.That(transaction.TransactionType == TransactionType.Buy).IsTrue();
-		await Assert.That(transaction.AssetItemId == assetItemId).IsTrue();
-		await Assert.That(transaction.Units == 10.5m).IsTrue();
-		await Assert.That(transaction.Price == 25.75m).IsTrue();
-		await Assert.That(transaction.Amount == 270.375m).IsTrue();
+		await Verifier.Verify(transaction);
 	}
 }

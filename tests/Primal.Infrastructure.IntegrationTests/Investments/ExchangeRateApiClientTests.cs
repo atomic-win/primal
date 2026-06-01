@@ -15,7 +15,7 @@ public sealed class ExchangeRateApiClientTests
 
 		var result = await client.GetExchangeRatesAsync(Currency.USD, Currency.USD, CancellationToken.None);
 
-		await Assert.That(result.Count).IsEqualTo(0);
+		await Verifier.Verify(result);
 	}
 
 	[Test]

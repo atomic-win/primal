@@ -15,7 +15,7 @@ public sealed class RatesExtensionsTests
 
 		var result = rates.GetOnOrBeforeValue(date);
 
-		await Assert.That(result).IsEqualTo(85.5m);
+		await Verifier.Verify(result);
 	}
 
 	[Test]
@@ -29,7 +29,7 @@ public sealed class RatesExtensionsTests
 
 		var result = rates.GetOnOrBeforeValue(date);
 
-		await Assert.That(result).IsEqualTo(84.0m);
+		await Verifier.Verify(result);
 	}
 
 	[Test]
@@ -44,7 +44,7 @@ public sealed class RatesExtensionsTests
 
 		var result = rates.GetOnOrBeforeValue(date);
 
-		await Assert.That(result).IsEqualTo(84.5m);
+		await Verifier.Verify(result);
 	}
 
 	[Test]
@@ -58,7 +58,7 @@ public sealed class RatesExtensionsTests
 
 		var result = rates.GetOnOrBeforeValue(date);
 
-		await Assert.That(result).IsEqualTo(82.0m);
+		await Verifier.Verify(result);
 	}
 
 	[Test]

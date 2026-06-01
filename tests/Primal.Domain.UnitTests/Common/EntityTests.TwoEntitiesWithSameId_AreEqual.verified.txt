@@ -1,0 +1,5 @@
+﻿{
+  EqualityOperator: true,
+  EqualsTyped: true,
+  EqualsObject: true
+}

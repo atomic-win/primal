@@ -17,7 +17,7 @@ public sealed class CachedExchangeRateApiClientTests
 
 		var result = await client.GetExchangeRatesAsync(Currency.USD, Currency.USD, CancellationToken.None);
 
-		await Assert.That(result.Count).IsEqualTo(0);
+		await Verifier.Verify(result);
 		await Assert.That(innerClient.ReceivedCalls().Any()).IsFalse();
 	}
 
@@ -30,7 +30,7 @@ public sealed class CachedExchangeRateApiClientTests
 
 		var result = await client.GetOnOrBeforeExchangeRateAsync(Currency.INR, Currency.INR, new DateOnly(2024, 5, 31), CancellationToken.None);
 
-		await Assert.That(result).IsEqualTo(1m);
+		await Verifier.Verify(result);
 		await Assert.That(innerClient.ReceivedCalls().Any()).IsFalse();
 	}
 }

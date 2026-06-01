@@ -12,9 +12,12 @@ public sealed class EntityTests
 		var left = CreateAsset(id, "Asset One", AssetType.MutualFund, "mf-12345");
 		var right = CreateAsset(id, "Asset Two", AssetType.Stock, "stock-AAPL");
 
-		await Assert.That(left == right).IsTrue();
-		await Assert.That(left.Equals(right)).IsTrue();
-		await Assert.That(left.Equals((object)right)).IsTrue();
+		await Verifier.Verify(new
+		{
+			EqualityOperator = left == right,
+			EqualsTyped = left.Equals(right),
+			EqualsObject = left.Equals((object)right),
+		});
 	}
 
 	[Test]
@@ -23,9 +26,12 @@ public sealed class EntityTests
 		var left = CreateAsset(new AssetId(Guid.NewGuid()));
 		var right = CreateAsset(new AssetId(Guid.NewGuid()));
 
-		await Assert.That(left == right).IsFalse();
-		await Assert.That(left.Equals(right)).IsFalse();
-		await Assert.That(left.Equals((object)right)).IsFalse();
+		await Verifier.Verify(new
+		{
+			EqualityOperator = left == right,
+			EqualsTyped = left.Equals(right),
+			EqualsObject = left.Equals((object)right),
+		});
 	}
 
 	[Test]
@@ -34,7 +40,7 @@ public sealed class EntityTests
 		var left = CreateAsset(new AssetId(Guid.NewGuid()));
 		var right = CreateAsset(new AssetId(Guid.NewGuid()));
 
-		await Assert.That(left != right).IsTrue();
+		await Verifier.Verify(left != right);
 	}
 
 	[Test]
@@ -44,7 +50,7 @@ public sealed class EntityTests
 		var left = CreateAsset(id, "Asset One", AssetType.MutualFund, "mf-12345");
 		var right = CreateAsset(id, "Asset Two", AssetType.Stock, "stock-AAPL");
 
-		await Assert.That(left.GetHashCode() == right.GetHashCode()).IsTrue();
+		await Verifier.Verify(left.GetHashCode() == right.GetHashCode());
 	}
 
 	[Test]
@@ -61,7 +67,7 @@ public sealed class EntityTests
 		var left = CreateAsset(new AssetId(firstGuid));
 		var right = CreateAsset(new AssetId(secondGuid));
 
-		await Assert.That(left.GetHashCode() != right.GetHashCode()).IsTrue();
+		await Verifier.Verify(left.GetHashCode() != right.GetHashCode());
 	}
 
 	[Test]
@@ -69,7 +75,7 @@ public sealed class EntityTests
 	{
 		var asset = CreateAsset(new AssetId(Guid.NewGuid()));
 
-		await Assert.That(asset.Equals(null)).IsFalse();
+		await Verifier.Verify(asset.Equals(null));
 	}
 
 	[Test]
@@ -78,7 +84,7 @@ public sealed class EntityTests
 		var asset = CreateAsset(new AssetId(Guid.NewGuid()));
 		object other = new AssetItem(new AssetItemId(Guid.NewGuid()), new AssetId(Guid.NewGuid()), "Item");
 
-		await Assert.That(asset.Equals(other)).IsFalse();
+		await Verifier.Verify(asset.Equals(other));
 	}
 
 	private static Asset CreateAsset(

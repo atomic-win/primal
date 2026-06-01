@@ -19,12 +19,6 @@ public sealed class IdentityProviderUserTests
 			"Ada Lovelace",
 			profileUrl);
 
-		await Assert.That(user.Id == id).IsTrue();
-		await Assert.That(user.IdentityProvider == IdentityProvider.Google).IsTrue();
-		await Assert.That(string.Equals(user.Email, "ada@example.com", StringComparison.Ordinal)).IsTrue();
-		await Assert.That(string.Equals(user.FirstName, "Ada", StringComparison.Ordinal)).IsTrue();
-		await Assert.That(string.Equals(user.LastName, "Lovelace", StringComparison.Ordinal)).IsTrue();
-		await Assert.That(string.Equals(user.FullName, "Ada Lovelace", StringComparison.Ordinal)).IsTrue();
-		await Assert.That(user.ProfilePictureUrl == profileUrl).IsTrue();
+		await Verifier.Verify(user);
 	}
 }

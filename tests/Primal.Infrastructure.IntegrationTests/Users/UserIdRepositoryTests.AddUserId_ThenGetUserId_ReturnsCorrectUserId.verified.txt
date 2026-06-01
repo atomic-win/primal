@@ -1,0 +1,4 @@
+﻿{
+  addedUserId: Guid_1,
+  result: Guid_1
+}

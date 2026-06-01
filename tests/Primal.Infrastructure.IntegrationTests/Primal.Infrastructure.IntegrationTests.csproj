@@ -11,6 +11,7 @@
     <PackageReference Include="NSubstitute" />
     <PackageReference Include="RichardSzalay.MockHttp" />
     <PackageReference Include="TUnit" />
+    <PackageReference Include="Verify.TUnit" />
   </ItemGroup>
 
   <ItemGroup>
