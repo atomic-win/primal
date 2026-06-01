@@ -7,6 +7,7 @@ public sealed class Returns_Transaction_When_It_Exists
 	[Test]
 	public async Task Test()
 	{
+		// Arrange
 		await using var factory = new PrimalE2EFactory();
 		_ = factory.CreateClient();
 
@@ -32,9 +33,11 @@ public sealed class Returns_Transaction_When_It_Exists
 			price: 150.25m,
 			amount: 0);
 
+		// Act
 		var response = await client.GetAsync(
 			$"/api/asset-items/{assetItem.Id}/transactions/{transaction.Id}?currency=INR");
 
+		// Assert
 		await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.OK);
 
 		var body = await response.Content.ReadAsStringAsync();

@@ -7,6 +7,7 @@ public sealed class Returns_AssetItems_After_Adding
 	[Test]
 	public async Task Test()
 	{
+		// Arrange
 		await using var factory = new PrimalE2EFactory();
 		_ = factory.CreateClient();
 
@@ -22,8 +23,10 @@ public sealed class Returns_AssetItems_After_Adding
 			externalId: "119551",
 			currency: "Unknown");
 
+		// Act
 		var response = await client.GetAsync("/api/asset-items");
 
+		// Assert
 		await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.OK);
 
 		var body = await response.Content.ReadAsStringAsync();

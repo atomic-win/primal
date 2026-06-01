@@ -7,6 +7,7 @@ public sealed class Returns_204_And_GET_Returns_Empty_After_Deletion
 	[Test]
 	public async Task Test()
 	{
+		// Arrange
 		await using var factory = new PrimalE2EFactory();
 		_ = factory.CreateClient();
 
@@ -32,12 +33,13 @@ public sealed class Returns_204_And_GET_Returns_Empty_After_Deletion
 			price: 150.25m,
 			amount: 0);
 
+		// Act
 		var response = await client.DeleteAsync(
 			$"/api/asset-items/{assetItem.Id}/transactions/{transaction.Id}");
 
+		// Assert
 		await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.NoContent);
 
-		// Validate via GET that transaction no longer exists
 		var getResponse = await client.GetAsync(
 			$"/api/asset-items/{assetItem.Id}/transactions/{transaction.Id}?currency=INR");
 		var body = await getResponse.Content.ReadAsStringAsync();

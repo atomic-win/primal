@@ -8,6 +8,7 @@ public sealed class Returns_201_And_GET_Returns_Created_Transaction
 	[Test]
 	public async Task Test()
 	{
+		// Arrange
 		await using var factory = new PrimalE2EFactory();
 		_ = factory.CreateClient();
 
@@ -24,6 +25,7 @@ public sealed class Returns_201_And_GET_Returns_Created_Transaction
 			externalId: "119551",
 			currency: "Unknown");
 
+		// Act
 		var response = await client.PostAsJsonAsync(
 			$"/api/asset-items/{assetItem.Id}/transactions", new
 			{
@@ -36,6 +38,7 @@ public sealed class Returns_201_And_GET_Returns_Created_Transaction
 				Amount = 0,
 			});
 
+		// Assert
 		await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.Created);
 
 		var body = await response.Content.ReadAsStringAsync();

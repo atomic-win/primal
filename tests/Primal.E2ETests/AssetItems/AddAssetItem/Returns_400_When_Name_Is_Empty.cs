@@ -8,12 +8,14 @@ public sealed class Returns_400_When_Name_Is_Empty
 	[Test]
 	public async Task Test()
 	{
+		// Arrange
 		await using var factory = new PrimalE2EFactory();
 		_ = factory.CreateClient();
 
 		var userId = await factory.CreateUserAsync();
 		var client = factory.CreateAuthenticatedClient(userId);
 
+		// Act
 		var response = await client.PostAsJsonAsync("/api/asset-items", new
 		{
 			Name = string.Empty,
@@ -23,6 +25,7 @@ public sealed class Returns_400_When_Name_Is_Empty
 			Currency = "Unknown",
 		});
 
+		// Assert
 		await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.BadRequest);
 
 		var body = await response.Content.ReadAsStringAsync();

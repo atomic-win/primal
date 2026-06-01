@@ -7,6 +7,7 @@ public sealed class Returns_500_When_Transaction_Does_Not_Exist
 	[Test]
 	public async Task Test()
 	{
+		// Arrange
 		await using var factory = new PrimalE2EFactory();
 		_ = factory.CreateClient();
 
@@ -20,9 +21,11 @@ public sealed class Returns_500_When_Transaction_Does_Not_Exist
 			externalId: string.Empty,
 			currency: "INR");
 
+		// Act
 		var response = await client.DeleteAsync(
 			$"/api/asset-items/{assetItem.Id}/transactions/{Guid.NewGuid()}");
 
+		// Assert
 		await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.NotFound);
 	}
 }

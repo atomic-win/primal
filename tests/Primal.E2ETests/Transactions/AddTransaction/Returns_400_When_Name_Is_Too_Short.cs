@@ -8,6 +8,7 @@ public sealed class Returns_400_When_Name_Is_Too_Short
 	[Test]
 	public async Task Test()
 	{
+		// Arrange
 		await using var factory = new PrimalE2EFactory();
 		_ = factory.CreateClient();
 
@@ -21,6 +22,7 @@ public sealed class Returns_400_When_Name_Is_Too_Short
 			externalId: string.Empty,
 			currency: "INR");
 
+		// Act
 		var response = await client.PostAsJsonAsync(
 			$"/api/asset-items/{assetItem.Id}/transactions", new
 			{
@@ -33,6 +35,7 @@ public sealed class Returns_400_When_Name_Is_Too_Short
 				Amount = 1000,
 			});
 
+		// Assert
 		await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.BadRequest);
 
 		var body = await response.Content.ReadAsStringAsync();

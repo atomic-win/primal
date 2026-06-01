@@ -8,6 +8,7 @@ public sealed class Returns_204_And_GET_Returns_Updated_Transaction
 	[Test]
 	public async Task Test()
 	{
+		// Arrange
 		await using var factory = new PrimalE2EFactory();
 		_ = factory.CreateClient();
 
@@ -33,6 +34,7 @@ public sealed class Returns_204_And_GET_Returns_Updated_Transaction
 			price: 150.25m,
 			amount: 0);
 
+		// Act
 		var editResponse = await client.PatchAsJsonAsync(
 			$"/api/asset-items/{assetItem.Id}/transactions/{transaction.Id}",
 			new
@@ -46,6 +48,7 @@ public sealed class Returns_204_And_GET_Returns_Updated_Transaction
 				Amount = 0,
 			});
 
+		// Assert
 		await Assert.That(editResponse.StatusCode).IsEqualTo(HttpStatusCode.NoContent);
 
 		var getResponse = await client.GetAsync(

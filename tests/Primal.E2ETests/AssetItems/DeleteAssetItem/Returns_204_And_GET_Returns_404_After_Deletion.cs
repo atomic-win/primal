@@ -7,6 +7,7 @@ public sealed class Returns_204_And_GET_Returns_404_After_Deletion
 	[Test]
 	public async Task Test()
 	{
+		// Arrange
 		await using var factory = new PrimalE2EFactory();
 		_ = factory.CreateClient();
 
@@ -22,11 +23,12 @@ public sealed class Returns_204_And_GET_Returns_404_After_Deletion
 			externalId: "119551",
 			currency: "Unknown");
 
+		// Act
 		var response = await client.DeleteAsync($"/api/asset-items/{assetItem.Id}");
 
+		// Assert
 		await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.NoContent);
 
-		// Validate via GET
 		var getResponse = await client.GetAsync($"/api/asset-items/{assetItem.Id}");
 		await Assert.That(getResponse.StatusCode).IsEqualTo(HttpStatusCode.NotFound);
 	}

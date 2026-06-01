@@ -8,6 +8,7 @@ public sealed class Returns_201_When_Adding_Valid_Stock
 	[Test]
 	public async Task Test()
 	{
+		// Arrange
 		await using var factory = new PrimalE2EFactory();
 		_ = factory.CreateClient();
 
@@ -16,6 +17,7 @@ public sealed class Returns_201_When_Adding_Valid_Stock
 		var userId = await factory.CreateUserAsync();
 		var client = factory.CreateAuthenticatedClient(userId);
 
+		// Act
 		var response = await client.PostAsJsonAsync("/api/asset-items", new
 		{
 			Name = "Apple Stock",
@@ -25,6 +27,7 @@ public sealed class Returns_201_When_Adding_Valid_Stock
 			Currency = "Unknown",
 		});
 
+		// Assert
 		await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.Created);
 
 		var body = await response.Content.ReadAsStringAsync();
