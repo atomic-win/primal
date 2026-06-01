@@ -1,4 +1,5 @@
 using FastEndpoints;
+using Primal.Api.Errors;
 using Primal.Application.Investments;
 using Primal.Domain.Investments;
 using Primal.Domain.Money;
@@ -64,7 +65,7 @@ internal sealed class AddAssetItemEndpoint : Endpoint<AddAssetItemRequest, Asset
 
 		if (string.IsNullOrWhiteSpace(mutualFund.SchemeCode))
 		{
-			this.ThrowError("Mutual fund not found", StatusCodes.Status404NotFound);
+			this.ThrowError(ErrorFactory.MutualFundNotFound(), StatusCodes.Status404NotFound);
 		}
 
 		return await this.assetRepository.AddAsync(
@@ -89,7 +90,7 @@ internal sealed class AddAssetItemEndpoint : Endpoint<AddAssetItemRequest, Asset
 
 		if (string.IsNullOrWhiteSpace(stock.Symbol))
 		{
-			this.ThrowError("Stock not found", StatusCodes.Status404NotFound);
+			this.ThrowError(ErrorFactory.StockNotFound(), StatusCodes.Status404NotFound);
 		}
 
 		return await this.assetRepository.AddAsync(

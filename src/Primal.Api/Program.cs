@@ -86,6 +86,10 @@ var app = builder.Build();
 	app.UseFastEndpoints(c =>
 	{
 		c.Serializer.Options.Converters.Add(new JsonStringEnumConverter());
+		c.Errors.UseProblemDetails(config =>
+		{
+			config.IndicateErrorCode = true;
+		});
 	});
 
 	app.Run();

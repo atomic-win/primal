@@ -1,5 +1,6 @@
 using FastEndpoints;
 using FluentValidation;
+using Primal.Api.Errors;
 using Primal.Application.Investments;
 using Primal.Domain.Investments;
 using Primal.Domain.Users;
@@ -31,38 +32,45 @@ internal sealed class AddTransactionValidator : Validator<AddTransactionRequest>
 	{
 		this.RuleFor(x => x.AssetItemId)
 			.NotEqual(Guid.Empty)
-			.WithMessage("Asset item ID must be provided.");
+			.WithMessage(ErrorMessages.AssetItem.IdRequired)
+			.WithErrorCode(ErrorCodes.AssetItem.IdRequired);
 	}
 
 	private void ConfigureFieldRules()
 	{
 		this.RuleFor(x => x.Date)
 			.NotEqual(default(DateOnly))
-			.WithMessage("Transaction date must be provided.");
+			.WithMessage(ErrorMessages.Transaction.DateRequired)
+			.WithErrorCode(ErrorCodes.Transaction.DateRequired);
 
 		this.RuleFor(x => x.Date)
 			.Must(date => date <= DateOnly.FromDateTime(this.timeProvider.GetUtcNow().UtcDateTime))
 			.When(x => x.Date != default)
-			.WithMessage("Transaction date cannot be in the future.");
+			.WithMessage(ErrorMessages.Transaction.DateInFuture)
+			.WithErrorCode(ErrorCodes.Transaction.DateInFuture);
 
 		this.RuleFor(x => x.Name)
 			.NotEmpty()
-			.WithMessage("Transaction name must be provided.");
+			.WithMessage(ErrorMessages.Transaction.NameRequired)
+			.WithErrorCode(ErrorCodes.Transaction.NameRequired);
 
 		this.RuleFor(x => x.Name)
 			.MinimumLength(3)
-			.WithMessage("Transaction name must be at least 3 characters long.");
+			.WithMessage(ErrorMessages.Transaction.NameTooShort)
+			.WithErrorCode(ErrorCodes.Transaction.NameTooShort);
 
 		this.RuleFor(x => x.Name)
 			.MaximumLength(1000)
-			.WithMessage("Transaction name must not exceed 1000 characters.");
+			.WithMessage(ErrorMessages.Transaction.NameTooLong)
+			.WithErrorCode(ErrorCodes.Transaction.NameTooLong);
 	}
 
 	private void ConfigureTransactionTypeRules()
 	{
 		this.RuleFor(x => x.TransactionType)
 			.NotEqual(TransactionType.Unknown)
-			.WithMessage("Transaction type must be provided.");
+			.WithMessage(ErrorMessages.Transaction.TypeRequired)
+			.WithErrorCode(ErrorCodes.Transaction.TypeRequired);
 
 		this.RuleFor(x => x)
 			.MustAsync(async (req, ct) =>
@@ -78,7 +86,8 @@ internal sealed class AddTransactionValidator : Validator<AddTransactionRequest>
 				return TransactionValidationExtensions.IsValidForAssetType(req.TransactionType, asset);
 			})
 			.When(x => x.AssetItemId != Guid.Empty && x.TransactionType != TransactionType.Unknown)
-			.WithMessage(req => $"Transaction type '{req.TransactionType}' is not valid for the asset type.");
+			.WithMessage(req => $"Transaction type '{req.TransactionType}' is not valid for the asset type")
+			.WithErrorCode(ErrorCodes.Transaction.TypeInvalid);
 	}
 
 	private void ConfigureAmountRules()
@@ -86,16 +95,19 @@ internal sealed class AddTransactionValidator : Validator<AddTransactionRequest>
 		this.RuleFor(x => x.Units)
 			.GreaterThan(0)
 			.When(x => TransactionValidationExtensions.IsUnitsRequired(x.TransactionType))
-			.WithMessage("Transaction units must be greater than zero.");
+			.WithMessage(ErrorMessages.Transaction.UnitsRequired)
+			.WithErrorCode(ErrorCodes.Transaction.UnitsRequired);
 
 		this.RuleFor(x => x.Price)
 			.GreaterThan(0)
 			.When(x => TransactionValidationExtensions.IsUnitsRequired(x.TransactionType))
-			.WithMessage("Transaction price must be greater than zero.");
+			.WithMessage(ErrorMessages.Transaction.PriceRequired)
+			.WithErrorCode(ErrorCodes.Transaction.PriceRequired);
 
 		this.RuleFor(x => x.Amount)
 			.GreaterThan(0)
 			.When(x => !TransactionValidationExtensions.IsUnitsRequired(x.TransactionType) && x.TransactionType != TransactionType.Unknown)
-			.WithMessage("Transaction amount must be greater than zero.");
+			.WithMessage(ErrorMessages.Transaction.AmountRequired)
+			.WithErrorCode(ErrorCodes.Transaction.AmountRequired);
 	}
 }

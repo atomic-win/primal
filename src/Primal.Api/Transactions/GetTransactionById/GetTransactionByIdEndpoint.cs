@@ -1,4 +1,5 @@
 using FastEndpoints;
+using Primal.Api.Errors;
 using Primal.Application.Investments;
 using Primal.Domain.Investments;
 using Primal.Domain.Users;
@@ -34,8 +35,7 @@ internal sealed class GetTransactionByIdEndpoint : Endpoint<GetTransactionByIdRe
 
 		if (transaction.Id == TransactionId.Empty)
 		{
-			await this.Send.NotFoundAsync(cancellationToken);
-			return;
+			this.ThrowError(ErrorFactory.TransactionNotFound(), StatusCodes.Status404NotFound);
 		}
 
 		var response = await transaction.ToResponse(

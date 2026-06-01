@@ -1,1 +1,1 @@
-﻿emptyString
+﻿{"type":"https://www.rfc-editor.org/rfc/rfc7231#section-6.5.4","title":"Not Found","status":404,"instance":"/api/asset-items/Guid_1/transactions/Guid_2","traceId":"Scrubbed","detail":"Transaction not found","errors":[{"name":"transactionId","reason":"Transaction not found","code":"TRANSACTION_NOT_FOUND"}]}

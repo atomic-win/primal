@@ -1,5 +1,6 @@
 using FastEndpoints;
 using FluentValidation;
+using Primal.Api.Errors;
 
 namespace Primal.Api.Transactions;
 
@@ -9,10 +10,12 @@ internal sealed class DeleteTransactionValidator : Validator<DeleteTransactionRe
 	{
 		this.RuleFor(x => x.AssetItemId)
 			.NotEqual(Guid.Empty)
-			.WithMessage("Asset item ID must be provided.");
+			.WithMessage(ErrorMessages.AssetItem.IdRequired)
+			.WithErrorCode(ErrorCodes.AssetItem.IdRequired);
 
 		this.RuleFor(x => x.TransactionId)
 			.NotEqual(Guid.Empty)
-			.WithMessage("Transaction ID must be provided.");
+			.WithMessage(ErrorMessages.Transaction.IdRequired)
+			.WithErrorCode(ErrorCodes.Transaction.IdRequired);
 	}
 }

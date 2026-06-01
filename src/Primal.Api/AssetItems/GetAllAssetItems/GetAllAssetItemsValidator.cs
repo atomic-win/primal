@@ -1,5 +1,6 @@
 using FastEndpoints;
 using FluentValidation;
+using Primal.Api.Errors;
 
 namespace Primal.Api.AssetItems;
 
@@ -9,6 +10,7 @@ internal sealed class GetAllAssetItemsValidator : Validator<GetAllAssetItemsRequ
 	{
 		this.RuleFor(x => x.UserId)
 			.NotEqual(Guid.Empty)
-			.WithMessage("User ID must be provided.");
+			.WithMessage(ErrorMessages.User.IdRequired)
+			.WithErrorCode(ErrorCodes.User.IdRequired);
 	}
 }

@@ -1,4 +1,5 @@
 using FastEndpoints;
+using Primal.Api.Errors;
 using Primal.Application.Users;
 using Primal.Domain.Money;
 using Primal.Domain.Users;
@@ -22,8 +23,7 @@ internal sealed class UpdateUserEndpoint : Endpoint<UpdateUserRequest>
 
 		if (user.Id == UserId.Empty)
 		{
-			this.ThrowError("User not found", 404);
-			return;
+			this.ThrowError(ErrorFactory.UserNotFound(), StatusCodes.Status404NotFound);
 		}
 
 		if ((req.PreferredCurrency == Currency.Unknown || req.PreferredCurrency == user.PreferredCurrency)

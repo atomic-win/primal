@@ -1,4 +1,5 @@
 using FastEndpoints;
+using Primal.Api.Errors;
 using Primal.Application.Investments;
 using Primal.Domain.Investments;
 using Primal.Domain.Users;
@@ -24,8 +25,7 @@ internal sealed class DeleteAssetItemEndpoint : Endpoint<DeleteAssetItemRequest>
 
 		if (assetItem.Id == AssetItemId.Empty)
 		{
-			await this.Send.NotFoundAsync();
-			return;
+			this.ThrowError(ErrorFactory.AssetItemNotFound(), StatusCodes.Status404NotFound);
 		}
 
 		await this.assetItemRepository.DeleteAsync(userId, assetItem.Id, ct);

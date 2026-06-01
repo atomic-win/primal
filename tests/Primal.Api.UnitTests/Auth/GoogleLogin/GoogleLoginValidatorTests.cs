@@ -1,5 +1,6 @@
 using FluentValidation.Results;
 using Primal.Api.Auth;
+using Primal.Api.Errors;
 
 namespace Primal.Api.UnitTests.Api.Auth.GoogleLogin;
 
@@ -25,7 +26,7 @@ public sealed class GoogleLoginValidatorTests
 		var result = await validator.ValidateAsync(request);
 
 		await Assert.That(result.IsValid).IsFalse();
-		await AssertHasError(result, "ID token must be provided.");
+		await AssertHasError(result, ErrorMessages.Auth.IdTokenRequired);
 	}
 
 	private static async Task AssertHasError(ValidationResult result, string errorMessage)

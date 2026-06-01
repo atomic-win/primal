@@ -2,6 +2,7 @@ using System.Collections.Immutable;
 using System.Runtime.CompilerServices;
 using FastEndpoints;
 using Microsoft.Extensions.Caching.Hybrid;
+using Primal.Api.Errors;
 using Primal.Application.Investments;
 using Primal.Domain.Investments;
 using Primal.Domain.Money;
@@ -58,12 +59,12 @@ internal sealed class GetValuationsEndpoint : Endpoint<GetValuationsRequest, IAs
 	{
 		if (currency == Currency.Unknown)
 		{
-			this.AddError("Currency query parameter is required.");
+			this.AddError(ErrorMessages.AssetItem.CurrencyRequired, ErrorCodes.AssetItem.CurrencyRequired);
 		}
 
 		if (assetItemIds.Count == 0)
 		{
-			this.AddError("At least one assetItemGuid query parameter is required.");
+			this.AddError(ErrorMessages.AssetItem.IdsRequired, ErrorCodes.AssetItem.IdsRequired);
 		}
 
 		var assetItems = new List<AssetItem>(capacity: assetItemIds.Count);
@@ -72,7 +73,7 @@ internal sealed class GetValuationsEndpoint : Endpoint<GetValuationsRequest, IAs
 			var assetItem = await this.assetItemRepository.GetByIdAsync(userId, assetItemId, ct);
 			if (assetItem.Id == AssetItemId.Empty)
 			{
-				this.AddError($"Asset item with ID '{assetItemId.Value}' not found.");
+				this.AddError($"Asset item with ID '{assetItemId.Value}' not found", ErrorCodes.AssetItem.NotFound);
 				continue;
 			}
 
