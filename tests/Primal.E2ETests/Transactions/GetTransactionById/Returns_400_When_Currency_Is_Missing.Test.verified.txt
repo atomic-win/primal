@@ -1,0 +1,1 @@
+﻿{"type":"https://www.rfc-editor.org/rfc/rfc7231#section-6.5.1","title":"Bad Request","status":400,"instance":"/api/asset-items/Guid_1/transactions/Guid_2","traceId":"Scrubbed","detail":"Currency must be provided","errors":[{"name":"currency","reason":"Currency must be provided","code":"CURRENCY_REQUIRED"}]}

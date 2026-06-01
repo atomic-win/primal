@@ -12,11 +12,11 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 | 2 | Rejects null IdToken | `{ "IdToken": null }` | 400 `ID_TOKEN_REQUIRED` | E2E | ✅ |
 | 3 | Rejects missing body | No request body | 400 `ID_TOKEN_REQUIRED` | E2E | ✅ |
 | 4 | Rejects empty JSON body | `{}` | 400 `ID_TOKEN_REQUIRED` | E2E | ✅ |
-| 5 | Existing user logs in | Valid Google token; user already in DB | 200 TokenResponse (access + refresh) | E2E | ❌ |
-| 6 | New user registers and logs in | Valid Google token; user not in DB | 200 TokenResponse; user + userId rows created | E2E | ❌ |
-| 7 | Rejects expired Google token | Expired Google ID token | 401 `ID_TOKEN_EXPIRED` | E2E | ❌ |
-| 8 | Rejects invalid Google token | Malformed Google ID token | 401 `ID_TOKEN_INVALID` | E2E | ❌ |
-| 9 | Returns 500 on unexpected error | Google validation throws non-JWT exception | 500 `UNEXPECTED_ERROR` | E2E | ❌ |
+| 5 | Existing user logs in | Valid Google token; user already in DB | 200 TokenResponse (access + refresh) | E2E | ✅ |
+| 6 | New user registers and logs in | Valid Google token; user not in DB | 200 TokenResponse; user + userId rows created | E2E | ✅ |
+| 7 | Rejects expired Google token | Expired Google ID token | 401 `ID_TOKEN_EXPIRED` | E2E | ✅ |
+| 8 | Rejects invalid Google token | Malformed Google ID token | 401 `ID_TOKEN_INVALID` | E2E | ✅ |
+| 9 | Returns 500 on unexpected error | Google validation throws non-JWT exception | 500 `UNEXPECTED_ERROR` | E2E | ✅ |
 | 10 | Accessible without auth | No Authorization header | Endpoint reachable (AllowAnonymous) | E2E | ✅ |
 
 > **Note:** Unit tests exist for GoogleLoginValidator (`ValidateAsync_ReturnsError_WhenIdTokenIsEmpty`, `ValidateAsync_ReturnsValid_WhenIdTokenIsProvided`) but no E2E tests for this endpoint.
@@ -339,7 +339,7 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 | 2 | Returns empty list | Asset item exists; no transactions | 200 `[]` | E2E | ✅ |
 | 3 | Returns transactions with calculated amounts | Asset item with multiple transactions; Currency=INR | 200 array with Amount calculated per transaction | E2E | ✅ |
 | 4 | Cross-currency amount calculation | INR asset; Currency=USD query param | 200; amounts converted to USD | E2E | ✅ |
-| 5 | Missing Currency defaults to Unknown | Currency query param absent | 200; amounts calculated with Unknown currency | E2E | ❌ |
+| 5 | Missing Currency returns 400 | Currency query param absent | 400 `CURRENCY_REQUIRED` | E2E | ✅ |
 | 6 | Rejects non-GUID route param | `/api/asset-items/not-a-guid/transactions` | 404 route not matched | E2E | ✅ |
 
 ---
@@ -354,7 +354,7 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 | 4 | Cross-currency amount — Deposit | INR BankAccount Deposit; Currency=USD | 200; amount = deposit × exchange rate | E2E | ✅ |
 | 5 | Same-currency amount unchanged | INR asset; Currency=INR | 200; amount unchanged | E2E | ✅ |
 | 6 | Non-MF/Stock asset rate = 1 | BankAccount Buy; cross-currency | 200; units × 1 × exchange rate | E2E | ✅ |
-| 7 | Missing Currency defaults to Unknown | Currency query param absent | 200 | E2E | ❌ |
+| 7 | Missing Currency returns 400 | Currency query param absent | 400 `CURRENCY_REQUIRED` | E2E | ✅ |
 | 8 | Rejects non-GUID transactionId | Non-GUID in route | 404 route not matched | E2E | ✅ |
 | 9 | Missing transactionId hits list endpoint | `/api/asset-items/{id}/transactions/` | Matches GET list endpoint instead | E2E | ✅ |
 
@@ -660,7 +660,7 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 
 | Section | Total | Present | Missing |
 |---------|-------|---------|---------|
-| 1. POST /api/auth/login/google | 10 | 5 | 5 |
+| 1. POST /api/auth/login/google | 10 | 10 | 0 |
 | 2. GET /api/users/me | 7 | 7 | 0 |
 | 3. PATCH /api/users/me | 10 | 10 | 0 |
 | 4. POST /api/asset-items | 45 | 45 | 0 |
@@ -669,8 +669,8 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 | 7. DELETE /api/asset-items/{id} | 4 | 4 | 0 |
 | 8. GET /api/asset-items/valuations | 37 | 37 | 0 |
 | 9. POST .../transactions | 74 | 74 | 0 |
-| 10. GET .../transactions | 6 | 5 | 1 |
-| 11. GET .../transactions/{id} | 9 | 8 | 1 |
+| 10. GET .../transactions | 6 | 6 | 0 |
+| 11. GET .../transactions/{id} | 9 | 9 | 0 |
 | 12. PATCH .../transactions/{id} | 26 | 26 | 0 |
 | 13. DELETE .../transactions/{id} | 3 | 3 | 0 |
 | 14. Cross-Cutting | 9 | 9 | 0 |
@@ -682,4 +682,4 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 | 20. Caching (Integration) | 15 | 2 | 13 |
 | 21. Repositories (Integration) | 25 | 5 | 20 |
 | 22. DB Schema (Integration) | 7 | 0 | 7 |
-| **Total** | **329** | **261** | **68** |
+| **Total** | **329** | **269** | **60** |

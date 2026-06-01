@@ -1,6 +1,7 @@
 using FastEndpoints;
 using FluentValidation;
 using Primal.Api.Errors;
+using Primal.Domain.Money;
 
 namespace Primal.Api.Transactions;
 
@@ -17,5 +18,10 @@ internal sealed class GetTransactionByIdValidator : Validator<GetTransactionById
 			.NotEqual(Guid.Empty)
 			.WithMessage(ErrorMessages.Transaction.IdRequired)
 			.WithErrorCode(ErrorCodes.Transaction.IdRequired);
+
+		this.RuleFor(x => x.Currency)
+			.NotEqual(Currency.Unknown)
+			.WithMessage(ErrorMessages.AssetItem.CurrencyRequired)
+			.WithErrorCode(ErrorCodes.AssetItem.CurrencyRequired);
 	}
 }
