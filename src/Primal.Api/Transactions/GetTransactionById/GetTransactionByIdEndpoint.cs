@@ -34,7 +34,8 @@ internal sealed class GetTransactionByIdEndpoint : Endpoint<GetTransactionByIdRe
 
 		if (transaction.Id == TransactionId.Empty)
 		{
-			this.ThrowError("Transaction not found", StatusCodes.Status404NotFound);
+			this.AddError("Transaction not found", "TRANSACTION_NOT_FOUND");
+			this.ThrowIfAnyErrors(StatusCodes.Status404NotFound);
 		}
 
 		var response = await transaction.ToResponse(

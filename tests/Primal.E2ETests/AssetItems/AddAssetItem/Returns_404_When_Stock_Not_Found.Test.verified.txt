@@ -1,1 +1,1 @@
-﻿{"type":"https://www.rfc-editor.org/rfc/rfc7231#section-6.5.4","title":"Not Found","status":404,"instance":"/api/asset-items","traceId":"Scrubbed","detail":"Stock not found","errors":[{"name":"generalErrors","reason":"Stock not found"}]}
+﻿{"type":"https://www.rfc-editor.org/rfc/rfc7231#section-6.5.4","title":"Not Found","status":404,"instance":"/api/asset-items","traceId":"Scrubbed","detail":"Stock not found","errors":[{"name":"generalErrors","reason":"Stock not found","code":"STOCK_NOT_FOUND"}]}

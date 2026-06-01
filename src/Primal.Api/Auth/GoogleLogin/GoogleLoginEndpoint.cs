@@ -61,18 +61,18 @@ internal sealed class GoogleLoginEndpoint : Endpoint<GoogleLoginRequest, TokenRe
 		}
 		catch (InvalidJwtException ex) when (string.Equals(ex.Message, "JWT has expired.", StringComparison.OrdinalIgnoreCase))
 		{
-			this.ValidationFailures.Add(new("IdToken", "ID token has expired") { ErrorCode = "ID_TOKEN_EXPIRED" });
+			this.AddError("ID token has expired", "ID_TOKEN_EXPIRED");
 			await this.Send.ErrorsAsync(statusCode: 401, cancellation: ct);
 		}
 		catch (InvalidJwtException)
 		{
-			this.ValidationFailures.Add(new("IdToken", "ID token is invalid") { ErrorCode = "ID_TOKEN_INVALID" });
+			this.AddError("ID token is invalid", "ID_TOKEN_INVALID");
 			await this.Send.ErrorsAsync(statusCode: 401, cancellation: ct);
 		}
 		catch (Exception ex)
 		{
 			Console.WriteLine(ex);
-			this.ValidationFailures.Add(new("IdToken", "An unexpected error occurred") { ErrorCode = "UNEXPECTED_ERROR" });
+			this.AddError("An unexpected error occurred", "UNEXPECTED_ERROR");
 			await this.Send.ErrorsAsync(statusCode: 500, cancellation: ct);
 		}
 	}

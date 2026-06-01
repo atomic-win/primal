@@ -29,7 +29,8 @@ internal sealed class AddTransactionEndpoint : Endpoint<AddTransactionRequest, T
 		var assetItem = await this.assetItemRepository.GetByIdAsync(userId, assetItemId, cancellationToken);
 		if (assetItem.Id == AssetItemId.Empty)
 		{
-			this.ThrowError("Asset item not found", StatusCodes.Status404NotFound);
+			this.AddError("Asset item not found", "ASSET_ITEM_NOT_FOUND");
+			this.ThrowIfAnyErrors(StatusCodes.Status404NotFound);
 		}
 
 		var (units, price, amount) = this.NormalizeAmounts(req);

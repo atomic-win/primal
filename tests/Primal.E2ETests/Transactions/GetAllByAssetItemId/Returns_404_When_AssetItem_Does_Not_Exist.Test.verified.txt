@@ -1,1 +1,1 @@
-﻿{"type":"https://www.rfc-editor.org/rfc/rfc7231#section-6.5.4","title":"Not Found","status":404,"instance":"/api/asset-items/Guid_1/transactions","traceId":"Scrubbed","detail":"Asset item not found","errors":[{"name":"generalErrors","reason":"Asset item not found"}]}
+﻿{"type":"https://www.rfc-editor.org/rfc/rfc7231#section-6.5.4","title":"Not Found","status":404,"instance":"/api/asset-items/Guid_1/transactions","traceId":"Scrubbed","detail":"Asset item not found","errors":[{"name":"generalErrors","reason":"Asset item not found","code":"ASSET_ITEM_NOT_FOUND"}]}

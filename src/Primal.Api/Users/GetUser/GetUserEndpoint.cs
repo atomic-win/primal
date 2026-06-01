@@ -21,8 +21,8 @@ internal sealed class GetUserEndpoint : Endpoint<GetUserRequest, UserResponse>
 
 		if (user.Id == UserId.Empty)
 		{
-			this.ThrowError("User not found", StatusCodes.Status404NotFound);
-			return;
+			this.AddError("User not found", "USER_NOT_FOUND");
+			this.ThrowIfAnyErrors(StatusCodes.Status404NotFound);
 		}
 
 		await this.Send.OkAsync(
