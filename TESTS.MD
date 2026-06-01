@@ -877,3 +877,148 @@ For each repository, standard CRUD path coverage:
 | 3 | Delete asset that has asset items → restricted | FK violation (ON DELETE RESTRICT) |
 | 4 | Duplicate email in `users` table | Unique index violation |
 | 5 | Duplicate `ExternalId` in `assets` table | Unique index violation |
+
+---
+
+## 11. Missing / Absent Request Properties
+
+Tests for when properties are entirely absent from the JSON body, route URL, or query string — distinct from being present-but-empty.
+
+### 11.1 POST /api/auth/login/google (Body)
+
+| # | Scenario | Expected |
+|---|----------|----------|
+| 1 | No request body at all | 400 — `ID_TOKEN_REQUIRED` (IdToken defaults to `null`) |
+| 2 | Empty JSON `{}` — `IdToken` key missing | 400 — `ID_TOKEN_REQUIRED` |
+| 3 | `{ "IdToken": null }` — key present, value null | 400 — `ID_TOKEN_REQUIRED` |
+
+### 11.2 PATCH /api/users/me (Body)
+
+`PreferredCurrency` and `PreferredLocale` are enums; missing keys deserialize to `0` → `Unknown`.
+
+| # | Scenario | Expected |
+|---|----------|----------|
+| 1 | No request body at all | 400 — `UPDATE_FIELDS_REQUIRED` (both default to `Unknown`) |
+| 2 | Empty JSON `{}` | 400 — `UPDATE_FIELDS_REQUIRED` |
+| 3 | `{ "PreferredCurrency": "INR" }` — `PreferredLocale` key missing | Passes — locale defaults to `Unknown`, currency is provided |
+| 4 | `{ "PreferredLocale": "EN_IN" }` — `PreferredCurrency` key missing | Passes — currency defaults to `Unknown`, locale is provided |
+
+### 11.3 POST /api/asset-items (Body)
+
+| # | Missing property | Default value | Expected |
+|---|-----------------|---------------|----------|
+| 1 | No body at all | All defaults | 400 — multiple errors (`ASSET_TYPE_UNKNOWN`, `NAME_REQUIRED`, etc.) |
+| 2 | Empty JSON `{}` | All defaults | 400 — multiple errors |
+| 3 | `Name` key missing | `null` | 400 — `NAME_REQUIRED` |
+| 4 | `AssetType` key missing | `Unknown` (0) | 400 — `ASSET_TYPE_UNKNOWN` |
+| 5 | `AssetClass` key missing | `Unknown` (0) | Depends on AssetType — `ASSET_CLASS_REQUIRED` for non-Stock/Bond types |
+| 6 | `ExternalId` key missing | `null` | `EXTERNAL_ID_REQUIRED` when AssetType is MutualFund/Stock; passes for others |
+| 7 | `Currency` key missing | `Unknown` (0) | `CURRENCY_REQUIRED` when AssetType is not MutualFund/Stock; passes for MutualFund/Stock |
+| 8 | Only `Name` + `AssetType=MutualFund` provided, all other keys missing | ExternalId=null, AssetClass=Unknown, Currency=Unknown | 400 — `EXTERNAL_ID_REQUIRED`, `ASSET_CLASS_REQUIRED` |
+| 9 | Only `Name` + `AssetType=BankAccount` provided, other keys missing | ExternalId=null, AssetClass=Unknown, Currency=Unknown | 400 — `ASSET_CLASS_REQUIRED`, `CURRENCY_REQUIRED` |
+
+### 11.4 GET /api/asset-items/{id} (Route)
+
+| # | Scenario | Expected |
+|---|----------|----------|
+| 1 | `GET /api/asset-items/` — no id segment | 404 route not matched (hits `/api/asset-items` list endpoint instead) |
+| 2 | `GET /api/asset-items/not-a-guid` — non-GUID in route | 404 route not matched (`:guid` constraint rejects) |
+
+### 11.5 DELETE /api/asset-items/{id} (Route)
+
+| # | Scenario | Expected |
+|---|----------|----------|
+| 1 | `DELETE /api/asset-items/` — no id segment | 404/405 route not matched |
+| 2 | `DELETE /api/asset-items/not-a-guid` | 404 route not matched |
+
+### 11.6 GET /api/asset-items/valuations (Query)
+
+| # | Scenario | Expected |
+|---|----------|----------|
+| 1 | No query parameters at all | 400 — `ASSET_ITEM_IDS_REQUIRED` + `CURRENCY_REQUIRED` |
+| 2 | `?Currency=USD` — `AssetItemIds` missing | 400 — `ASSET_ITEM_IDS_REQUIRED` |
+| 3 | `?AssetItemIds=...` — `Currency` missing | Defaults to `Unknown` (0) → 400 — `CURRENCY_REQUIRED` |
+| 4 | `?AssetItemIds=not-a-guid&Currency=USD` — malformed GUID in list | 400 binding error |
+| 5 | `?AssetItemIds=&Currency=USD` — empty AssetItemIds value | 400 — `ASSET_ITEM_IDS_REQUIRED` |
+
+### 11.7 POST /api/asset-items/{assetItemId}/transactions (Route + Body)
+
+#### Route
+
+| # | Scenario | Expected |
+|---|----------|----------|
+| 1 | `POST /api/asset-items//transactions` — empty assetItemId | 404 route not matched |
+| 2 | `POST /api/asset-items/not-a-guid/transactions` | 404 route not matched |
+
+#### Body
+
+| # | Missing property | Default value | Expected |
+|---|-----------------|---------------|----------|
+| 3 | No body at all | All defaults | 400 — multiple errors (`DATE_REQUIRED`, `NAME_REQUIRED`, `TRANSACTION_TYPE_REQUIRED`) |
+| 4 | Empty JSON `{}` | All defaults | 400 — multiple errors |
+| 5 | `Date` key missing | `default(DateOnly)` = 0001-01-01 | 400 — `DATE_REQUIRED` |
+| 6 | `Name` key missing | `null` | 400 — `NAME_REQUIRED` |
+| 7 | `TransactionType` key missing | `Unknown` (0) | 400 — `TRANSACTION_TYPE_REQUIRED` |
+| 8 | `Units` key missing (Buy type) | `0` | 400 — `UNITS_REQUIRED` |
+| 9 | `Price` key missing (Buy type) | `0` | 400 — `PRICE_REQUIRED` |
+| 10 | `Amount` key missing (Deposit type) | `0` | 400 — `AMOUNT_REQUIRED` |
+| 11 | `Units` key missing (Deposit type) | `0` | Passes — units not required for Deposit |
+| 12 | `Price` key missing (Deposit type) | `0` | Passes — price not required for Deposit |
+| 13 | `Amount` key missing (Buy type) | `0` | Passes — amount not required for Buy |
+
+### 11.8 GET /api/asset-items/{assetItemId}/transactions (Route + Query)
+
+| # | Scenario | Expected |
+|---|----------|----------|
+| 1 | Empty assetItemId in route | 404 route not matched |
+| 2 | Non-GUID assetItemId in route | 404 route not matched |
+| 3 | `Currency` query param missing | Defaults to `Unknown` (0) — endpoint still processes |
+
+### 11.9 GET /api/asset-items/{assetItemId}/transactions/{transactionId} (Route + Query)
+
+| # | Scenario | Expected |
+|---|----------|----------|
+| 1 | Missing assetItemId in route | 404 route not matched |
+| 2 | Missing transactionId in route | 404 route not matched (matches list endpoint instead) |
+| 3 | Non-GUID assetItemId | 404 route not matched |
+| 4 | Non-GUID transactionId | 404 route not matched |
+| 5 | `Currency` query param missing | Defaults to `Unknown` (0) |
+
+### 11.10 PATCH /api/asset-items/{assetItemId}/transactions/{transactionId} (Route + Body)
+
+#### Route
+
+| # | Scenario | Expected |
+|---|----------|----------|
+| 1 | Missing assetItemId | 404 route not matched |
+| 2 | Missing transactionId | 404/405 route not matched |
+| 3 | Non-GUID route params | 404 route not matched |
+
+#### Body — all fields are optional for edit (partial update semantics)
+
+| # | Scenario | Expected |
+|---|----------|----------|
+| 4 | No body at all | All defaults (Name=null, TransactionType=Unknown, Units=0, Price=0, Amount=0) → uses all existing values via NormalizeRequest |
+| 5 | Empty JSON `{}` | Same as above — all existing values preserved |
+| 6 | Only `Name` provided | Only name updated; type/units/price/amount from existing |
+| 7 | Only `TransactionType` provided | Only type updated; name/amounts from existing |
+| 8 | Only `Units` provided (Buy/Sell type) | Only units updated; price from existing |
+| 9 | Only `Price` provided (Buy/Sell type) | Only price updated; units from existing |
+| 10 | Only `Amount` provided (non-Buy/Sell type) | Only amount updated |
+| 11 | `TransactionType` key missing + `Name` key missing | Both default to existing — no effective change, still returns 204 |
+
+### 11.11 DELETE /api/asset-items/{assetItemId}/transactions/{transactionId} (Route)
+
+| # | Scenario | Expected |
+|---|----------|----------|
+| 1 | Missing assetItemId | 404 route not matched |
+| 2 | Missing transactionId | 404/405 route not matched |
+| 3 | Non-GUID route params | 404 route not matched |
+
+### 11.12 POST /api/auth/refresh-token (Body)
+
+| # | Scenario | Expected |
+|---|----------|----------|
+| 1 | No body at all | 401/400 — missing refresh token |
+| 2 | Empty JSON `{}` | 401/400 — missing refresh token |
+| 3 | `UserId` key missing | 401/400 — depends on FastEndpoints TokenService validation |
