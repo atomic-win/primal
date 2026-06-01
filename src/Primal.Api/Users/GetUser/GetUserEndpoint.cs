@@ -21,7 +21,7 @@ internal sealed class GetUserEndpoint : Endpoint<GetUserRequest, UserResponse>
 
 		if (user.Id == UserId.Empty)
 		{
-			this.ThrowError("User not found", "USER_NOT_FOUND", statusCode: StatusCodes.Status404NotFound);
+			this.ThrowError(new FluentValidation.Results.ValidationFailure("userId", "User not found") { ErrorCode = "USER_NOT_FOUND" }, StatusCodes.Status404NotFound);
 		}
 
 		await this.Send.OkAsync(

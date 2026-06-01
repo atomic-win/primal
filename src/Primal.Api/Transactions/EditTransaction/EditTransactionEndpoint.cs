@@ -30,14 +30,14 @@ internal sealed class EditTransactionEndpoint : Endpoint<EditTransactionRequest>
 		var assetItem = await this.assetItemRepository.GetByIdAsync(userId, assetItemId, cancellationToken);
 		if (assetItem.Id == AssetItemId.Empty)
 		{
-			this.ThrowError("Asset item not found", "ASSET_ITEM_NOT_FOUND", statusCode: StatusCodes.Status404NotFound);
+			this.ThrowError(new FluentValidation.Results.ValidationFailure("assetItemId", "Asset item not found") { ErrorCode = "ASSET_ITEM_NOT_FOUND" }, StatusCodes.Status404NotFound);
 		}
 
 		var existingTransaction = await this.transactionRepository.GetByIdAsync(
 			userId, assetItemId, transactionId, cancellationToken);
 		if (existingTransaction.Id == TransactionId.Empty)
 		{
-			this.ThrowError("Transaction not found", "TRANSACTION_NOT_FOUND", statusCode: StatusCodes.Status404NotFound);
+			this.ThrowError(new FluentValidation.Results.ValidationFailure("transactionId", "Transaction not found") { ErrorCode = "TRANSACTION_NOT_FOUND" }, StatusCodes.Status404NotFound);
 		}
 
 		var normalized = this.NormalizeRequest(req, existingTransaction);

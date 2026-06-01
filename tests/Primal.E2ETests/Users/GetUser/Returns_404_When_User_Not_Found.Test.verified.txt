@@ -1,1 +1,1 @@
-﻿{"type":"https://www.rfc-editor.org/rfc/rfc7231#section-6.5.4","title":"Not Found","status":404,"instance":"/api/users/me","traceId":"Scrubbed","detail":"User not found","errors":[{"name":"generalErrors","reason":"User not found","code":"USER_NOT_FOUND"}]}
+﻿{"type":"https://www.rfc-editor.org/rfc/rfc7231#section-6.5.4","title":"Not Found","status":404,"instance":"/api/users/me","traceId":"Scrubbed","detail":"User not found","errors":[{"name":"userId","reason":"User not found","code":"USER_NOT_FOUND"}]}
