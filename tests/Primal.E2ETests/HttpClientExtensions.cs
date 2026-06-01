@@ -1,4 +1,6 @@
 using System.Net.Http.Json;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Primal.Api.AssetItems;
 using Primal.Api.Transactions;
 
@@ -6,6 +8,12 @@ namespace Primal.E2ETests;
 
 internal static class HttpClientExtensions
 {
+	private static readonly JsonSerializerOptions JsonOptions = new()
+	{
+		PropertyNameCaseInsensitive = true,
+		Converters = { new JsonStringEnumConverter() },
+	};
+
 	internal static async Task<AssetItemResponse> AddAssetItemAsync(
 		this HttpClient client, string name, string assetClass, string assetType, string externalId, string currency)
 	{
@@ -44,5 +52,12 @@ internal static class HttpClientExtensions
 			});
 
 		return await response.ReadJsonAsync<TransactionResponse>();
+	}
+
+	private static async Task<T> ReadJsonAsync<T>(this HttpResponseMessage response)
+	{
+		response.EnsureSuccessStatusCode();
+		var result = await response.Content.ReadFromJsonAsync<T>(JsonOptions);
+		return result!;
 	}
 }
