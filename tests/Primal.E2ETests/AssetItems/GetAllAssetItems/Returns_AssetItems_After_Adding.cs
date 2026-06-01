@@ -11,7 +11,7 @@ public sealed class Returns_AssetItems_After_Adding
 		await using var factory = new PrimalE2EFactory();
 		_ = factory.CreateClient();
 
-		WireMockSetup.SetupMutualFundLatest(factory.MutualFundApi);
+		factory.MutualFundApi.SetupMutualFundLatest(schemeCode: "119551");
 
 		var userId = await factory.CreateUserAsync();
 		var client = factory.CreateAuthenticatedClient(userId);

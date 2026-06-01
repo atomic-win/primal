@@ -11,7 +11,7 @@ public sealed class Returns_404_When_MutualFund_Not_Found
 		await using var factory = new PrimalE2EFactory();
 		_ = factory.CreateClient();
 
-		WireMockSetup.SetupMutualFundNotFound(factory.MutualFundApi, "999999");
+		factory.MutualFundApi.SetupMutualFundNotFound(schemeCode: "999999");
 
 		var userId = await factory.CreateUserAsync();
 		var client = factory.CreateAuthenticatedClient(userId);

@@ -11,7 +11,7 @@ public sealed class Returns_201_When_Adding_Valid_Stock
 		await using var factory = new PrimalE2EFactory();
 		_ = factory.CreateClient();
 
-		WireMockSetup.SetupStockSearch(factory.StockApi);
+		factory.StockApi.SetupStockSearch(symbol: "AAPL");
 
 		var userId = await factory.CreateUserAsync();
 		var client = factory.CreateAuthenticatedClient(userId);

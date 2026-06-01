@@ -10,8 +10,8 @@ public sealed class Returns_Transaction_When_It_Exists
 		await using var factory = new PrimalE2EFactory();
 		_ = factory.CreateClient();
 
-		WireMockSetup.SetupMutualFundLatest(factory.MutualFundApi);
-		WireMockSetup.SetupMutualFundPrices(factory.MutualFundApi);
+		factory.MutualFundApi.SetupMutualFundLatest(schemeCode: "119551");
+		factory.MutualFundApi.SetupMutualFundPrices(schemeCode: "119551");
 
 		var userId = await factory.CreateUserAsync();
 		var client = factory.CreateAuthenticatedClient(userId);

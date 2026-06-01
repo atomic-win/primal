@@ -11,8 +11,8 @@ public sealed class Returns_204_And_GET_Returns_Updated_Transaction
 		await using var factory = new PrimalE2EFactory();
 		_ = factory.CreateClient();
 
-		WireMockSetup.SetupMutualFundLatest(factory.MutualFundApi);
-		WireMockSetup.SetupMutualFundPrices(factory.MutualFundApi);
+		factory.MutualFundApi.SetupMutualFundLatest(schemeCode: "119551");
+		factory.MutualFundApi.SetupMutualFundPrices(schemeCode: "119551");
 
 		var userId = await factory.CreateUserAsync();
 		var client = factory.CreateAuthenticatedClient(userId);

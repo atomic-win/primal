@@ -11,7 +11,7 @@ public sealed class Returns_404_When_Stock_Not_Found
 		await using var factory = new PrimalE2EFactory();
 		_ = factory.CreateClient();
 
-		WireMockSetup.SetupStockSearchEmpty(factory.StockApi);
+		factory.StockApi.SetupStockSearchEmpty();
 
 		var userId = await factory.CreateUserAsync();
 		var client = factory.CreateAuthenticatedClient(userId);

@@ -4,9 +4,9 @@ using WireMock.Server;
 
 namespace Primal.E2ETests;
 
-internal static class WireMockSetup
+internal static class WireMockServerExtensions
 {
-	internal static void SetupMutualFundLatest(WireMockServer server, string schemeCode = "119551")
+	internal static void SetupMutualFundLatest(this WireMockServer server, string schemeCode)
 	{
 		server
 			.Given(Request.Create().WithPath($"/mf/{schemeCode}/latest").UsingGet())
@@ -30,7 +30,7 @@ internal static class WireMockSetup
 				"""));
 	}
 
-	internal static void SetupMutualFundPrices(WireMockServer server, string schemeCode = "119551")
+	internal static void SetupMutualFundPrices(this WireMockServer server, string schemeCode)
 	{
 		server
 			.Given(Request.Create().WithPath($"/mf/{schemeCode}").UsingGet())
@@ -55,14 +55,14 @@ internal static class WireMockSetup
 				"""));
 	}
 
-	internal static void SetupMutualFundNotFound(WireMockServer server, string schemeCode)
+	internal static void SetupMutualFundNotFound(this WireMockServer server, string schemeCode)
 	{
 		server
 			.Given(Request.Create().WithPath($"/mf/{schemeCode}/latest").UsingGet())
 			.RespondWith(Response.Create().WithStatusCode(404));
 	}
 
-	internal static void SetupStockSearch(WireMockServer server, string symbol = "AAPL")
+	internal static void SetupStockSearch(this WireMockServer server, string symbol)
 	{
 		server
 			.Given(Request.Create().WithPath("/stable/search-symbol").UsingGet())
@@ -80,7 +80,7 @@ internal static class WireMockSetup
 				"""));
 	}
 
-	internal static void SetupStockSearchEmpty(WireMockServer server)
+	internal static void SetupStockSearchEmpty(this WireMockServer server)
 	{
 		server
 			.Given(Request.Create().WithPath("/stable/search-symbol").UsingGet())
