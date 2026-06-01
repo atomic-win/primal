@@ -29,5 +29,8 @@ public sealed class Returns_404_When_AssetItemId_Is_Not_Guid
 
 		// Assert
 		await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.NotFound);
+
+		var body = await response.Content.ReadAsStringAsync();
+		await Verifier.Verify(body);
 	}
 }

@@ -21,5 +21,8 @@ public sealed class Returns_401_When_No_Token_Provided
 
 		// Assert
 		await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.Unauthorized);
+
+		var body = await response.Content.ReadAsStringAsync();
+		await Verifier.Verify(body);
 	}
 }

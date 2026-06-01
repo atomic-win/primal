@@ -1,0 +1,1 @@
+﻿{"type":"https://www.rfc-editor.org/rfc/rfc7231#section-6.5.1","title":"Bad Request","status":400,"instance":"/api/auth/login/google","traceId":"Scrubbed","detail":"ID token must be provided","errors":[{"name":"idToken","reason":"ID token must be provided","code":"ID_TOKEN_REQUIRED"}]}

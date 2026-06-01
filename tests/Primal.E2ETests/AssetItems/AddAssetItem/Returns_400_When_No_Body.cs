@@ -19,5 +19,8 @@ public sealed class Returns_400_When_No_Body
 
 		// Assert
 		await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.UnsupportedMediaType);
+
+		var body = await response.Content.ReadAsStringAsync();
+		await Verifier.Verify(body);
 	}
 }

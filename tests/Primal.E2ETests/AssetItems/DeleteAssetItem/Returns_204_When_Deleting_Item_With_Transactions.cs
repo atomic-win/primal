@@ -38,5 +38,8 @@ public sealed class Returns_204_When_Deleting_Item_With_Transactions
 
 		var getResponse = await client.GetAsync($"/api/asset-items/{assetItem.Id}");
 		await Assert.That(getResponse.StatusCode).IsEqualTo(HttpStatusCode.NotFound);
+
+		var body = await getResponse.Content.ReadAsStringAsync();
+		await Verifier.Verify(body);
 	}
 }

@@ -20,5 +20,8 @@ public sealed class Returns_Reachable_Without_Auth
 
 		// Assert
 		await Assert.That(response.StatusCode).IsNotEqualTo(HttpStatusCode.Unauthorized);
+
+		var body = await response.Content.ReadAsStringAsync();
+		await Verifier.Verify(body);
 	}
 }

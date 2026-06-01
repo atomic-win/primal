@@ -38,5 +38,8 @@ public sealed class Returns_401_When_JWT_Is_Expired
 
 		// Assert
 		await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.Unauthorized);
+
+		var body = await response.Content.ReadAsStringAsync();
+		await Verifier.Verify(body);
 	}
 }

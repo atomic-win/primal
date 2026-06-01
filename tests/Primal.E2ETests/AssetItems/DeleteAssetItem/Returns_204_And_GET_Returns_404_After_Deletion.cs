@@ -31,5 +31,8 @@ public sealed class Returns_204_And_GET_Returns_404_After_Deletion
 
 		var getResponse = await client.GetAsync($"/api/asset-items/{assetItem.Id}");
 		await Assert.That(getResponse.StatusCode).IsEqualTo(HttpStatusCode.NotFound);
+
+		var body = await getResponse.Content.ReadAsStringAsync();
+		await Verifier.Verify(body);
 	}
 }

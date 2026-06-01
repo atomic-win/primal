@@ -16,5 +16,8 @@ public sealed class Returns_401_When_Unauthenticated
 
 		// Assert
 		await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.Unauthorized);
+
+		var body = await response.Content.ReadAsStringAsync();
+		await Verifier.Verify(body);
 	}
 }

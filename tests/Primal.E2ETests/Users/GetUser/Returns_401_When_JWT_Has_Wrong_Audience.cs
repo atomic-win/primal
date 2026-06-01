@@ -38,5 +38,8 @@ public sealed class Returns_401_When_JWT_Has_Wrong_Audience
 
 		// Assert
 		await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.Unauthorized);
+
+		var body = await response.Content.ReadAsStringAsync();
+		await Verifier.Verify(body);
 	}
 }
