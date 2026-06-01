@@ -64,8 +64,7 @@ internal sealed class AddAssetItemEndpoint : Endpoint<AddAssetItemRequest, Asset
 
 		if (string.IsNullOrWhiteSpace(mutualFund.SchemeCode))
 		{
-			this.AddError("Mutual fund not found", "MUTUAL_FUND_NOT_FOUND");
-			this.ThrowIfAnyErrors(StatusCodes.Status404NotFound);
+			this.ThrowError("Mutual fund not found", "MUTUAL_FUND_NOT_FOUND", statusCode: StatusCodes.Status404NotFound);
 		}
 
 		return await this.assetRepository.AddAsync(
@@ -90,8 +89,7 @@ internal sealed class AddAssetItemEndpoint : Endpoint<AddAssetItemRequest, Asset
 
 		if (string.IsNullOrWhiteSpace(stock.Symbol))
 		{
-			this.AddError("Stock not found", "STOCK_NOT_FOUND");
-			this.ThrowIfAnyErrors(StatusCodes.Status404NotFound);
+			this.ThrowError("Stock not found", "STOCK_NOT_FOUND", statusCode: StatusCodes.Status404NotFound);
 		}
 
 		return await this.assetRepository.AddAsync(

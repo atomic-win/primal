@@ -22,8 +22,7 @@ internal sealed class UpdateUserEndpoint : Endpoint<UpdateUserRequest>
 
 		if (user.Id == UserId.Empty)
 		{
-			this.AddError("User not found", "USER_NOT_FOUND");
-			this.ThrowIfAnyErrors(StatusCodes.Status404NotFound);
+			this.ThrowError("User not found", "USER_NOT_FOUND", statusCode: StatusCodes.Status404NotFound);
 		}
 
 		if ((req.PreferredCurrency == Currency.Unknown || req.PreferredCurrency == user.PreferredCurrency)

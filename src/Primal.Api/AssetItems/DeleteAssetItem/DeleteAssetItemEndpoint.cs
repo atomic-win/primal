@@ -24,8 +24,7 @@ internal sealed class DeleteAssetItemEndpoint : Endpoint<DeleteAssetItemRequest>
 
 		if (assetItem.Id == AssetItemId.Empty)
 		{
-			this.AddError("Asset item not found", "ASSET_ITEM_NOT_FOUND");
-			this.ThrowIfAnyErrors(StatusCodes.Status404NotFound);
+			this.ThrowError("Asset item not found", "ASSET_ITEM_NOT_FOUND", statusCode: StatusCodes.Status404NotFound);
 		}
 
 		await this.assetItemRepository.DeleteAsync(userId, assetItem.Id, ct);
