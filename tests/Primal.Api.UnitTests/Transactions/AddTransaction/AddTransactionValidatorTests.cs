@@ -220,7 +220,7 @@ public sealed class AddTransactionValidatorTests
 		assetRepository.GetByIdAsync(Arg.Any<AssetId>(), Arg.Any<CancellationToken>())
 			.Returns(asset);
 
-		return new AddTransactionValidator(assetItemRepository, assetRepository);
+		return new AddTransactionValidator(assetItemRepository, assetRepository, TimeProvider.System);
 	}
 
 	private static AddTransactionRequest CreateRequest(

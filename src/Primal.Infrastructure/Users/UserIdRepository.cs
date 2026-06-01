@@ -9,10 +9,12 @@ namespace Primal.Infrastructure.Users;
 internal sealed class UserIdRepository : IUserIdRepository
 {
 	private readonly DbConnectionFactory connectionFactory;
+	private readonly TimeProvider timeProvider;
 
-	internal UserIdRepository(DbConnectionFactory connectionFactory)
+	internal UserIdRepository(DbConnectionFactory connectionFactory, TimeProvider timeProvider)
 	{
 		this.connectionFactory = connectionFactory;
+		this.timeProvider = timeProvider;
 	}
 
 	public async Task<UserId> GetUserId(
@@ -35,7 +37,7 @@ internal sealed class UserIdRepository : IUserIdRepository
 		CancellationToken cancellationToken)
 	{
 		var userId = Guid.CreateVersion7();
-		var now = DateTimeOffset.UtcNow.ToString("O");
+		var now = this.timeProvider.GetUtcNow().ToString("O");
 
 		using var connection = this.connectionFactory.CreateConnection();
 

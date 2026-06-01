@@ -13,6 +13,7 @@ namespace Primal.Api.AssetItems;
 internal sealed class GetValuationsEndpoint : Endpoint<GetValuationsRequest, IAsyncEnumerable<ValuationResponse>>
 {
 	private readonly HybridCache cache;
+	private readonly TimeProvider timeProvider;
 
 	private readonly IAssetRepository assetRepository;
 	private readonly IAssetItemRepository assetItemRepository;
@@ -21,12 +22,14 @@ internal sealed class GetValuationsEndpoint : Endpoint<GetValuationsRequest, IAs
 
 	public GetValuationsEndpoint(
 		HybridCache cache,
+		TimeProvider timeProvider,
 		IAssetRepository assetRepository,
 		IAssetItemRepository assetItemRepository,
 		ITransactionRepository transactionRepository,
 		ITransactionAmountCalculator transactionAmountCalculator)
 	{
 		this.cache = cache;
+		this.timeProvider = timeProvider;
 		this.assetRepository = assetRepository;
 		this.assetItemRepository = assetItemRepository;
 		this.transactionRepository = transactionRepository;
@@ -128,7 +131,7 @@ internal sealed class GetValuationsEndpoint : Endpoint<GetValuationsRequest, IAs
 		if (!valuationInputs.SelectMany(i => i.XirrInputs).Any())
 		{
 			return new ValuationResponse(
-				Date: valuationDate == DateOnly.FromDateTime(DateTime.UtcNow) ? valuationDate : DateOnly.MinValue,
+				Date: valuationDate == DateOnly.FromDateTime(this.timeProvider.GetUtcNow().UtcDateTime) ? valuationDate : DateOnly.MinValue,
 				InvestedValue: 0,
 				CurrentValue: 0,
 				XirrPercent: 0);
@@ -453,9 +456,10 @@ internal sealed class GetValuationsEndpoint : Endpoint<GetValuationsRequest, IAs
 
 	private IEnumerable<DateOnly> GetValuationDates()
 	{
-		yield return DateOnly.FromDateTime(DateTime.UtcNow);
+		var utcNow = this.timeProvider.GetUtcNow().UtcDateTime;
+		yield return DateOnly.FromDateTime(utcNow);
 
-		var endOfMonth = new DateOnly(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1).AddDays(-1);
+		var endOfMonth = new DateOnly(utcNow.Year, utcNow.Month, 1).AddDays(-1);
 
 		while (true)
 		{

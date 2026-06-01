@@ -13,7 +13,7 @@ public sealed class TransactionRepositoryTests
 	public async Task GetByAssetItemIdAsync_Empty_ReturnsEmpty()
 	{
 		var db = TestDbHelper.CreateTestDatabase();
-		var repository = new TransactionRepository(db);
+		var repository = new TransactionRepository(db, TimeProvider.System);
 		var userId = await AddUserAsync(db);
 		var asset = await AddAssetAsync(db);
 		var assetItem = await AddAssetItemAsync(db, userId, asset.Id);
@@ -27,7 +27,7 @@ public sealed class TransactionRepositoryTests
 	public async Task AddAsync_ThenGetByAssetItemIdAsync_ReturnsTransaction()
 	{
 		var db = TestDbHelper.CreateTestDatabase();
-		var repository = new TransactionRepository(db);
+		var repository = new TransactionRepository(db, TimeProvider.System);
 		var userId = await AddUserAsync(db);
 		var asset = await AddAssetAsync(db);
 		var assetItem = await AddAssetItemAsync(db, userId, asset.Id);
@@ -61,7 +61,7 @@ public sealed class TransactionRepositoryTests
 	public async Task GetByIdAsync_NonExistent_ReturnsEmptyTransaction()
 	{
 		var db = TestDbHelper.CreateTestDatabase();
-		var repository = new TransactionRepository(db);
+		var repository = new TransactionRepository(db, TimeProvider.System);
 		var userId = await AddUserAsync(db);
 		var asset = await AddAssetAsync(db);
 		var assetItem = await AddAssetItemAsync(db, userId, asset.Id);
@@ -76,7 +76,7 @@ public sealed class TransactionRepositoryTests
 	public async Task AddAsync_ThenGetByIdAsync_ReturnsCorrectTransaction()
 	{
 		var db = TestDbHelper.CreateTestDatabase();
-		var repository = new TransactionRepository(db);
+		var repository = new TransactionRepository(db, TimeProvider.System);
 		var userId = await AddUserAsync(db);
 		var asset = await AddAssetAsync(db);
 		var assetItem = await AddAssetItemAsync(db, userId, asset.Id);
@@ -109,7 +109,7 @@ public sealed class TransactionRepositoryTests
 	public async Task UpdateAsync_ThenGetByIdAsync_ReturnsUpdatedTransaction()
 	{
 		var db = TestDbHelper.CreateTestDatabase();
-		var repository = new TransactionRepository(db);
+		var repository = new TransactionRepository(db, TimeProvider.System);
 		var userId = await AddUserAsync(db);
 		var asset = await AddAssetAsync(db);
 		var assetItem = await AddAssetItemAsync(db, userId, asset.Id);
@@ -152,7 +152,7 @@ public sealed class TransactionRepositoryTests
 	public async Task DeleteAsync_ThenGetByIdAsync_ReturnsEmpty()
 	{
 		var db = TestDbHelper.CreateTestDatabase();
-		var repository = new TransactionRepository(db);
+		var repository = new TransactionRepository(db, TimeProvider.System);
 		var userId = await AddUserAsync(db);
 		var asset = await AddAssetAsync(db);
 		var assetItem = await AddAssetItemAsync(db, userId, asset.Id);
@@ -177,7 +177,7 @@ public sealed class TransactionRepositoryTests
 
 	private static async Task<UserId> AddUserAsync(DbConnectionFactory db)
 	{
-		var repository = new UserRepository(db);
+		var repository = new UserRepository(db, TimeProvider.System);
 		var userId = new UserId(Guid.NewGuid());
 		await repository.AddUserAsync(
 			userId,
@@ -191,7 +191,7 @@ public sealed class TransactionRepositoryTests
 
 	private static Task<Asset> AddAssetAsync(DbConnectionFactory db)
 	{
-		var repository = new AssetRepository(db);
+		var repository = new AssetRepository(db, TimeProvider.System);
 		return repository.AddAsync(
 			"Tech Fund",
 			AssetClass.Equity,
@@ -203,7 +203,7 @@ public sealed class TransactionRepositoryTests
 
 	private static Task<AssetItem> AddAssetItemAsync(DbConnectionFactory db, UserId userId, AssetId assetId)
 	{
-		var repository = new AssetItemRepository(db);
+		var repository = new AssetItemRepository(db, TimeProvider.System);
 		return repository.AddAsync(userId, assetId, "Primary Portfolio", CancellationToken.None);
 	}
 }

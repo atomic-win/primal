@@ -10,10 +10,12 @@ namespace Primal.Infrastructure.Investments;
 internal sealed class TransactionRepository : ITransactionRepository
 {
 	private readonly DbConnectionFactory connectionFactory;
+	private readonly TimeProvider timeProvider;
 
-	internal TransactionRepository(DbConnectionFactory connectionFactory)
+	internal TransactionRepository(DbConnectionFactory connectionFactory, TimeProvider timeProvider)
 	{
 		this.connectionFactory = connectionFactory;
+		this.timeProvider = timeProvider;
 	}
 
 	public async Task<IEnumerable<Transaction>> GetByAssetItemIdAsync(
@@ -67,7 +69,7 @@ internal sealed class TransactionRepository : ITransactionRepository
 		CancellationToken cancellationToken)
 	{
 		var id = Guid.CreateVersion7();
-		var now = DateTimeOffset.UtcNow.ToString("O");
+		var now = this.timeProvider.GetUtcNow().ToString("O");
 
 		using var connection = this.connectionFactory.CreateConnection();
 
@@ -107,7 +109,7 @@ internal sealed class TransactionRepository : ITransactionRepository
 		Transaction transaction,
 		CancellationToken cancellationToken)
 	{
-		var now = DateTimeOffset.UtcNow.ToString("O");
+		var now = this.timeProvider.GetUtcNow().ToString("O");
 
 		using var connection = this.connectionFactory.CreateConnection();
 

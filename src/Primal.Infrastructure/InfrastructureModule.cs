@@ -55,12 +55,14 @@ public sealed class InfrastructureModule : Module
 	private void RegisterPersistence(ContainerBuilder builder)
 	{
 		builder.Register(c => new UserIdRepository(
-			c.Resolve<DbConnectionFactory>()))
+			c.Resolve<DbConnectionFactory>(),
+			c.Resolve<TimeProvider>()))
 			.As<IUserIdRepository>()
 			.SingleInstance();
 
 		builder.Register(c => new UserRepository(
-			c.Resolve<DbConnectionFactory>()))
+			c.Resolve<DbConnectionFactory>(),
+			c.Resolve<TimeProvider>()))
 			.As<UserRepository>()
 			.SingleInstance();
 
@@ -71,7 +73,8 @@ public sealed class InfrastructureModule : Module
 			.SingleInstance();
 
 		builder.Register(c => new AssetRepository(
-			c.Resolve<DbConnectionFactory>()))
+			c.Resolve<DbConnectionFactory>(),
+			c.Resolve<TimeProvider>()))
 			.As<AssetRepository>()
 			.SingleInstance();
 
@@ -82,7 +85,8 @@ public sealed class InfrastructureModule : Module
 			.SingleInstance();
 
 		builder.Register(c => new AssetItemRepository(
-			c.Resolve<DbConnectionFactory>()))
+			c.Resolve<DbConnectionFactory>(),
+			c.Resolve<TimeProvider>()))
 			.As<AssetItemRepository>()
 			.SingleInstance();
 
@@ -93,7 +97,8 @@ public sealed class InfrastructureModule : Module
 			.SingleInstance();
 
 		builder.Register(c => new TransactionRepository(
-			c.Resolve<DbConnectionFactory>()))
+			c.Resolve<DbConnectionFactory>(),
+			c.Resolve<TimeProvider>()))
 			.As<TransactionRepository>()
 			.SingleInstance();
 

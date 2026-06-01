@@ -10,13 +10,16 @@ internal sealed class AddTransactionValidator : Validator<AddTransactionRequest>
 {
 	private readonly IAssetItemRepository assetItemRepository;
 	private readonly IAssetRepository assetRepository;
+	private readonly TimeProvider timeProvider;
 
 	public AddTransactionValidator(
 		IAssetItemRepository assetItemRepository,
-		IAssetRepository assetRepository)
+		IAssetRepository assetRepository,
+		TimeProvider timeProvider)
 	{
 		this.assetItemRepository = assetItemRepository;
 		this.assetRepository = assetRepository;
+		this.timeProvider = timeProvider;
 
 		this.ConfigureAssetItemRules();
 		this.ConfigureFieldRules();
@@ -48,7 +51,7 @@ internal sealed class AddTransactionValidator : Validator<AddTransactionRequest>
 			.WithMessage("Transaction date must be provided.");
 
 		this.RuleFor(x => x.Date)
-			.Must(date => date <= DateOnly.FromDateTime(DateTime.UtcNow))
+			.Must(date => date <= DateOnly.FromDateTime(this.timeProvider.GetUtcNow().UtcDateTime))
 			.When(x => x.Date != default)
 			.WithMessage("Transaction date cannot be in the future.");
 
