@@ -9,6 +9,7 @@ internal sealed class GetAllAssetItemsValidator : Validator<GetAllAssetItemsRequ
 	{
 		this.RuleFor(x => x.UserId)
 			.NotEqual(Guid.Empty)
-			.WithMessage("User ID must be provided");
+			.WithMessage("User ID must be provided")
+			.WithErrorCode("USER_ID_REQUIRED");
 	}
 }

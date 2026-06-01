@@ -9,6 +9,7 @@ internal sealed class GoogleLoginValidator : Validator<GoogleLoginRequest>
 	{
 		this.RuleFor(x => x.IdToken)
 			.NotEmpty()
-			.WithMessage("ID token must be provided");
+			.WithMessage("ID token must be provided")
+			.WithErrorCode("ID_TOKEN_REQUIRED");
 	}
 }

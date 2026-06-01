@@ -11,6 +11,7 @@ internal sealed class UpdateUserValidator : Validator<UpdateUserRequest>
 	{
 		this.RuleFor(x => x)
 			.Must(req => req.PreferredCurrency != Currency.Unknown || req.PreferredLocale != Locale.Unknown)
-			.WithMessage("At least one field of preferred currency or preferred locale must be provided");
+			.WithMessage("At least one field of preferred currency or preferred locale must be provided")
+			.WithErrorCode("UPDATE_FIELDS_REQUIRED");
 	}
 }

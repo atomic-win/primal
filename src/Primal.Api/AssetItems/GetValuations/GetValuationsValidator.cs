@@ -10,10 +10,12 @@ internal sealed class GetValuationsValidator : Validator<GetValuationsRequest>
 	{
 		this.RuleFor(x => x.AssetItemIds)
 			.NotEmpty()
-			.WithMessage("At least one asset item ID must be provided");
+			.WithMessage("At least one asset item ID must be provided")
+			.WithErrorCode("ASSET_ITEM_IDS_REQUIRED");
 
 		this.RuleFor(x => x.Currency)
 			.NotEqual(Currency.Unknown)
-			.WithMessage("Currency must be provided");
+			.WithMessage("Currency must be provided")
+			.WithErrorCode("CURRENCY_REQUIRED");
 	}
 }

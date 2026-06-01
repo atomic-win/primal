@@ -58,12 +58,12 @@ internal sealed class GetValuationsEndpoint : Endpoint<GetValuationsRequest, IAs
 	{
 		if (currency == Currency.Unknown)
 		{
-			this.AddError("Currency query parameter is required");
+			this.AddError("Currency query parameter is required", "CURRENCY_REQUIRED");
 		}
 
 		if (assetItemIds.Count == 0)
 		{
-			this.AddError("At least one assetItemGuid query parameter is required");
+			this.AddError("At least one assetItemGuid query parameter is required", "ASSET_ITEM_IDS_REQUIRED");
 		}
 
 		var assetItems = new List<AssetItem>(capacity: assetItemIds.Count);
@@ -72,7 +72,7 @@ internal sealed class GetValuationsEndpoint : Endpoint<GetValuationsRequest, IAs
 			var assetItem = await this.assetItemRepository.GetByIdAsync(userId, assetItemId, ct);
 			if (assetItem.Id == AssetItemId.Empty)
 			{
-				this.AddError($"Asset item with ID '{assetItemId.Value}' not found");
+				this.AddError($"Asset item with ID '{assetItemId.Value}' not found", "ASSET_ITEM_NOT_FOUND");
 				continue;
 			}
 
