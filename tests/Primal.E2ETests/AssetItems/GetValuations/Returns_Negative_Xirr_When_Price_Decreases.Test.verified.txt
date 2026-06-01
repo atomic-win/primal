@@ -1,0 +1,1 @@
+﻿[{"date":"2026-06-01","investedValue":2000.00,"currentValue":1500.00,"xirrPercent":-25.00},{"date":"2026-05-31","investedValue":2000.00,"currentValue":1520.00,"xirrPercent":-24.00}]

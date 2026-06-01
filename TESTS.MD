@@ -28,7 +28,7 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 | # | Test | Input | Expected | Type | Present |
 |---|------|-------|----------|------|---------|
 | 1 | Refreshes valid token | Valid refresh token in body | 200 new TokenResponse | E2E | ✅ |
-| 2 | Rejects invalid refresh token | Invalid/expired refresh token | 401 | E2E | ❌ |
+| 2 | Rejects invalid refresh token | Invalid/expired refresh token | 401 | E2E | ✅ |
 | 3 | Rejects missing body | No request body | 401/400 | E2E | ✅ |
 | 4 | Rejects empty JSON body | `{}` | 401/400 | E2E | ✅ |
 
@@ -60,7 +60,7 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 | 6 | Updates locale only | `{ PreferredLocale: "EN_IN" }` (currency key missing → Unknown) | 204; locale=EN_IN, currency preserved | E2E | ✅ |
 | 7 | Updates both fields | `{ PreferredCurrency: "INR", PreferredLocale: "EN_IN" }` | 204; both updated | E2E | ✅ |
 | 8 | No-op when values match existing | Currency=existing, Locale=existing | 204; no DB update | E2E | ✅ |
-| 9 | No-op when both unknown and existing match | Currency=Unknown (existing=USD), Locale=Unknown (existing=EN_US) | 204; no DB update | E2E | ❌ |
+| 9 | No-op when both unknown and existing match | Currency=Unknown (existing=USD), Locale=Unknown (existing=EN_US) | 204; no DB update | E2E | ✅ |
 | 10 | Rejects missing auth | No Authorization header | 401 | E2E | ✅ |
 
 ---
@@ -74,9 +74,9 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 | 1 | Rejects empty body | `{}` | 400 multiple errors (ASSET_TYPE_UNKNOWN, NAME_REQUIRED, etc.) | E2E | ✅ |
 | 2 | Rejects no body | No request body | 400 multiple errors | E2E | ✅ |
 | 3 | Rejects Unknown AssetType | `AssetType: "Unknown"` | 400 `ASSET_TYPE_UNKNOWN` | E2E | ✅ |
-| 4 | Rejects missing AssetType | AssetType key absent (defaults to Unknown) | 400 `ASSET_TYPE_UNKNOWN` | E2E | ❌ |
+| 4 | Rejects missing AssetType | AssetType key absent (defaults to Unknown) | 400 `ASSET_TYPE_UNKNOWN` | E2E | ✅ |
 | 5 | Rejects empty Name | `Name: ""` | 400 `NAME_REQUIRED` | E2E | ✅ |
-| 6 | Rejects missing Name | Name key absent | 400 `NAME_REQUIRED` | E2E | ❌ |
+| 6 | Rejects missing Name | Name key absent | 400 `NAME_REQUIRED` | E2E | ✅ |
 | 7 | Rejects Unknown AssetClass for BankAccount | `AssetType: BankAccount, AssetClass: Unknown` | 400 `ASSET_CLASS_REQUIRED` | E2E | ✅ |
 | 8 | Rejects Unknown AssetClass for Wallet | `AssetType: Wallet, AssetClass: Unknown` | 400 `ASSET_CLASS_REQUIRED` | E2E | ✅ |
 | 9 | Rejects Unknown AssetClass for TradingAccount | `AssetType: TradingAccount, AssetClass: Unknown` | 400 `ASSET_CLASS_REQUIRED` | E2E | ✅ |
@@ -164,7 +164,7 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 | 2 | Rejects Unknown Currency | `Currency: Unknown` or missing | 400 `CURRENCY_REQUIRED` | E2E | ✅ |
 | 3 | Rejects no query params | No query params at all | 400 both errors | E2E | ✅ |
 | 4 | Rejects non-existent asset item IDs | `AssetItemIds: [<non-existent-guid>]` | 400 `ASSET_ITEM_NOT_FOUND` | E2E | ✅ |
-| 5 | Rejects malformed GUID | `AssetItemIds: ["not-a-guid"]` | 400 binding error | E2E | ❌ |
+| 5 | Rejects malformed GUID | `AssetItemIds: ["not-a-guid"]` | 400 binding error | E2E | ✅ |
 | 6 | Deduplicates AssetItemIds | Same GUID passed twice | Processes only once; valid response | E2E | ✅ |
 | 7 | Rejects missing auth | No Authorization header | 401 | E2E | ✅ |
 
@@ -201,18 +201,18 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 | 24 | FixedDeposit: Invested from Deposit minus Withdrawal | FD with Deposit then partial Withdrawal | InvestedValue = remaining deposit amount | E2E | ✅ |
 | 25 | Stock: Invested from Buy minus Sell | Stock with Buy then partial Sell | InvestedValue = remaining units × buy price | E2E | ✅ |
 | 26 | Full offset → zero invested | Buy 10u then Sell 10u | InvestedValue = 0 | E2E | ✅ |
-| 27 | Partial offset | Buy 10u@100, Sell 3u | InvestedValue = 7u × buy price (adjusted) | E2E | ❌ |
+| 27 | Partial offset | Buy 10u@100, Sell 3u | InvestedValue = 7u × buy price (adjusted) | E2E | ✅ |
 
 ### Valuations — XIRR
 
 | # | Test | Input | Expected | Type | Present |
 |---|------|-------|----------|------|---------|
-| 28 | No transactions → XIRR = 0 | Empty transactions | XirrPercent = 0 | E2E | ❌ |
+| 28 | No transactions → XIRR = 0 | Empty transactions | XirrPercent = 0 | E2E | ✅ |
 | 29 | All < 1 year: YearDiff normalized | Single Buy transaction from 3 months ago | XIRR calculated with YearDiff=1.0 | E2E | ❌ |
 | 30 | Transactions > 1 year | Buy from 2 years ago | XIRR uses actual YearDiff | E2E | ❌ |
-| 31 | Positive return scenario | Buy low, current price higher | XirrPercent > 0 | E2E | ❌ |
-| 32 | Negative return scenario | Buy high, current price lower | XirrPercent < 0 | E2E | ❌ |
-| 33 | Same-date transactions grouped | Two Buy transactions on same date | YearDiff grouped, amounts summed | E2E | ❌ |
+| 31 | Positive return scenario | Buy low, current price higher | XirrPercent > 0 | E2E | ✅ |
+| 32 | Negative return scenario | Buy high, current price lower | XirrPercent < 0 | E2E | ✅ |
+| 33 | Same-date transactions grouped | Two Buy transactions on same date | YearDiff grouped, amounts summed | E2E | ✅ |
 
 ### Valuations — cross-currency
 
@@ -225,8 +225,8 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 
 | # | Test | Input | Expected | Type | Present |
 |---|------|-------|----------|------|---------|
-| 36 | Deposit uses valuationDate | Deposit transaction | Amount calculated at valuation date exchange rate | E2E | ❌ |
-| 37 | Buy uses transaction.Date | Buy transaction | Amount calculated at transaction date price | E2E | ❌ |
+| 36 | Deposit uses valuationDate | Deposit transaction | Amount calculated at valuation date exchange rate | E2E | ✅ |
+| 37 | Buy uses transaction.Date | Buy transaction | Amount calculated at transaction date price | E2E | ✅ |
 
 ---
 
@@ -377,13 +377,13 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 |---|------|-------|----------|------|---------|
 | 1 | Rejects short Name | `Name: "ab"` (2 chars, non-whitespace) | 400 `NAME_TOO_SHORT` | E2E | ✅ |
 | 2 | Rejects long Name | `Name: "a" × 1001` | 400 `NAME_TOO_LONG` | E2E | ✅ |
-| 3 | Accepts empty/whitespace Name | `Name: ""` or key missing | Passes; uses existing name | E2E | ❌ |
+| 3 | Accepts empty/whitespace Name | `Name: ""` or key missing | Passes; uses existing name | E2E | ✅ |
 | 4 | Rejects negative Units for Buy | `TransactionType: Buy, Units: -1` | 400 `UNITS_INVALID` | E2E | ✅ |
-| 5 | Accepts zero Units for Buy | `TransactionType: Buy, Units: 0` | Passes; uses existing units | E2E | ❌ |
+| 5 | Accepts zero Units for Buy | `TransactionType: Buy, Units: 0` | Passes; uses existing units | E2E | ✅ |
 | 6 | Rejects negative Price for Buy | `TransactionType: Buy, Price: -1` | 400 `PRICE_INVALID` | E2E | ✅ |
-| 7 | Accepts zero Price for Buy | `TransactionType: Buy, Price: 0` | Passes; uses existing price | E2E | ❌ |
+| 7 | Accepts zero Price for Buy | `TransactionType: Buy, Price: 0` | Passes; uses existing price | E2E | ✅ |
 | 8 | Rejects negative Amount for Deposit | `TransactionType: Deposit, Amount: -1` | 400 `AMOUNT_INVALID` | E2E | ✅ |
-| 9 | Accepts zero Amount for Deposit | `TransactionType: Deposit, Amount: 0` | Passes; uses existing amount | E2E | ❌ |
+| 9 | Accepts zero Amount for Deposit | `TransactionType: Deposit, Amount: 0` | Passes; uses existing amount | E2E | ✅ |
 | 10 | Rejects invalid type for asset | `MutualFund asset, TransactionType: Deposit` | 400 `TRANSACTION_TYPE_INVALID` | E2E | ✅ |
 | 11 | Unknown type skips type check | `TransactionType: Unknown` | Passes type validation | E2E | ✅ |
 | 12 | Rejects non-GUID route params | Non-GUID in assetItemId or transactionId | 404 route not matched | E2E | ✅ |
@@ -451,10 +451,10 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 | # | Test | Input | Expected | Type | Present |
 |---|------|-------|----------|------|---------|
 | 1 | Auth required on all protected endpoints | Any protected endpoint without Authorization header | 401 | E2E | ✅ |
-| 2 | Expired JWT rejected | Any protected endpoint with expired JWT | 401 | E2E | ❌ |
-| 3 | Wrong audience rejected | JWT with wrong audience | 401 | E2E | ❌ |
-| 4 | Wrong issuer rejected | JWT with wrong issuer | 401 | E2E | ❌ |
-| 5 | Invalid signature rejected | Tampered JWT | 401 | E2E | ❌ |
+| 2 | Expired JWT rejected | Any protected endpoint with expired JWT | 401 | E2E | ✅ |
+| 3 | Wrong audience rejected | JWT with wrong audience | 401 | E2E | ✅ |
+| 4 | Wrong issuer rejected | JWT with wrong issuer | 401 | E2E | ✅ |
+| 5 | Invalid signature rejected | Tampered JWT | 401 | E2E | ✅ |
 | 6 | Enums serialized as strings | Any response with enum field | Enum rendered as string, not integer | E2E | ✅ |
 | 7 | ProblemDetails format on validation error | Any validation failure | Response body is ProblemDetails with errorCode | E2E | ✅ |
 | 8 | Multiple validation errors returned | Request triggering 2+ validation rules | All errors present in response | E2E | ✅ |
@@ -670,20 +670,20 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 | Section | Total | Present | Missing |
 |---------|-------|---------|---------|
 | 1. POST /api/auth/login/google | 10 | 5 | 5 |
-| 2. POST /api/auth/refresh-token | 4 | 3 | 1 |
+| 2. POST /api/auth/refresh-token | 4 | 4 | 0 |
 | 3. GET /api/users/me | 7 | 7 | 0 |
-| 4. PATCH /api/users/me | 10 | 9 | 1 |
-| 5. POST /api/asset-items | 45 | 43 | 2 |
+| 4. PATCH /api/users/me | 10 | 10 | 0 |
+| 5. POST /api/asset-items | 45 | 45 | 0 |
 | 6. GET /api/asset-items | 2 | 2 | 0 |
 | 7. GET /api/asset-items/{id} | 3 | 3 | 0 |
 | 8. DELETE /api/asset-items/{id} | 4 | 4 | 0 |
-| 9. GET /api/asset-items/valuations | 37 | 27 | 10 |
+| 9. GET /api/asset-items/valuations | 37 | 35 | 2 |
 | 10. POST .../transactions | 74 | 74 | 0 |
 | 11. GET .../transactions | 6 | 5 | 1 |
 | 12. GET .../transactions/{id} | 9 | 8 | 1 |
-| 13. PATCH .../transactions/{id} | 26 | 22 | 4 |
+| 13. PATCH .../transactions/{id} | 26 | 26 | 0 |
 | 14. DELETE .../transactions/{id} | 3 | 3 | 0 |
-| 15. Cross-Cutting | 9 | 5 | 4 |
+| 15. Cross-Cutting | 9 | 9 | 0 |
 | 16. Entity\<TId\> (Unit) | 15 | 7 | 8 |
 | 17. Empty Sentinels (Unit) | 4 | 4 | 0 |
 | 18. TransactionValidationExtensions (Unit) | 1 | 0 | 1 |
@@ -692,4 +692,4 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 | 21. Caching (Integration) | 15 | 2 | 13 |
 | 22. Repositories (Integration) | 25 | 5 | 20 |
 | 23. DB Schema (Integration) | 7 | 0 | 7 |
-| **Total** | **333** | **243** | **90** |
+| **Total** | **333** | **263** | **70** |

@@ -1,6 +1,5 @@
 using FastEndpoints;
 using FastEndpoints.Security;
-using Primal.Api.Errors;
 
 namespace Primal.Api.Auth;
 
@@ -15,10 +14,6 @@ internal sealed class MyTokenService : RefreshTokenService<TokenRequest, TokenRe
 			o.Audience = config["TokenIssuerSettings:Audience"] ?? throw new InvalidOperationException("TokenIssuerSettings:Audience configuration is missing");
 			o.AccessTokenValidity = TimeSpan.FromMinutes(config.GetValue<int>("TokenIssuerSettings:AccessTokenValidity"));
 			o.RefreshTokenValidity = TimeSpan.FromHours(config.GetValue<int>("TokenIssuerSettings:RefreshTokenValidity"));
-			o.Endpoint("/api/auth/refresh-token", ep =>
-			{
-				ep.Summary(s => s.Summary = "this is the refresh token endpoint");
-			});
 		});
 	}
 
@@ -29,7 +24,6 @@ internal sealed class MyTokenService : RefreshTokenService<TokenRequest, TokenRe
 
 	public override Task RefreshRequestValidationAsync(TokenRequest req)
 	{
-		this.ThrowError(ErrorFactory.RefreshTokenDisabled(), StatusCodes.Status403Forbidden);
 		return Task.CompletedTask;
 	}
 
