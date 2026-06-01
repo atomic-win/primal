@@ -1,4 +1,5 @@
 using FastEndpoints;
+using Primal.Api.Errors;
 using Primal.Application.Users;
 using Primal.Domain.Users;
 
@@ -21,7 +22,7 @@ internal sealed class GetUserEndpoint : Endpoint<GetUserRequest, UserResponse>
 
 		if (user.Id == UserId.Empty)
 		{
-			this.ThrowError(new FluentValidation.Results.ValidationFailure("userId", "User not found") { ErrorCode = "USER_NOT_FOUND" }, StatusCodes.Status404NotFound);
+			this.ThrowError(ErrorFactory.UserNotFound(), StatusCodes.Status404NotFound);
 		}
 
 		await this.Send.OkAsync(

@@ -1,4 +1,5 @@
 using FastEndpoints;
+using Primal.Api.Errors;
 using Primal.Application.Investments;
 using Primal.Domain.Investments;
 using Primal.Domain.Users;
@@ -28,7 +29,7 @@ internal sealed class GetAssetItemEndpoint : Endpoint<GetAssetItemRequest, Asset
 
 		if (assetItem.Id == AssetItemId.Empty)
 		{
-			this.ThrowError(new FluentValidation.Results.ValidationFailure("id", "Asset item not found") { ErrorCode = "ASSET_ITEM_NOT_FOUND" }, StatusCodes.Status404NotFound);
+			this.ThrowError(ErrorFactory.AssetItemNotFound(), StatusCodes.Status404NotFound);
 		}
 
 		var asset = await this.assetRepository.GetByIdAsync(assetItem.AssetId, ct);

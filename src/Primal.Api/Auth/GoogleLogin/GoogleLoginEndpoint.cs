@@ -5,6 +5,7 @@ using FastEndpoints;
 using FastEndpoints.Security;
 using Google.Apis.Auth;
 using Microsoft.AspNetCore.Authorization;
+using Primal.Api.Errors;
 using Primal.Application.Users;
 using Primal.Domain.Users;
 
@@ -61,18 +62,18 @@ internal sealed class GoogleLoginEndpoint : Endpoint<GoogleLoginRequest, TokenRe
 		}
 		catch (InvalidJwtException ex) when (string.Equals(ex.Message, "JWT has expired.", StringComparison.OrdinalIgnoreCase))
 		{
-			this.AddError("ID token has expired", "ID_TOKEN_EXPIRED");
+			this.AddError(ErrorMessages.Auth.IdTokenExpired, ErrorCodes.Auth.IdTokenExpired);
 			await this.Send.ErrorsAsync(statusCode: 401, cancellation: ct);
 		}
 		catch (InvalidJwtException)
 		{
-			this.AddError("ID token is invalid", "ID_TOKEN_INVALID");
+			this.AddError(ErrorMessages.Auth.IdTokenInvalid, ErrorCodes.Auth.IdTokenInvalid);
 			await this.Send.ErrorsAsync(statusCode: 401, cancellation: ct);
 		}
 		catch (Exception ex)
 		{
 			Console.WriteLine(ex);
-			this.AddError("An unexpected error occurred", "UNEXPECTED_ERROR");
+			this.AddError(ErrorMessages.Auth.UnexpectedError, ErrorCodes.Auth.UnexpectedError);
 			await this.Send.ErrorsAsync(statusCode: 500, cancellation: ct);
 		}
 	}

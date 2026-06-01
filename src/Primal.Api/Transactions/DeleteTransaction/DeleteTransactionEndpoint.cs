@@ -1,4 +1,5 @@
 using FastEndpoints;
+using Primal.Api.Errors;
 using Primal.Application.Investments;
 using Primal.Domain.Investments;
 using Primal.Domain.Users;
@@ -29,7 +30,7 @@ internal sealed class DeleteTransactionEndpoint : Endpoint<DeleteTransactionRequ
 
 		if (transaction.Id == TransactionId.Empty)
 		{
-			this.ThrowError(new FluentValidation.Results.ValidationFailure("transactionId", "Transaction not found") { ErrorCode = "TRANSACTION_NOT_FOUND" }, StatusCodes.Status404NotFound);
+			this.ThrowError(ErrorFactory.TransactionNotFound(), StatusCodes.Status404NotFound);
 		}
 
 		await this.transactionRepository.DeleteAsync(

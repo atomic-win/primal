@@ -1,5 +1,6 @@
 using FastEndpoints;
 using FluentValidation;
+using Primal.Api.Errors;
 using Primal.Domain.Money;
 
 namespace Primal.Api.AssetItems;
@@ -10,12 +11,12 @@ internal sealed class GetValuationsValidator : Validator<GetValuationsRequest>
 	{
 		this.RuleFor(x => x.AssetItemIds)
 			.NotEmpty()
-			.WithMessage("At least one asset item ID must be provided")
-			.WithErrorCode("ASSET_ITEM_IDS_REQUIRED");
+			.WithMessage(ErrorMessages.AssetItem.IdsRequired)
+			.WithErrorCode(ErrorCodes.AssetItem.IdsRequired);
 
 		this.RuleFor(x => x.Currency)
 			.NotEqual(Currency.Unknown)
-			.WithMessage("Currency must be provided")
-			.WithErrorCode("CURRENCY_REQUIRED");
+			.WithMessage(ErrorMessages.AssetItem.CurrencyRequired)
+			.WithErrorCode(ErrorCodes.AssetItem.CurrencyRequired);
 	}
 }

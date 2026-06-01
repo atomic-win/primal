@@ -1,5 +1,6 @@
 using FastEndpoints;
 using FluentValidation;
+using Primal.Api.Errors;
 
 namespace Primal.Api.Auth;
 
@@ -9,7 +10,7 @@ internal sealed class GoogleLoginValidator : Validator<GoogleLoginRequest>
 	{
 		this.RuleFor(x => x.IdToken)
 			.NotEmpty()
-			.WithMessage("ID token must be provided")
-			.WithErrorCode("ID_TOKEN_REQUIRED");
+			.WithMessage(ErrorMessages.Auth.IdTokenRequired)
+			.WithErrorCode(ErrorCodes.Auth.IdTokenRequired);
 	}
 }

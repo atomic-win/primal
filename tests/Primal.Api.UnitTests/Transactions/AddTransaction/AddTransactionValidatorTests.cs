@@ -1,5 +1,6 @@
 using FluentValidation.Results;
 using NSubstitute;
+using Primal.Api.Errors;
 using Primal.Api.Transactions;
 using Primal.Application.Investments;
 using Primal.Domain.Investments;
@@ -47,7 +48,7 @@ public sealed class AddTransactionValidatorTests
 		var result = await validator.ValidateAsync(request);
 
 		await Assert.That(result.IsValid).IsFalse();
-		await AssertHasError(result, "Asset item ID must be provided");
+		await AssertHasError(result, ErrorMessages.AssetItem.IdRequired);
 	}
 
 	[Test]
@@ -59,7 +60,7 @@ public sealed class AddTransactionValidatorTests
 		var result = await validator.ValidateAsync(request);
 
 		await Assert.That(result.IsValid).IsFalse();
-		await AssertHasError(result, "Transaction date must be provided");
+		await AssertHasError(result, ErrorMessages.Transaction.DateRequired);
 	}
 
 	[Test]
@@ -71,7 +72,7 @@ public sealed class AddTransactionValidatorTests
 		var result = await validator.ValidateAsync(request);
 
 		await Assert.That(result.IsValid).IsFalse();
-		await AssertHasError(result, "Transaction date cannot be in the future");
+		await AssertHasError(result, ErrorMessages.Transaction.DateInFuture);
 	}
 
 	[Test]
@@ -83,7 +84,7 @@ public sealed class AddTransactionValidatorTests
 		var result = await validator.ValidateAsync(request);
 
 		await Assert.That(result.IsValid).IsFalse();
-		await AssertHasError(result, "Transaction name must be provided");
+		await AssertHasError(result, ErrorMessages.Transaction.NameRequired);
 	}
 
 	[Test]
@@ -95,7 +96,7 @@ public sealed class AddTransactionValidatorTests
 		var result = await validator.ValidateAsync(request);
 
 		await Assert.That(result.IsValid).IsFalse();
-		await AssertHasError(result, "Transaction name must be at least 3 characters long");
+		await AssertHasError(result, ErrorMessages.Transaction.NameTooShort);
 	}
 
 	[Test]
@@ -107,7 +108,7 @@ public sealed class AddTransactionValidatorTests
 		var result = await validator.ValidateAsync(request);
 
 		await Assert.That(result.IsValid).IsFalse();
-		await AssertHasError(result, "Transaction name must not exceed 1000 characters");
+		await AssertHasError(result, ErrorMessages.Transaction.NameTooLong);
 	}
 
 	[Test]
@@ -119,7 +120,7 @@ public sealed class AddTransactionValidatorTests
 		var result = await validator.ValidateAsync(request);
 
 		await Assert.That(result.IsValid).IsFalse();
-		await AssertHasError(result, "Transaction type must be provided");
+		await AssertHasError(result, ErrorMessages.Transaction.TypeRequired);
 	}
 
 	[Test]
@@ -147,7 +148,7 @@ public sealed class AddTransactionValidatorTests
 		var result = await validator.ValidateAsync(request);
 
 		await Assert.That(result.IsValid).IsFalse();
-		await AssertHasError(result, "Transaction units must be greater than zero");
+		await AssertHasError(result, ErrorMessages.Transaction.UnitsRequired);
 	}
 
 	[Test]
@@ -163,7 +164,7 @@ public sealed class AddTransactionValidatorTests
 		var result = await validator.ValidateAsync(request);
 
 		await Assert.That(result.IsValid).IsFalse();
-		await AssertHasError(result, "Transaction price must be greater than zero");
+		await AssertHasError(result, ErrorMessages.Transaction.PriceRequired);
 	}
 
 	[Test]
@@ -183,7 +184,7 @@ public sealed class AddTransactionValidatorTests
 		var result = await validator.ValidateAsync(request);
 
 		await Assert.That(result.IsValid).IsFalse();
-		await AssertHasError(result, "Transaction amount must be greater than zero");
+		await AssertHasError(result, ErrorMessages.Transaction.AmountRequired);
 	}
 
 	private static AddTransactionValidator CreateValidator(

@@ -1,5 +1,6 @@
 using FastEndpoints;
 using FluentValidation;
+using Primal.Api.Errors;
 using Primal.Domain.Money;
 using Primal.Domain.Users;
 
@@ -11,7 +12,7 @@ internal sealed class UpdateUserValidator : Validator<UpdateUserRequest>
 	{
 		this.RuleFor(x => x)
 			.Must(req => req.PreferredCurrency != Currency.Unknown || req.PreferredLocale != Locale.Unknown)
-			.WithMessage("At least one field of preferred currency or preferred locale must be provided")
-			.WithErrorCode("UPDATE_FIELDS_REQUIRED");
+			.WithMessage(ErrorMessages.User.UpdateFieldsRequired)
+			.WithErrorCode(ErrorCodes.User.UpdateFieldsRequired);
 	}
 }

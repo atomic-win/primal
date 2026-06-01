@@ -1,5 +1,6 @@
 using FastEndpoints;
 using FluentValidation;
+using Primal.Api.Errors;
 
 namespace Primal.Api.Transactions;
 
@@ -9,7 +10,7 @@ internal sealed class GetAllByAssetItemIdValidator : Validator<GetAllByAssetItem
 	{
 		this.RuleFor(x => x.AssetItemId)
 			.NotEqual(Guid.Empty)
-			.WithMessage("Asset item ID must be provided")
-			.WithErrorCode("ASSET_ITEM_ID_REQUIRED");
+			.WithMessage(ErrorMessages.AssetItem.IdRequired)
+			.WithErrorCode(ErrorCodes.AssetItem.IdRequired);
 	}
 }
