@@ -22,7 +22,7 @@ public sealed class Returns_400_When_Buy_Invalid_For_Wallet
 			externalId: string.Empty,
 			currency: "INR");
 
-		// Act — Buy is not valid for Wallet
+		// Act
 		var response = await client.PostAsJsonAsync(
 			$"/api/asset-items/{assetItem.Id}/transactions", new
 			{

@@ -31,7 +31,7 @@ public sealed class Returns_400_When_TransactionType_Invalid_For_AssetType
 			price: 0m,
 			amount: 100m);
 
-		// Act — Buy is not valid for BankAccount
+		// Act
 		var response = await client.PatchAsJsonAsync(
 			$"/api/asset-items/{assetItem.Id}/transactions/{transaction.Id}",
 			new

@@ -30,7 +30,7 @@ public sealed class Returns_Amount_Unchanged_For_Same_Currency
 			price: 0m,
 			amount: 123.45m);
 
-		// Act — request with same currency as asset (exchange rate = 1)
+		// Act
 		var response = await client.GetAsync(
 			$"/api/asset-items/{assetItem.Id}/transactions/{transaction.Id}?currency=INR");
 

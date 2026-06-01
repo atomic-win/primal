@@ -24,7 +24,7 @@ public sealed class Returns_400_When_Price_Not_Greater_Than_Zero
 			externalId: "119551",
 			currency: "Unknown");
 
-		// Act — Buy with 0 price
+		// Act
 		var response = await client.PostAsJsonAsync(
 			$"/api/asset-items/{assetItem.Id}/transactions", new
 			{

@@ -18,7 +18,7 @@ public sealed class Returns_Valuations_For_Valid_Request
 		var assetItem = await client.AddAssetItemAsync(
 			"My Bank", "EmergencyFund", "BankAccount", string.Empty, "INR");
 
-		// Act — request valuations with same currency as asset (no exchange rate needed)
+		// Act
 		var response = await client.GetAsync(
 			$"/api/asset-items/valuations?currency=INR&assetItemIds={assetItem.Id}");
 

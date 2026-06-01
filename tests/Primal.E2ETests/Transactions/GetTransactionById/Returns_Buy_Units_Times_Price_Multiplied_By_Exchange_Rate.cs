@@ -33,11 +33,11 @@ public sealed class Returns_Buy_Units_Times_Price_Multiplied_By_Exchange_Rate
 			price: 25m,
 			amount: 0m);
 
-		// Act — request in INR (stock is USD, exchange rate = 83)
+		// Act
 		var response = await client.GetAsync(
 			$"/api/asset-items/{assetItem.Id}/transactions/{transaction.Id}?currency=INR");
 
-		// Assert — 3 units * 25 price * 83 exchange rate = 6225 INR
+		// Assert
 		await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.OK);
 
 		var body = await response.Content.ReadAsStringAsync();

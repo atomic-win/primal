@@ -15,7 +15,7 @@ public sealed class Returns_204_When_No_Changes
 		var userId = await factory.CreateUserAsync();
 		var client = factory.CreateAuthenticatedClient(userId);
 
-		// Act — send the same defaults (USD, EN_US) that CreateUserAsync sets
+		// Act
 		var response = await client.PatchAsJsonAsync("/api/users/me", new
 		{
 			PreferredCurrency = "USD",

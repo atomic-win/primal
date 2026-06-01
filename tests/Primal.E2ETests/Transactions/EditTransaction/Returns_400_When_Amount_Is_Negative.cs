@@ -31,7 +31,7 @@ public sealed class Returns_400_When_Amount_Is_Negative
 			price: 0m,
 			amount: 100m);
 
-		// Act — negative amount
+		// Act
 		var response = await client.PatchAsJsonAsync(
 			$"/api/asset-items/{assetItem.Id}/transactions/{transaction.Id}",
 			new

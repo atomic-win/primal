@@ -22,7 +22,7 @@ public sealed class Returns_400_When_Amount_Not_Greater_Than_Zero
 			externalId: string.Empty,
 			currency: "INR");
 
-		// Act — Deposit with 0 amount
+		// Act
 		var response = await client.PostAsJsonAsync(
 			$"/api/asset-items/{assetItem.Id}/transactions", new
 			{

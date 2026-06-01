@@ -15,7 +15,7 @@ public sealed class Returns_400_When_No_Fields_Provided
 		var userId = await factory.CreateUserAsync();
 		var client = factory.CreateAuthenticatedClient(userId);
 
-		// Act — send Unknown for both fields (means "not provided")
+		// Act
 		var response = await client.PatchAsJsonAsync("/api/users/me", new
 		{
 			PreferredCurrency = "Unknown",

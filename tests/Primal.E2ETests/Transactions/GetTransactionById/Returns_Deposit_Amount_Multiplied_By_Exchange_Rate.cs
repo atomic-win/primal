@@ -32,11 +32,11 @@ public sealed class Returns_Deposit_Amount_Multiplied_By_Exchange_Rate
 			price: 0m,
 			amount: 100m);
 
-		// Act — request in INR (asset is USD, exchange rate = 82)
+		// Act
 		var response = await client.GetAsync(
 			$"/api/asset-items/{assetItem.Id}/transactions/{transaction.Id}?currency=INR");
 
-		// Assert — 100 USD * 82 = 8200 INR
+		// Assert
 		await Assert.That(response.StatusCode).IsEqualTo(HttpStatusCode.OK);
 
 		var body = await response.Content.ReadAsStringAsync();

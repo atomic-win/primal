@@ -24,7 +24,7 @@ public sealed class Returns_400_When_Deposit_Invalid_For_MutualFund
 			externalId: "119551",
 			currency: "Unknown");
 
-		// Act — Deposit is not valid for MutualFund
+		// Act
 		var response = await client.PostAsJsonAsync(
 			$"/api/asset-items/{assetItem.Id}/transactions", new
 			{
