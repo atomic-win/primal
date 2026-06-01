@@ -30,8 +30,13 @@ internal static class WireMockServerExtensions
 				"""));
 	}
 
-	internal static void SetupMutualFundPrices(this WireMockServer server, string schemeCode)
+	internal static void SetupMutualFundPrices(
+		this WireMockServer server,
+		string schemeCode,
+		IReadOnlyCollection<(string Date, string Nav)> prices)
 	{
+		var priceEntries = string.Join(",\n\t\t\t\t\t", prices.Select(p => $$"""{ "date": "{{p.Date}}", "nav": "{{p.Nav}}" }"""));
+
 		server
 			.Given(Request.Create().WithPath($"/mf/{schemeCode}").UsingGet())
 			.RespondWith(Response.Create()
@@ -47,8 +52,7 @@ internal static class WireMockServerExtensions
 						"scheme_name": "Test Equity Fund"
 					},
 					"data": [
-						{ "date": "15-01-2026", "nav": "150.25" },
-						{ "date": "16-01-2026", "nav": "151.00" }
+						{{priceEntries}}
 					],
 					"status": "SUCCESS"
 				}

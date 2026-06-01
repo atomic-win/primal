@@ -13,7 +13,9 @@ public sealed class Returns_201_And_GET_Returns_Created_Transaction
 		_ = factory.CreateClient();
 
 		factory.MutualFundApi.SetupMutualFundLatest(schemeCode: "119551");
-		factory.MutualFundApi.SetupMutualFundPrices(schemeCode: "119551");
+		factory.MutualFundApi.SetupMutualFundPrices(
+			schemeCode: "119551",
+			prices: [("15-01-2026", "150.25"), ("16-01-2026", "151.00")]);
 
 		var userId = await factory.CreateUserAsync();
 		var client = factory.CreateAuthenticatedClient(userId);
