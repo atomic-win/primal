@@ -93,4 +93,17 @@ internal static class WireMockServerExtensions
 				.WithHeader("Content-Type", "application/json")
 				.WithBody("[]"));
 	}
+
+	internal static void SetupExchangeRate(
+		this WireMockServer server,
+		string date,
+		decimal closeRate)
+	{
+		server
+			.Given(Request.Create().WithPath("/query").UsingGet())
+			.RespondWith(Response.Create()
+				.WithStatusCode(200)
+				.WithHeader("Content-Type", "text/csv")
+				.WithBody($"timestamp,open,high,low,close\n{date},{closeRate},{closeRate},{closeRate},{closeRate}\n"));
+	}
 }
