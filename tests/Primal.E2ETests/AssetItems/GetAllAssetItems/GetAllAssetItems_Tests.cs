@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Http.Json;
-using VerifyTUnit;
 
 namespace Primal.E2ETests.AssetItems.GetAllAssetItems;
 
@@ -12,7 +11,7 @@ public sealed class GetAllAssetItems_Tests
 		await using var factory = new PrimalE2EFactory();
 		_ = factory.CreateClient();
 
-		var userId = await TestDataSeeder.SeedUserAsync(factory);
+		var userId = await factory.CreateUserAsync();
 		var client = factory.CreateAuthenticatedClient(userId);
 
 		var response = await client.GetAsync("/api/asset-items");
@@ -31,7 +30,7 @@ public sealed class GetAllAssetItems_Tests
 
 		WireMockSetup.SetupMutualFundLatest(factory.MutualFundApi);
 
-		var userId = await TestDataSeeder.SeedUserAsync(factory);
+		var userId = await factory.CreateUserAsync();
 		var client = factory.CreateAuthenticatedClient(userId);
 
 		await client.PostAsJsonAsync("/api/asset-items", new

@@ -1,12 +1,8 @@
-using System.Globalization;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Dapper;
-using Microsoft.Data.Sqlite;
 using Primal.Api.AssetItems;
 using Primal.Api.Transactions;
-using Primal.Domain.Users;
 
 namespace Primal.E2ETests;
 
@@ -17,37 +13,6 @@ internal static class TestDataSeeder
 		PropertyNameCaseInsensitive = true,
 		Converters = { new JsonStringEnumConverter() },
 	};
-
-	internal static async Task<UserId> SeedUserAsync(PrimalE2EFactory factory)
-	{
-		// User creation requires Google OAuth which cannot be mocked at HTTP level.
-		// Direct DB insert is the only option since there's no public user-creation API.
-		var userId = new UserId(Guid.NewGuid());
-		var now = DateTimeOffset.UtcNow.ToString("O");
-
-		using var connection = new SqliteConnection($"Data Source={factory.DbPath}");
-		await connection.OpenAsync();
-
-		await connection.ExecuteAsync(
-			"""
-			INSERT INTO users (Id, Email, FirstName, LastName, FullName, PreferredCurrency, PreferredLocale, CreatedAt, UpdatedAt)
-			VALUES (@Id, @Email, @FirstName, @LastName, @FullName, @PreferredCurrency, @PreferredLocale, @CreatedAt, @UpdatedAt)
-			""",
-			new
-			{
-				Id = userId.Value.ToString("D", CultureInfo.InvariantCulture).ToUpperInvariant(),
-				Email = "test@example.com",
-				FirstName = "Test",
-				LastName = "User",
-				FullName = "Test User",
-				PreferredCurrency = "USD",
-				PreferredLocale = "EN_US",
-				CreatedAt = now,
-				UpdatedAt = now,
-			});
-
-		return userId;
-	}
 
 	internal static async Task<Guid> SeedAssetItemViaMutualFundAsync(HttpClient client)
 	{

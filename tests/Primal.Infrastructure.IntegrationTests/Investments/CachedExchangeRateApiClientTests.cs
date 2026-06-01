@@ -1,4 +1,3 @@
-using System.Linq;
 using Microsoft.Extensions.Caching.Hybrid;
 using NSubstitute;
 using Primal.Application.Investments;

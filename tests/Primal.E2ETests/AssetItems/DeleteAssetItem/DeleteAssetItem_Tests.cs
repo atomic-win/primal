@@ -12,7 +12,7 @@ public sealed class DeleteAssetItem_Tests
 
 		WireMockSetup.SetupMutualFundLatest(factory.MutualFundApi);
 
-		var userId = await TestDataSeeder.SeedUserAsync(factory);
+		var userId = await factory.CreateUserAsync();
 		var client = factory.CreateAuthenticatedClient(userId);
 		var assetItemId = await TestDataSeeder.SeedAssetItemViaMutualFundAsync(client);
 
@@ -31,7 +31,7 @@ public sealed class DeleteAssetItem_Tests
 		await using var factory = new PrimalE2EFactory();
 		_ = factory.CreateClient();
 
-		var userId = await TestDataSeeder.SeedUserAsync(factory);
+		var userId = await factory.CreateUserAsync();
 		var client = factory.CreateAuthenticatedClient(userId);
 
 		var response = await client.DeleteAsync($"/api/asset-items/{Guid.NewGuid()}");

@@ -1,5 +1,4 @@
 using System.Net;
-using VerifyTUnit;
 
 namespace Primal.E2ETests.AssetItems.GetAssetItem;
 
@@ -13,7 +12,7 @@ public sealed class GetAssetItem_Exists_Tests
 
 		WireMockSetup.SetupMutualFundLatest(factory.MutualFundApi);
 
-		var userId = await TestDataSeeder.SeedUserAsync(factory);
+		var userId = await factory.CreateUserAsync();
 		var client = factory.CreateAuthenticatedClient(userId);
 
 		var assetItemId = await TestDataSeeder.SeedAssetItemViaMutualFundAsync(client);

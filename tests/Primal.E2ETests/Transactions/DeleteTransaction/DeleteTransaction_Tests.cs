@@ -1,5 +1,4 @@
 using System.Net;
-using VerifyTUnit;
 
 namespace Primal.E2ETests.Transactions.DeleteTransaction;
 
@@ -14,7 +13,7 @@ public sealed class DeleteTransaction_Tests
 		WireMockSetup.SetupMutualFundLatest(factory.MutualFundApi);
 		WireMockSetup.SetupMutualFundPrices(factory.MutualFundApi);
 
-		var userId = await TestDataSeeder.SeedUserAsync(factory);
+		var userId = await factory.CreateUserAsync();
 		var client = factory.CreateAuthenticatedClient(userId);
 		var assetItemId = await TestDataSeeder.SeedAssetItemViaMutualFundAsync(client);
 		var transactionId = await TestDataSeeder.SeedBuyTransactionAsync(
@@ -38,7 +37,7 @@ public sealed class DeleteTransaction_Tests
 		await using var factory = new PrimalE2EFactory();
 		_ = factory.CreateClient();
 
-		var userId = await TestDataSeeder.SeedUserAsync(factory);
+		var userId = await factory.CreateUserAsync();
 		var client = factory.CreateAuthenticatedClient(userId);
 		var assetItemId = await TestDataSeeder.SeedAssetItemViaFixedDepositAsync(client);
 

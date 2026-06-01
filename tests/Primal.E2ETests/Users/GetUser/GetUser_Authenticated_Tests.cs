@@ -1,7 +1,5 @@
 using System.Net;
-using System.Net.Http.Json;
 using Primal.Domain.Users;
-using VerifyTUnit;
 
 namespace Primal.E2ETests.Users.GetUser;
 
@@ -13,7 +11,7 @@ public sealed class GetUser_Authenticated_Tests
 		await using var factory = new PrimalE2EFactory();
 		_ = factory.CreateClient();
 
-		var userId = await TestDataSeeder.SeedUserAsync(factory);
+		var userId = await factory.CreateUserAsync();
 		var client = factory.CreateAuthenticatedClient(userId);
 
 		var response = await client.GetAsync("/api/users/me");

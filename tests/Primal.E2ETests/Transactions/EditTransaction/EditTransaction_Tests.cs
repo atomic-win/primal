@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Http.Json;
-using VerifyTUnit;
 
 namespace Primal.E2ETests.Transactions.EditTransaction;
 
@@ -15,7 +14,7 @@ public sealed class EditTransaction_Tests
 		WireMockSetup.SetupMutualFundLatest(factory.MutualFundApi);
 		WireMockSetup.SetupMutualFundPrices(factory.MutualFundApi);
 
-		var userId = await TestDataSeeder.SeedUserAsync(factory);
+		var userId = await factory.CreateUserAsync();
 		var client = factory.CreateAuthenticatedClient(userId);
 		var assetItemId = await TestDataSeeder.SeedAssetItemViaMutualFundAsync(client);
 		var transactionId = await TestDataSeeder.SeedBuyTransactionAsync(

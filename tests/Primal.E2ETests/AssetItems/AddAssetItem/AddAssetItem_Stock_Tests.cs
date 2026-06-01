@@ -13,7 +13,7 @@ public sealed class AddAssetItem_Stock_Tests
 
 		WireMockSetup.SetupStockSearch(factory.StockApi);
 
-		var userId = await TestDataSeeder.SeedUserAsync(factory);
+		var userId = await factory.CreateUserAsync();
 		var client = factory.CreateAuthenticatedClient(userId);
 
 		var response = await client.PostAsJsonAsync("/api/asset-items", new
@@ -36,7 +36,7 @@ public sealed class AddAssetItem_Stock_Tests
 
 		WireMockSetup.SetupStockSearchEmpty(factory.StockApi);
 
-		var userId = await TestDataSeeder.SeedUserAsync(factory);
+		var userId = await factory.CreateUserAsync();
 		var client = factory.CreateAuthenticatedClient(userId);
 
 		var response = await client.PostAsJsonAsync("/api/asset-items", new
