@@ -31,12 +31,12 @@ internal sealed class UserIdRepository : IUserIdRepository
 		return userId is null ? UserId.Empty : new UserId(Guid.Parse(userId));
 	}
 
-	public async Task<UserId> AddUserId(
+	public async Task AddUserId(
 		IdentityProvider identityProvider,
 		IdentityProviderUserId identityProviderUserId,
+		UserId userId,
 		CancellationToken cancellationToken)
 	{
-		var userId = Guid.CreateVersion7();
 		var now = this.timeProvider.GetUtcNow().ToString("O");
 
 		using var connection = this.connectionFactory.CreateConnection();
@@ -50,11 +50,9 @@ internal sealed class UserIdRepository : IUserIdRepository
 			{
 				Id = identityProviderUserId.Value,
 				IdentityProvider = identityProvider.ToString(),
-				UserId = userId.ToString("D", CultureInfo.InvariantCulture).ToUpperInvariant(),
+				UserId = userId.Value.ToString("D", CultureInfo.InvariantCulture).ToUpperInvariant(),
 				CreatedAt = now,
 				UpdatedAt = now,
 			});
-
-		return new UserId(userId);
 	}
 }

@@ -11,11 +11,23 @@ internal static class ModuleInitializer
 		VerifierSettings.ScrubInlineGuids();
 		VerifierSettings.DontScrubDateTimes();
 		VerifierSettings.AddScrubber(ScrubTraceId);
+		VerifierSettings.AddScrubber(ScrubJsonField("accessToken"));
+		VerifierSettings.AddScrubber(ScrubJsonField("refreshToken"));
 	}
 
 	private static void ScrubTraceId(StringBuilder input)
 	{
-		const string prefix = "\"traceId\":\"";
+		ScrubJsonFieldValue(input, "traceId");
+	}
+
+	private static Action<StringBuilder> ScrubJsonField(string fieldName)
+	{
+		return input => ScrubJsonFieldValue(input, fieldName);
+	}
+
+	private static void ScrubJsonFieldValue(StringBuilder input, string fieldName)
+	{
+		var prefix = $"\"{fieldName}\":\"";
 		const string suffix = "\"";
 
 		var text = input.ToString();

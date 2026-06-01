@@ -9,8 +9,9 @@ public interface IUserIdRepository
 		IdentityProviderUserId identityProviderUserId,
 		CancellationToken cancellationToken);
 
-	Task<UserId> AddUserId(
+	Task AddUserId(
 		IdentityProvider identityProvider,
 		IdentityProviderUserId identityProviderUserId,
+		UserId userId,
 		CancellationToken cancellationToken);
 }

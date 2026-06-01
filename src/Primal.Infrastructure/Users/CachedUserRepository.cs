@@ -29,7 +29,6 @@ internal sealed class CachedUserRepository : IUserRepository
 	}
 
 	public async Task<User> AddUserAsync(
-		UserId userId,
 		string email,
 		string firstName,
 		string lastName,
@@ -37,7 +36,6 @@ internal sealed class CachedUserRepository : IUserRepository
 		CancellationToken cancellationToken)
 	{
 		return await this.userRepository.AddUserAsync(
-			userId,
 			email,
 			firstName,
 			lastName,

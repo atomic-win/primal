@@ -42,17 +42,19 @@ internal sealed class GoogleLoginEndpoint : Endpoint<GoogleLoginRequest, TokenRe
 
 			if (userId == UserId.Empty)
 			{
-				userId = await this.userIdRepository.AddUserId(
-					IdentityProvider.Google,
-					identityProviderUser.Id,
-					ct);
-
-				await this.userRepository.AddUserAsync(
-					userId,
+				var user = await this.userRepository.AddUserAsync(
 					identityProviderUser.Email,
 					firstName: identityProviderUser.FirstName,
 					lastName: identityProviderUser.LastName,
 					fullName: identityProviderUser.FullName,
+					ct);
+
+				userId = user.Id;
+
+				await this.userIdRepository.AddUserId(
+					IdentityProvider.Google,
+					identityProviderUser.Id,
+					userId,
 					ct);
 			}
 

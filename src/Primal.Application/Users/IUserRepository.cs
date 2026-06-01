@@ -10,7 +10,6 @@ public interface IUserRepository
 		CancellationToken cancellationToken);
 
 	Task<User> AddUserAsync(
-		UserId userId,
 		string email,
 		string firstName,
 		string lastName,

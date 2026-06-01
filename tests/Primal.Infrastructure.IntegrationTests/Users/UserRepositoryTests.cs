@@ -10,17 +10,15 @@ public sealed class UserRepositoryTests
 	{
 		var db = TestDbHelper.CreateTestDatabase();
 		var repository = new UserRepository(db, TimeProvider.System);
-		var userId = new UserId(Guid.NewGuid());
 
-		await repository.AddUserAsync(
-			userId,
+		var user = await repository.AddUserAsync(
 			"ada@example.com",
 			"Ada",
 			"Lovelace",
 			"Ada Lovelace",
 			CancellationToken.None);
 
-		var result = await repository.GetUserAsync(userId, CancellationToken.None);
+		var result = await repository.GetUserAsync(user.Id, CancellationToken.None);
 
 		await Verifier.Verify(result);
 	}

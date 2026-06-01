@@ -37,13 +37,13 @@ internal sealed class UserRepository : IUserRepository
 	}
 
 	public async Task<User> AddUserAsync(
-		UserId userId,
 		string email,
 		string firstName,
 		string lastName,
 		string fullName,
 		CancellationToken cancellationToken)
 	{
+		var userId = new UserId(Guid.CreateVersion7());
 		var now = this.timeProvider.GetUtcNow().ToString("O");
 
 		using var connection = this.connectionFactory.CreateConnection();

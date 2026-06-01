@@ -3,8 +3,11 @@ using System.Security.Claims;
 using System.Text;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
+using NSubstitute;
+using Primal.Application.Users;
 using Primal.Domain.Users;
 using WireMock.Server;
 
@@ -28,6 +31,8 @@ internal sealed class PrimalE2EFactory : WebApplicationFactory<Program>
 	internal WireMockServer StockApi { get; } = WireMockServer.Start();
 
 	internal WireMockServer ExchangeRateApi { get; } = WireMockServer.Start();
+
+	internal IIdTokenValidator IdTokenValidator { get; } = Substitute.For<IIdTokenValidator>();
 
 	internal string CreateToken(UserId userId)
 	{
@@ -81,7 +86,11 @@ internal sealed class PrimalE2EFactory : WebApplicationFactory<Program>
 
 			services.AddSingleton<TimeProvider>(new Microsoft.Extensions.Time.Testing.FakeTimeProvider(FrozenTime));
 		});
-		builder.UseSetting("InvestmentSettings:ExchangeRateApiBaseUrl", this.ExchangeRateApi.Url!);
+
+		builder.ConfigureTestServices(services =>
+		{
+			services.AddSingleton(this.IdTokenValidator);
+		});
 	}
 
 	protected override void Dispose(bool disposing)

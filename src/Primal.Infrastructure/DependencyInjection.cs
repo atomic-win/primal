@@ -1,7 +1,9 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Primal.Application.Users;
 using Primal.Infrastructure.Investments;
 using Primal.Infrastructure.Persistence;
+using Primal.Infrastructure.Users;
 
 namespace Primal.Infrastructure;
 
@@ -11,7 +13,8 @@ public static class DependencyInjection
 	{
 		return services
 			.AddPersistence(configuration)
-			.AddInvestments(configuration);
+			.AddInvestments(configuration)
+			.AddAuth();
 	}
 
 	private static IServiceCollection AddPersistence(this IServiceCollection services, ConfigurationManager configuration)
@@ -67,6 +70,12 @@ public static class DependencyInjection
 		})
 		.SetHandlerLifetime(Timeout.InfiniteTimeSpan);
 
+		return services;
+	}
+
+	private static IServiceCollection AddAuth(this IServiceCollection services)
+	{
+		services.AddSingleton<IIdTokenValidator, GoogleIdTokenValidator>();
 		return services;
 	}
 }

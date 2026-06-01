@@ -1,0 +1,1 @@
+﻿{"type":"https://www.rfc-editor.org/rfc/rfc7235#section-3.1","title":"Unauthorized","status":401,"instance":"/api/auth/login/google","traceId":"Scrubbed","detail":"ID token is invalid","errors":[{"name":"generalErrors","reason":"ID token is invalid","code":"ID_TOKEN_INVALID"}]}

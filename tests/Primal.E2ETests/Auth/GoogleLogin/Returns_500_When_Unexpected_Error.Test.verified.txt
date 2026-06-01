@@ -1,0 +1,1 @@
+﻿{"type":"https://www.rfc-editor.org/rfc/rfc7231#section-6.5.1","title":"One or more errors occurred.","status":500,"instance":"/api/auth/login/google","traceId":"Scrubbed","detail":"An unexpected error occurred","errors":[{"name":"generalErrors","reason":"An unexpected error occurred","code":"UNEXPECTED_ERROR"}]}

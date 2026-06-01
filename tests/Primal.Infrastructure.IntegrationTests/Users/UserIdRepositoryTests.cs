@@ -23,12 +23,21 @@ public sealed class UserIdRepositoryTests
 	public async Task AddUserId_ThenGetUserId_ReturnsCorrectUserId()
 	{
 		var db = TestDbHelper.CreateTestDatabase();
+		var userRepository = new UserRepository(db, TimeProvider.System);
 		var repository = new UserIdRepository(db, TimeProvider.System);
 		var identityProviderUserId = new IdentityProviderUserId("google-123");
 
-		var addedUserId = await repository.AddUserId(
+		var user = await userRepository.AddUserAsync(
+			"test@example.com",
+			"Test",
+			"User",
+			"Test User",
+			CancellationToken.None);
+
+		await repository.AddUserId(
 			IdentityProvider.Google,
 			identityProviderUserId,
+			user.Id,
 			CancellationToken.None);
 
 		var result = await repository.GetUserId(
@@ -36,10 +45,6 @@ public sealed class UserIdRepositoryTests
 			identityProviderUserId,
 			CancellationToken.None);
 
-		await Verifier.Verify(new
-		{
-			addedUserId,
-			result,
-		});
+		await Assert.That(result).IsEqualTo(user.Id);
 	}
 }
