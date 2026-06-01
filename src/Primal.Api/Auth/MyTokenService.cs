@@ -1,5 +1,6 @@
 using FastEndpoints;
 using FastEndpoints.Security;
+using Primal.Api.Errors;
 
 namespace Primal.Api.Auth;
 
@@ -21,12 +22,6 @@ internal sealed class MyTokenService : RefreshTokenService<TokenRequest, TokenRe
 		});
 	}
 
-	public override async Task HandleAsync(TokenRequest req, CancellationToken ct)
-	{
-		// Instantly drops the request and sends a 404 Not Found or 410 Gone
-		await this.Send.NotFoundAsync(ct);
-	}
-
 	public override async Task PersistTokenAsync(TokenResponse response)
 	{
 		await Task.CompletedTask;
@@ -34,6 +29,7 @@ internal sealed class MyTokenService : RefreshTokenService<TokenRequest, TokenRe
 
 	public override Task RefreshRequestValidationAsync(TokenRequest req)
 	{
+		this.ThrowError(ErrorFactory.RefreshTokenDisabled(), StatusCodes.Status403Forbidden);
 		return Task.CompletedTask;
 	}
 
