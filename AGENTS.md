@@ -14,7 +14,7 @@ src/
   Primal.Api/             # FastEndpoints, validators, DTOs, Program.cs
 tests/
   Primal.Domain.UnitTests/                # Domain model contract tests
-  Primal.Api.UnitTests/                   # Validator tests (GoogleLogin only)
+  Primal.Api.UnitTests/                   # Validator tests
   Primal.Infrastructure.IntegrationTests/ # Repository, API client, cache tests
   Primal.E2ETests/                        # End-to-end HTTP tests (primary test suite)
 ```
