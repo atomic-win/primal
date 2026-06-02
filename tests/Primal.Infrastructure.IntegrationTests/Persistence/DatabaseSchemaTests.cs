@@ -111,6 +111,23 @@ public sealed class DatabaseSchemaTests
 			await assetRepo.AddAsync("Second", AssetClass.Debt, AssetType.MutualFund, Currency.INR, "mf-dup", CancellationToken.None));
 	}
 
+	[Test]
+	public async Task AssetDelete_Restricted_WhenItemsExist()
+	{
+		var db = CreateFkEnabledDb();
+		var userRepo = new UserRepository(db, TimeProvider.System);
+		var assetRepo = new AssetRepository(db, TimeProvider.System);
+		var assetItemRepo = new AssetItemRepository(db, TimeProvider.System);
+
+		var user = await userRepo.AddUserAsync("test@example.com", "Test", "User", "Test User", CancellationToken.None);
+		var asset = await assetRepo.AddAsync("Test", AssetClass.Equity, AssetType.MutualFund, Currency.INR, "mf-123", CancellationToken.None);
+		await assetItemRepo.AddAsync(user.Id, asset.Id, "My Fund", CancellationToken.None);
+
+		using var conn = db.CreateConnection();
+		await Assert.ThrowsAsync<Microsoft.Data.Sqlite.SqliteException>(async () =>
+			await conn.ExecuteAsync("DELETE FROM assets WHERE Id = @Id", new { Id = asset.Id.Value.ToString("D").ToUpperInvariant() }));
+	}
+
 	private static DbConnectionFactory CreateFkEnabledDb()
 	{
 		var connectionFactory = new DbConnectionFactory($"Data Source=file:{Guid.NewGuid()}?mode=memory&cache=shared;Foreign Keys=True");

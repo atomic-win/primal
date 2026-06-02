@@ -27,6 +27,19 @@ public sealed class ExchangeRateApiClientTests
 			() => client.GetOnOrBeforeExchangeRateAsync(Currency.USD, Currency.INR, new DateOnly(2024, 5, 31), CancellationToken.None));
 	}
 
+	[Test]
+	public async Task GetExchangeRatesAsync_ValidCsv_ReturnsParsedRates()
+	{
+		var csv = "timestamp,open,high,low,close\n2026-01-15,83.0,84.0,82.5,83.5\n2026-01-16,83.5,84.5,83.0,84.0\n";
+		var client = CreateClient("*", csv, "text/csv");
+
+		var result = await client.GetExchangeRatesAsync(Currency.INR, Currency.USD, CancellationToken.None);
+
+		await Assert.That(result.Count).IsEqualTo(2);
+		await Assert.That(result[new DateOnly(2026, 1, 15)]).IsEqualTo(83.5m);
+		await Assert.That(result[new DateOnly(2026, 1, 16)]).IsEqualTo(84.0m);
+	}
+
 	private static ExchangeRateApiClient CreateClient(string url, string content, string mediaType = "text/csv", HttpStatusCode statusCode = HttpStatusCode.OK)
 	{
 		var mockHttp = new MockHttpMessageHandler();

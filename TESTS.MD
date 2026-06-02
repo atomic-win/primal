@@ -514,10 +514,10 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 
 | # | Test | Input | Expected | Type | Present |
 |---|------|-------|----------|------|---------|
-| 1 | GetBySymbol — API 404 | Stub returns 404 | Empty MutualFund (SchemeCode="") | Integration | ❌ |
-| 2 | GetBySymbol — valid response | Stub returns JSON with meta+data | MutualFund with Name, SchemeCode, Currency=INR | Integration | ❌ |
-| 3 | GetPrices — API 404 | Stub returns 404 | Empty dictionary | Integration | ❌ |
-| 4 | GetPrices — valid response | Stub returns JSON with date/NAV data | FrozenDictionary with parsed dd-MM-yyyy dates | Integration | ❌ |
+| 1 | GetBySymbol — API 404 | Stub returns 404 | Empty MutualFund (SchemeCode="") | Integration | ✅ |
+| 2 | GetBySymbol — valid response | Stub returns JSON with meta+data | MutualFund with Name, SchemeCode, Currency=INR | Integration | ✅ |
+| 3 | GetPrices — API 404 | Stub returns 404 | Empty dictionary | Integration | ✅ |
+| 4 | GetPrices — valid response | Stub returns JSON with date/NAV data | FrozenDictionary with parsed dd-MM-yyyy dates | Integration | ✅ |
 
 > **Note:** `MutualFundApiClientTests` exists but only tests `GetOnOrBeforePriceAsync_ThrowsNotSupportedException`.
 
@@ -525,13 +525,13 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 
 | # | Test | Input | Expected | Type | Present |
 |---|------|-------|----------|------|---------|
-| 5 | GetBySymbol — API 404 | Stub returns 404 | Empty Stock (Symbol="") | Integration | ❌ |
-| 6 | GetBySymbol — empty array | Stub returns `[]` | Empty Stock | Integration | ❌ |
-| 7 | GetBySymbol — unrecognized currency | Stub returns `[{ Currency: "XYZ" }]` | Empty Stock | Integration | ❌ |
-| 8 | GetBySymbol — valid response | Stub returns `[{ Symbol, Name, Currency: "USD" }]` | Stock with parsed fields | Integration | ❌ |
-| 9 | GetPrices — API 404 | Stub returns 404 | Empty dictionary | Integration | ❌ |
-| 10 | GetPrices — empty array | Stub returns `[]` | Empty dictionary | Integration | ❌ |
-| 11 | GetPrices — valid response | Stub returns price array | FrozenDictionary with yyyy-MM-dd dates | Integration | ❌ |
+| 5 | GetBySymbol — API 404 | Stub returns 404 | Empty Stock (Symbol="") | Integration | ✅ |
+| 6 | GetBySymbol — empty array | Stub returns `[]` | Empty Stock | Integration | ✅ |
+| 7 | GetBySymbol — unrecognized currency | Stub returns `[{ Currency: "XYZ" }]` | Empty Stock | Integration | ✅ |
+| 8 | GetBySymbol — valid response | Stub returns `[{ Symbol, Name, Currency: "USD" }]` | Stock with parsed fields | Integration | ✅ |
+| 9 | GetPrices — API 404 | Stub returns 404 | Empty dictionary | Integration | ✅ |
+| 10 | GetPrices — empty array | Stub returns `[]` | Empty dictionary | Integration | ✅ |
+| 11 | GetPrices — valid response | Stub returns price array | FrozenDictionary with yyyy-MM-dd dates | Integration | ✅ |
 
 > **Note:** `StockApiClientTests` exists but only tests `GetOnOrBeforePriceAsync_ThrowsNotSupportedException`.
 
@@ -540,7 +540,7 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 | # | Test | Input | Expected | Type | Present |
 |---|------|-------|----------|------|---------|
 | 12 | GetExchangeRates — same currency | from=USD, to=USD | Empty dictionary (short-circuit) | Integration | ✅ |
-| 13 | GetExchangeRates — valid CSV | Stub returns CSV with timestamp/close columns | FrozenDictionary using close column | Integration | ❌ |
+| 13 | GetExchangeRates — valid CSV | Stub returns CSV with timestamp/close columns | FrozenDictionary using close column | Integration | ✅ |
 
 ---
 
@@ -552,39 +552,39 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 |---|------|-------|----------|------|---------|
 | 1 | Same currency short-circuits (rates) | from=USD, to=USD | Returns empty dict without API/cache call | Integration | ✅ |
 | 2 | Same currency short-circuits (on-or-before) | from=USD, to=USD | Returns 1m without API/cache call | Integration | ✅ |
-| 3 | First call fetches and caches | from=INR, to=USD, first call | Fetches from API; subsequent call returns cached | Integration | ❌ |
+| 3 | First call fetches and caches | from=INR, to=USD, first call | Fetches from API; subsequent call returns cached | Integration | ✅ |
 
 ### CachedAssetApiClient\<T\>
 
 | # | Test | Input | Expected | Type | Present |
 |---|------|-------|----------|------|---------|
-| 4 | GetBySymbol caches result | Same symbol called twice | Second call doesn't hit inner client | Integration | ❌ |
-| 5 | GetPrices caches result | Same symbol called twice | Second call from cache | Integration | ❌ |
-| 6 | GetOnOrBeforePrice caches | Same symbol+date called twice | Second call from cache | Integration | ❌ |
+| 4 | GetBySymbol caches result | Same symbol called twice | Second call doesn't hit inner client | Integration | ✅ |
+| 5 | GetPrices caches result | Same symbol called twice | Second call from cache | Integration | ✅ |
+| 6 | GetOnOrBeforePrice caches | Same symbol+date called twice | Second call from cache | Integration | ✅ |
 
 ### CachedUserRepository
 
 | # | Test | Input | Expected | Type | Present |
 |---|------|-------|----------|------|---------|
-| 7 | GetUser caches result | Same userId called twice | Second call from cache | Integration | ❌ |
-| 8 | Update invalidates cache | Update then Get | Get returns fresh data | Integration | ❌ |
+| 7 | GetUser caches result | Same userId called twice | Second call from cache | Integration | ✅ |
+| 8 | Update invalidates cache | Update then Get | Get returns fresh data | Integration | ✅ |
 
 ### CachedAssetItemRepository
 
 | # | Test | Input | Expected | Type | Present |
 |---|------|-------|----------|------|---------|
-| 9 | GetAll caches list | Same userId called twice | Second call from cache | Integration | ❌ |
-| 10 | Add invalidates list cache | Add then GetAll | GetAll returns updated list | Integration | ❌ |
-| 11 | Delete invalidates list + item cache | Delete then GetAll + GetById | Both return updated data | Integration | ❌ |
+| 9 | GetAll caches list | Same userId called twice | Second call from cache | Integration | ✅ |
+| 10 | Add invalidates list cache | Add then GetAll | GetAll returns updated list | Integration | ✅ |
+| 11 | Delete invalidates list + item cache | Delete then GetAll + GetById | Both return updated data | Integration | ✅ |
 
 ### CachedTransactionRepository
 
 | # | Test | Input | Expected | Type | Present |
 |---|------|-------|----------|------|---------|
-| 12 | GetByAssetItemId caches | Same IDs called twice | Second call from cache | Integration | ❌ |
-| 13 | Add invalidates txn + valuation tags | Add then Get | Get returns updated list | Integration | ❌ |
-| 14 | Update invalidates txn + valuation tags | Update then Get | Get returns updated data | Integration | ❌ |
-| 15 | Delete invalidates txn + valuation tags | Delete then Get | Get returns updated list | Integration | ❌ |
+| 12 | GetByAssetItemId caches | Same IDs called twice | Second call from cache | Integration | ✅ |
+| 13 | Add invalidates txn + valuation tags | Add then Get | Get returns updated list | Integration | ✅ |
+| 14 | Update invalidates txn + valuation tags | Update then Get | Get returns updated data | Integration | ✅ |
+| 15 | Delete invalidates txn + valuation tags | Delete then Get | Get returns updated list | Integration | ✅ |
 
 ---
 
@@ -650,7 +650,7 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 | 2 | User delete cascades to asset_items | Delete user row directly | asset_items rows deleted | Integration | ✅ |
 | 3 | User delete cascades to transactions | Delete user row directly | transactions rows deleted | Integration | ✅ |
 | 4 | Asset item delete cascades to transactions | Delete asset_item row directly | transactions rows deleted | Integration | ✅ |
-| 5 | Asset delete restricted when items exist | Delete asset with linked asset_items | FK violation error | Integration | ❌ |
+| 5 | Asset delete restricted when items exist | Delete asset with linked asset_items | FK violation error | Integration | ✅ |
 | 6 | Duplicate email rejected | Insert two users with same email | Unique constraint violation | Integration | ✅ |
 | 7 | Duplicate ExternalId rejected | Insert two assets with same ExternalId | Unique constraint violation | Integration | ✅ |
 
@@ -674,12 +674,12 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 | 12. PATCH .../transactions/{id} | 26 | 26 | 0 |
 | 13. DELETE .../transactions/{id} | 3 | 3 | 0 |
 | 14. Cross-Cutting | 9 | 9 | 0 |
-| 15. Entity\<TId\> (Unit) | 15 | 7 | 8 |
+| 15. Entity\<TId\> (Unit) | 15 | 15 | 0 |
 | 16. Empty Sentinels (Unit) | 4 | 4 | 0 |
-| 17. TransactionValidationExtensions (Unit) | 1 | 0 | 1 |
+| 17. TransactionValidationExtensions (Unit) | 1 | 1 | 0 |
 | 18. RatesExtensions (Unit) | 5 | 5 | 0 |
-| 19. API Clients (Integration) | 13 | 1 | 12 |
-| 20. Caching (Integration) | 15 | 2 | 13 |
-| 21. Repositories (Integration) | 25 | 5 | 20 |
-| 22. DB Schema (Integration) | 7 | 0 | 7 |
-| **Total** | **329** | **269** | **60** |
+| 19. API Clients (Integration) | 13 | 13 | 0 |
+| 20. Caching (Integration) | 15 | 15 | 0 |
+| 21. Repositories (Integration) | 25 | 25 | 0 |
+| 22. DB Schema (Integration) | 7 | 7 | 0 |
+| **Total** | **329** | **329** | **0** |

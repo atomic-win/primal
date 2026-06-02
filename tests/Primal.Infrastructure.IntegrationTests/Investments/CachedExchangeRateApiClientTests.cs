@@ -1,3 +1,4 @@
+using System.Collections.Frozen;
 using Microsoft.Extensions.Caching.Hybrid;
 using NSubstitute;
 using Primal.Application.Investments;
@@ -32,5 +33,23 @@ public sealed class CachedExchangeRateApiClientTests
 
 		await Verifier.Verify(result);
 		await Assert.That(innerClient.ReceivedCalls().Any()).IsFalse();
+	}
+
+	[Test]
+	public async Task GetExchangeRatesAsync_DifferentCurrency_FetchesAndCaches()
+	{
+		var cache = TestCacheHelper.CreateHybridCache();
+		var innerClient = Substitute.For<IExchangeRateApiClient>();
+		var rates = new Dictionary<DateOnly, decimal> { [new DateOnly(2026, 1, 15)] = 83.5m }
+			.ToFrozenDictionary();
+		innerClient.GetExchangeRatesAsync(Currency.INR, Currency.USD, Arg.Any<CancellationToken>())
+			.Returns(rates);
+
+		var client = new CachedExchangeRateApiClient(cache, innerClient);
+
+		await client.GetExchangeRatesAsync(Currency.INR, Currency.USD, CancellationToken.None);
+		await client.GetExchangeRatesAsync(Currency.INR, Currency.USD, CancellationToken.None);
+
+		await innerClient.Received(1).GetExchangeRatesAsync(Currency.INR, Currency.USD, Arg.Any<CancellationToken>());
 	}
 }

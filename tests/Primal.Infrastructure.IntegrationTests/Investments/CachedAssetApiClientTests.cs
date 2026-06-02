@@ -1,0 +1,60 @@
+using System.Collections.Frozen;
+using NSubstitute;
+using Primal.Application.Investments;
+using Primal.Domain.Investments;
+using Primal.Domain.Money;
+using Primal.Infrastructure.Investments;
+
+namespace Primal.Infrastructure.IntegrationTests.Investments;
+
+public sealed class CachedAssetApiClientTests
+{
+	[Test]
+	public async Task GetBySymbol_SecondCall_ReturnsFromCache()
+	{
+		var cache = TestCacheHelper.CreateHybridCache();
+		var inner = Substitute.For<IAssetApiClient<MutualFund>>();
+		inner.GetBySymbolAsync("119551", Arg.Any<CancellationToken>())
+			.Returns(new MutualFund("119551", "Test Fund", "Open", "Equity", Currency.INR));
+
+		var client = new CachedAssetApiClient<MutualFund>(cache, inner);
+
+		await client.GetBySymbolAsync("119551", CancellationToken.None);
+		await client.GetBySymbolAsync("119551", CancellationToken.None);
+
+		await inner.Received(1).GetBySymbolAsync("119551", Arg.Any<CancellationToken>());
+	}
+
+	[Test]
+	public async Task GetPrices_SecondCall_ReturnsFromCache()
+	{
+		var cache = TestCacheHelper.CreateHybridCache();
+		var inner = Substitute.For<IAssetApiClient<MutualFund>>();
+		var prices = new Dictionary<DateOnly, decimal> { [new DateOnly(2026, 1, 15)] = 150.25m }.ToFrozenDictionary();
+		inner.GetPricesAsync("119551", Arg.Any<CancellationToken>()).Returns(prices);
+
+		var client = new CachedAssetApiClient<MutualFund>(cache, inner);
+
+		await client.GetPricesAsync("119551", CancellationToken.None);
+		await client.GetPricesAsync("119551", CancellationToken.None);
+
+		await inner.Received(1).GetPricesAsync("119551", Arg.Any<CancellationToken>());
+	}
+
+	[Test]
+	public async Task GetOnOrBeforePrice_SecondCall_ReturnsFromCache()
+	{
+		var cache = TestCacheHelper.CreateHybridCache();
+		var inner = Substitute.For<IAssetApiClient<MutualFund>>();
+		var prices = new Dictionary<DateOnly, decimal> { [new DateOnly(2026, 1, 15)] = 150.25m }.ToFrozenDictionary();
+		inner.GetPricesAsync("119551", Arg.Any<CancellationToken>()).Returns(prices);
+
+		var client = new CachedAssetApiClient<MutualFund>(cache, inner);
+
+		var first = await client.GetOnOrBeforePriceAsync("119551", new DateOnly(2026, 1, 15), CancellationToken.None);
+		var second = await client.GetOnOrBeforePriceAsync("119551", new DateOnly(2026, 1, 15), CancellationToken.None);
+
+		await Assert.That(first).IsEqualTo(150.25m);
+		await Assert.That(second).IsEqualTo(150.25m);
+	}
+}
