@@ -15,8 +15,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Primal.Api\Primal.Api.csproj" />
-    <ProjectReference Include="..\..\src\Primal.Application\Primal.Application.csproj" />
-    <ProjectReference Include="..\..\src\Primal.Domain\Primal.Domain.csproj" />
   </ItemGroup>
 
 

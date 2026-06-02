@@ -31,24 +31,19 @@ public sealed class ExchangeRateApiClientTests
 	public async Task GetExchangeRatesAsync_ValidCsv_ReturnsParsedRates()
 	{
 		var csv = "timestamp,open,high,low,close\n2026-01-15,83.0,84.0,82.5,83.5\n2026-01-16,83.5,84.5,83.0,84.0\n";
-		var client = CreateClient("*", csv, "text/csv");
+		var client = CreateClient("*", csv);
 
 		var result = await client.GetExchangeRatesAsync(Currency.INR, Currency.USD, CancellationToken.None);
 
 		await Verifier.Verify(result);
 	}
 
-	private static ExchangeRateApiClient CreateClient(string url, string content, string mediaType = "text/csv", HttpStatusCode statusCode = HttpStatusCode.OK)
+	private static ExchangeRateApiClient CreateClient(string url, string content, HttpStatusCode statusCode = HttpStatusCode.OK)
 	{
-		var mockHttp = new MockHttpMessageHandler();
-		mockHttp.When(url)
-			.Respond(statusCode, mediaType, content);
+		var factory = new MockHttpMessageHandler()
+			.WithCsvResponse(url, content, statusCode)
+			.CreateMockHttpClientFactory<ExchangeRateApiClient>("https://www.alphavantage.co");
 
-		var httpClient = mockHttp.ToHttpClient();
-		httpClient.BaseAddress = new Uri("https://www.alphavantage.co");
-
-		var httpClientFactory = Substitute.For<IHttpClientFactory>();
-		httpClientFactory.CreateClient(nameof(ExchangeRateApiClient)).Returns(httpClient);
-		return new ExchangeRateApiClient("test-api-key", httpClientFactory);
+		return new ExchangeRateApiClient("test-api-key", factory);
 	}
 }

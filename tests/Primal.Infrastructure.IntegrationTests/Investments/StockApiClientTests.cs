@@ -1,6 +1,4 @@
 using System.Net;
-using NSubstitute;
-using Primal.Domain.Money;
 using Primal.Infrastructure.Investments;
 using RichardSzalay.MockHttp;
 
@@ -45,8 +43,7 @@ public sealed class StockApiClientTests
 
 		var result = await client.GetBySymbolAsync("XYZ", CancellationToken.None);
 
-		await Assert.That(result.Symbol).IsEqualTo(string.Empty);
-		await Assert.That(result.Currency).IsEqualTo(Currency.Unknown);
+		await Verifier.Verify(result);
 	}
 
 	[Test]
@@ -77,7 +74,7 @@ public sealed class StockApiClientTests
 
 		var result = await client.GetPricesAsync("AAPL", CancellationToken.None);
 
-		await Assert.That(result.Count).IsEqualTo(0);
+		await Verifier.Verify(result);
 	}
 
 	[Test]
@@ -93,15 +90,10 @@ public sealed class StockApiClientTests
 
 	private static StockApiClient CreateClient(string url, string content, HttpStatusCode statusCode = HttpStatusCode.OK)
 	{
-		var mockHttp = new MockHttpMessageHandler();
-		mockHttp.When(url)
-			.Respond(statusCode, "application/json", content);
+		var factory = new MockHttpMessageHandler()
+			.WithJsonResponse(url, content, statusCode)
+			.CreateMockHttpClientFactory<StockApiClient>("https://financialmodelingprep.com");
 
-		var httpClient = mockHttp.ToHttpClient();
-		httpClient.BaseAddress = new Uri("https://financialmodelingprep.com");
-
-		var httpClientFactory = Substitute.For<IHttpClientFactory>();
-		httpClientFactory.CreateClient(nameof(StockApiClient)).Returns(httpClient);
-		return new StockApiClient("test-api-key", httpClientFactory);
+		return new StockApiClient("test-api-key", factory);
 	}
 }

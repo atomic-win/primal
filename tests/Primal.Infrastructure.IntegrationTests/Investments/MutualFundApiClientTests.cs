@@ -1,6 +1,4 @@
 using System.Net;
-using NSubstitute;
-using Primal.Domain.Money;
 using Primal.Infrastructure.Investments;
 using RichardSzalay.MockHttp;
 
@@ -82,15 +80,10 @@ public sealed class MutualFundApiClientTests
 
 	private static MutualFundApiClient CreateClient(string url, string content, HttpStatusCode statusCode = HttpStatusCode.OK)
 	{
-		var mockHttp = new MockHttpMessageHandler();
-		mockHttp.When(url)
-			.Respond(statusCode, "application/json", content);
+		var factory = new MockHttpMessageHandler()
+			.WithJsonResponse(url, content, statusCode)
+			.CreateMockHttpClientFactory<MutualFundApiClient>("https://api.mfapi.in");
 
-		var httpClient = mockHttp.ToHttpClient();
-		httpClient.BaseAddress = new Uri("https://api.mfapi.in");
-
-		var httpClientFactory = Substitute.For<IHttpClientFactory>();
-		httpClientFactory.CreateClient(nameof(MutualFundApiClient)).Returns(httpClient);
-		return new MutualFundApiClient(httpClientFactory);
+		return new MutualFundApiClient(factory);
 	}
 }
