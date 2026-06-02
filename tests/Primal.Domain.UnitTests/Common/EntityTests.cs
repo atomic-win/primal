@@ -79,6 +79,51 @@ public sealed class EntityTests
 	}
 
 	[Test]
+	public async Task Equals_Object_ReturnsFalse_ForNull()
+	{
+		var asset = CreateAsset(new AssetId(Guid.NewGuid()));
+
+		await Verifier.Verify(asset.Equals((object)null!));
+	}
+
+	[Test]
+	public async Task EqualityOperator_ReturnsTrue_ForBothNull()
+	{
+		Asset left = null;
+		Asset right = null;
+
+		await Verifier.Verify(left == right);
+	}
+
+	[Test]
+	public async Task EqualityOperator_ReturnsFalse_WhenLeftNull()
+	{
+		Asset left = null;
+		var right = CreateAsset(new AssetId(Guid.NewGuid()));
+
+		await Verifier.Verify(left == right);
+	}
+
+	[Test]
+	public async Task EqualityOperator_ReturnsFalse_WhenRightNull()
+	{
+		var left = CreateAsset(new AssetId(Guid.NewGuid()));
+		Asset right = null;
+
+		await Verifier.Verify(left == right);
+	}
+
+	[Test]
+	public async Task InequalityOperator_ReturnsFalse_ForSameId()
+	{
+		var id = new AssetId(Guid.NewGuid());
+		var left = CreateAsset(id);
+		var right = CreateAsset(id);
+
+		await Verifier.Verify(left != right);
+	}
+
+	[Test]
 	public async Task Equals_ReturnsFalse_ForDifferentType()
 	{
 		var asset = CreateAsset(new AssetId(Guid.NewGuid()));

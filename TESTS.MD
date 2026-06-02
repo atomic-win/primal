@@ -462,15 +462,15 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 | 1 | Equals(Entity) — same Id | Two entities, same Id | `true` | Unit | ✅ |
 | 2 | Equals(Entity) — different Id | Two entities, different Ids | `false` | Unit | ✅ |
 | 3 | Equals(Entity) — null | Entity vs null | `false` | Unit | ✅ |
-| 4 | Equals(object) — matching entity | Entity as object | `true` | Unit | ❌ |
+| 4 | Equals(object) — matching entity | Entity as object | `true` | Unit | ✅ |
 | 5 | Equals(object) — non-entity | Entity vs random object | `false` | Unit | ✅ |
-| 6 | Equals(object) — null | Entity vs null object | `false` | Unit | ❌ |
-| 7 | == both non-null same Id | Same Id | `true` | Unit | ❌ |
-| 8 | == both non-null different Id | Different Ids | `false` | Unit | ❌ |
-| 9 | == both null | null == null | `true` | Unit | ❌ |
-| 10 | == left null, right non-null | null == entity | `false` | Unit | ❌ |
-| 11 | == left non-null, right null | entity == null | `false` | Unit | ❌ |
-| 12 | != same Id | Same Id | `false` | Unit | ❌ |
+| 6 | Equals(object) — null | Entity vs null object | `false` | Unit | ✅ |
+| 7 | == both non-null same Id | Same Id | `true` | Unit | ✅ |
+| 8 | == both non-null different Id | Different Ids | `false` | Unit | ✅ |
+| 9 | == both null | null == null | `true` | Unit | ✅ |
+| 10 | == left null, right non-null | null == entity | `false` | Unit | ✅ |
+| 11 | == left non-null, right null | entity == null | `false` | Unit | ✅ |
+| 12 | != same Id | Same Id | `false` | Unit | ✅ |
 | 13 | != different Id | Different Ids | `true` | Unit | ✅ |
 | 14 | GetHashCode consistent | Same Id entities | Equal hash codes | Unit | ✅ |
 | 15 | GetHashCode distinct | Different Id entities | Different hash codes | Unit | ✅ |
@@ -492,7 +492,7 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 
 | # | Test | Input | Expected | Type | Present |
 |---|------|-------|----------|------|---------|
-| 1 | IsValidForAssetType with Unknown AssetType | `AssetType.Unknown`, any TransactionType | Throws `InvalidOperationException` | Unit | ❌ |
+| 1 | IsValidForAssetType with Unknown AssetType | `AssetType.Unknown`, any TransactionType | Throws `InvalidOperationException` | Unit | ✅ |
 
 ---
 
