@@ -83,7 +83,7 @@ public sealed class TransactionRepositoryTests
 
 	private static async Task<(TransactionRepository Repository, UserId UserId, AssetItemId AssetItemId)> CreateTestContext()
 	{
-		var db = TestDbHelper.CreateTestDatabase();
+		var db = TestDbFactory.CreateTestDatabase();
 		var userRepo = new UserRepository(db, TimeProvider.System);
 		var assetRepo = new AssetRepository(db, TimeProvider.System);
 		var assetItemRepo = new AssetItemRepository(db, TimeProvider.System);

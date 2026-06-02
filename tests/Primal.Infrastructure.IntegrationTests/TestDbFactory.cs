@@ -4,7 +4,7 @@ using Primal.Infrastructure.Persistence;
 
 namespace Primal.Infrastructure.IntegrationTests;
 
-internal static class TestDbHelper
+internal static class TestDbFactory
 {
 	private static readonly ConcurrentBag<IDbConnection> KeepAliveConnections = [];
 

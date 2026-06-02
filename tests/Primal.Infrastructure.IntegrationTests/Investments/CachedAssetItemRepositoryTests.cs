@@ -60,8 +60,8 @@ public sealed class CachedAssetItemRepositoryTests
 
 	private static async Task<(CachedAssetItemRepository Cached, UserId UserId, AssetId AssetId)> CreateTestContext()
 	{
-		var cache = TestCacheHelper.CreateHybridCache();
-		var db = TestDbHelper.CreateTestDatabase();
+		var cache = TestCacheFactory.CreateHybridCache();
+		var db = TestDbFactory.CreateTestDatabase();
 		var userRepo = new UserRepository(db, TimeProvider.System);
 		var assetRepo = new AssetRepository(db, TimeProvider.System);
 		var inner = new AssetItemRepository(db, TimeProvider.System);

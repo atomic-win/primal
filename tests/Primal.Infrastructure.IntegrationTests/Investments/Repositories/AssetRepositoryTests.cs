@@ -9,7 +9,7 @@ public sealed class AssetRepositoryTests
 	[Test]
 	public async Task Add_ThenGetById_ReturnsAsset()
 	{
-		var db = TestDbHelper.CreateTestDatabase();
+		var db = TestDbFactory.CreateTestDatabase();
 		var repository = new AssetRepository(db, TimeProvider.System);
 
 		var asset = await repository.AddAsync(
@@ -28,7 +28,7 @@ public sealed class AssetRepositoryTests
 	[Test]
 	public async Task GetById_NonExistent_ReturnsEmpty()
 	{
-		var db = TestDbHelper.CreateTestDatabase();
+		var db = TestDbFactory.CreateTestDatabase();
 		var repository = new AssetRepository(db, TimeProvider.System);
 
 		var result = await repository.GetByIdAsync(new AssetId(Guid.NewGuid()), CancellationToken.None);
@@ -39,7 +39,7 @@ public sealed class AssetRepositoryTests
 	[Test]
 	public async Task Add_ThenGetByExternalId_ReturnsAsset()
 	{
-		var db = TestDbHelper.CreateTestDatabase();
+		var db = TestDbFactory.CreateTestDatabase();
 		var repository = new AssetRepository(db, TimeProvider.System);
 
 		var asset = await repository.AddAsync(
@@ -58,7 +58,7 @@ public sealed class AssetRepositoryTests
 	[Test]
 	public async Task GetByExternalId_NonExistent_ReturnsEmpty()
 	{
-		var db = TestDbHelper.CreateTestDatabase();
+		var db = TestDbFactory.CreateTestDatabase();
 		var repository = new AssetRepository(db, TimeProvider.System);
 
 		var result = await repository.GetByExternalIdAsync("non-existent", CancellationToken.None);

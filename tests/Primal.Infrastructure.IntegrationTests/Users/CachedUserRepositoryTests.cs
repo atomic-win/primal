@@ -9,8 +9,8 @@ public sealed class CachedUserRepositoryTests
 	[Test]
 	public async Task GetUserAsync_SecondCall_ReturnsFromCache()
 	{
-		var cache = TestCacheHelper.CreateHybridCache();
-		var db = TestDbHelper.CreateTestDatabase();
+		var cache = TestCacheFactory.CreateHybridCache();
+		var db = TestDbFactory.CreateTestDatabase();
 		var inner = new UserRepository(db, TimeProvider.System);
 		var cached = new CachedUserRepository(cache, inner);
 
@@ -25,8 +25,8 @@ public sealed class CachedUserRepositoryTests
 	[Test]
 	public async Task UpdateUserProfileAsync_InvalidatesCache()
 	{
-		var cache = TestCacheHelper.CreateHybridCache();
-		var db = TestDbHelper.CreateTestDatabase();
+		var cache = TestCacheFactory.CreateHybridCache();
+		var db = TestDbFactory.CreateTestDatabase();
 		var inner = new UserRepository(db, TimeProvider.System);
 		var cached = new CachedUserRepository(cache, inner);
 

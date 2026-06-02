@@ -12,7 +12,7 @@ public sealed class CachedAssetApiClientTests
 	[Test]
 	public async Task GetBySymbol_SecondCall_ReturnsFromCache()
 	{
-		var cache = TestCacheHelper.CreateHybridCache();
+		var cache = TestCacheFactory.CreateHybridCache();
 		var inner = Substitute.For<IAssetApiClient<MutualFund>>();
 		inner.GetBySymbolAsync("119551", Arg.Any<CancellationToken>())
 			.Returns(new MutualFund("119551", "Test Fund", "Open", "Equity", Currency.INR));
@@ -28,7 +28,7 @@ public sealed class CachedAssetApiClientTests
 	[Test]
 	public async Task GetPrices_SecondCall_ReturnsFromCache()
 	{
-		var cache = TestCacheHelper.CreateHybridCache();
+		var cache = TestCacheFactory.CreateHybridCache();
 		var inner = Substitute.For<IAssetApiClient<MutualFund>>();
 		var prices = new Dictionary<DateOnly, decimal> { [new DateOnly(2026, 1, 15)] = 150.25m }.ToFrozenDictionary();
 		inner.GetPricesAsync("119551", Arg.Any<CancellationToken>()).Returns(prices);
@@ -44,7 +44,7 @@ public sealed class CachedAssetApiClientTests
 	[Test]
 	public async Task GetOnOrBeforePrice_SecondCall_ReturnsFromCache()
 	{
-		var cache = TestCacheHelper.CreateHybridCache();
+		var cache = TestCacheFactory.CreateHybridCache();
 		var inner = Substitute.For<IAssetApiClient<MutualFund>>();
 		var prices = new Dictionary<DateOnly, decimal> { [new DateOnly(2026, 1, 15)] = 150.25m }.ToFrozenDictionary();
 		inner.GetPricesAsync("119551", Arg.Any<CancellationToken>()).Returns(prices);

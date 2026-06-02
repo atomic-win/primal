@@ -11,7 +11,7 @@ public sealed class AssetItemRepositoryTests
 	[Test]
 	public async Task Add_ThenGetAll_ReturnsItems()
 	{
-		var db = TestDbHelper.CreateTestDatabase();
+		var db = TestDbFactory.CreateTestDatabase();
 		var userRepo = new UserRepository(db, TimeProvider.System);
 		var assetRepo = new AssetRepository(db, TimeProvider.System);
 		var repository = new AssetItemRepository(db, TimeProvider.System);
@@ -29,7 +29,7 @@ public sealed class AssetItemRepositoryTests
 	[Test]
 	public async Task GetAll_Empty_ReturnsEmptyCollection()
 	{
-		var db = TestDbHelper.CreateTestDatabase();
+		var db = TestDbFactory.CreateTestDatabase();
 		var userRepo = new UserRepository(db, TimeProvider.System);
 		var repository = new AssetItemRepository(db, TimeProvider.System);
 
@@ -43,7 +43,7 @@ public sealed class AssetItemRepositoryTests
 	[Test]
 	public async Task Add_ThenGetById_ReturnsAssetItem()
 	{
-		var db = TestDbHelper.CreateTestDatabase();
+		var db = TestDbFactory.CreateTestDatabase();
 		var userRepo = new UserRepository(db, TimeProvider.System);
 		var assetRepo = new AssetRepository(db, TimeProvider.System);
 		var repository = new AssetItemRepository(db, TimeProvider.System);
@@ -61,7 +61,7 @@ public sealed class AssetItemRepositoryTests
 	[Test]
 	public async Task GetById_NonExistent_ReturnsEmpty()
 	{
-		var db = TestDbHelper.CreateTestDatabase();
+		var db = TestDbFactory.CreateTestDatabase();
 		var userRepo = new UserRepository(db, TimeProvider.System);
 		var repository = new AssetItemRepository(db, TimeProvider.System);
 
@@ -75,7 +75,7 @@ public sealed class AssetItemRepositoryTests
 	[Test]
 	public async Task Delete_RemovesItem()
 	{
-		var db = TestDbHelper.CreateTestDatabase();
+		var db = TestDbFactory.CreateTestDatabase();
 		var userRepo = new UserRepository(db, TimeProvider.System);
 		var assetRepo = new AssetRepository(db, TimeProvider.System);
 		var repository = new AssetItemRepository(db, TimeProvider.System);

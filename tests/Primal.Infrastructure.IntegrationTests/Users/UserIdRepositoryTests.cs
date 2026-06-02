@@ -8,7 +8,7 @@ public sealed class UserIdRepositoryTests
 	[Test]
 	public async Task GetUserId_NonExistentUser_ReturnsEmptyUserId()
 	{
-		var db = TestDbHelper.CreateTestDatabase();
+		var db = TestDbFactory.CreateTestDatabase();
 		var repository = new UserIdRepository(db, TimeProvider.System);
 
 		var result = await repository.GetUserId(
@@ -22,7 +22,7 @@ public sealed class UserIdRepositoryTests
 	[Test]
 	public async Task AddUserId_ThenGetUserId_ReturnsCorrectUserId()
 	{
-		var db = TestDbHelper.CreateTestDatabase();
+		var db = TestDbFactory.CreateTestDatabase();
 		var userRepository = new UserRepository(db, TimeProvider.System);
 		var repository = new UserIdRepository(db, TimeProvider.System);
 		var identityProviderUserId = new IdentityProviderUserId("google-123");

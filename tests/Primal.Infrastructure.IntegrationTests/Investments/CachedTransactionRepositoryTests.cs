@@ -76,8 +76,8 @@ public sealed class CachedTransactionRepositoryTests
 
 	private static async Task<(CachedTransactionRepository Cached, UserId UserId, AssetItemId AssetItemId)> CreateTestContext()
 	{
-		var cache = TestCacheHelper.CreateHybridCache();
-		var db = TestDbHelper.CreateTestDatabase();
+		var cache = TestCacheFactory.CreateHybridCache();
+		var db = TestDbFactory.CreateTestDatabase();
 		var userRepo = new UserRepository(db, TimeProvider.System);
 		var assetRepo = new AssetRepository(db, TimeProvider.System);
 		var assetItemRepo = new AssetItemRepository(db, TimeProvider.System);

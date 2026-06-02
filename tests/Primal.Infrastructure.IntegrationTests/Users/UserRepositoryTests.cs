@@ -9,7 +9,7 @@ public sealed class UserRepositoryTests
 	[Test]
 	public async Task AddUserAsync_ThenGetUserAsync_ReturnsCorrectUser()
 	{
-		var db = TestDbHelper.CreateTestDatabase();
+		var db = TestDbFactory.CreateTestDatabase();
 		var repository = new UserRepository(db, TimeProvider.System);
 
 		var user = await repository.AddUserAsync(
@@ -27,7 +27,7 @@ public sealed class UserRepositoryTests
 	[Test]
 	public async Task GetUserAsync_NonExistent_ReturnsEmpty()
 	{
-		var db = TestDbHelper.CreateTestDatabase();
+		var db = TestDbFactory.CreateTestDatabase();
 		var repository = new UserRepository(db, TimeProvider.System);
 
 		var result = await repository.GetUserAsync(new UserId(Guid.NewGuid()), CancellationToken.None);
@@ -38,7 +38,7 @@ public sealed class UserRepositoryTests
 	[Test]
 	public async Task UpdateUserProfileAsync_UpdatesFields()
 	{
-		var db = TestDbHelper.CreateTestDatabase();
+		var db = TestDbFactory.CreateTestDatabase();
 		var repository = new UserRepository(db, TimeProvider.System);
 
 		var user = await repository.AddUserAsync(

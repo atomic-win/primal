@@ -3,7 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Primal.Infrastructure.IntegrationTests;
 
-internal static class TestCacheHelper
+internal static class TestCacheFactory
 {
 	internal static HybridCache CreateHybridCache()
 	{
