@@ -1,0 +1,12 @@
+name: local
+variables:
+  - name: baseUrl
+    value: http://localhost:5185
+  - secret: true
+    name: idToken
+  - secret: true
+    name: accessToken
+  - secret: true
+    name: ALPHA_VANTAGE_API_KEY
+  - secret: true
+    name: FMP_API_KEY
