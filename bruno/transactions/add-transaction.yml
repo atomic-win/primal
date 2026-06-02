@@ -1,0 +1,28 @@
+info:
+    name: add-transaction
+    type: http
+    seq: 1
+
+http:
+    method: POST
+    url: "{{baseUrl}}/api/asset-items/{{assetItemId}}/transactions"
+    body:
+        type: json
+        data: |-
+            {
+              "date": "2026-06-01",
+              "name": "Buy AAPL",
+              "transactionType": "Buy",
+              "units": 10,
+              "price": 150.00,
+              "amount": 1500.00
+            }
+    auth:
+        type: bearer
+        token: "{{accessToken}}"
+
+settings:
+    encodeUrl: true
+    timeout: 0
+    followRedirects: true
+    maxRedirects: 5
