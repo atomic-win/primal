@@ -1,0 +1,8 @@
+﻿{
+  Name: Test MF,
+  AssetClass: Equity,
+  AssetType: MutualFund,
+  Currency: INR,
+  ExternalId: mf-119551,
+  Id: Guid_1
+}

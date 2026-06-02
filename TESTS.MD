@@ -603,42 +603,42 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 | # | Test | Input | Expected | Type | Present |
 |---|------|-------|----------|------|---------|
 | 4 | GetUser — exists | Existing userId | Returns User with all fields | Integration | ✅ |
-| 5 | GetUser — not found | Non-existent userId | Returns User.Empty | Integration | ❌ |
+| 5 | GetUser — not found | Non-existent userId | Returns User.Empty | Integration | ✅ |
 | 6 | AddUser | New user data | Inserts with defaults (USD, EN_US) | Integration | ✅ |
-| 7 | UpdateUserProfile | Existing userId, new currency/locale | Updates fields + UpdatedAt timestamp | Integration | ❌ |
+| 7 | UpdateUserProfile | Existing userId, new currency/locale | Updates fields + UpdatedAt timestamp | Integration | ✅ |
 
 ### AssetRepository
 
 | # | Test | Input | Expected | Type | Present |
 |---|------|-------|----------|------|---------|
-| 8 | GetById — exists | Existing assetId | Returns Asset | Integration | ❌ |
-| 9 | GetById — not found | Non-existent assetId | Returns Asset.Empty | Integration | ❌ |
-| 10 | GetByExternalId — exists | Existing externalId | Returns Asset | Integration | ❌ |
-| 11 | GetByExternalId — not found | Non-existent externalId | Returns Asset.Empty | Integration | ❌ |
-| 12 | Add | New asset data | Inserts row; returns Asset | Integration | ❌ |
+| 8 | GetById — exists | Existing assetId | Returns Asset | Integration | ✅ |
+| 9 | GetById — not found | Non-existent assetId | Returns Asset.Empty | Integration | ✅ |
+| 10 | GetByExternalId — exists | Existing externalId | Returns Asset | Integration | ✅ |
+| 11 | GetByExternalId — not found | Non-existent externalId | Returns Asset.Empty | Integration | ✅ |
+| 12 | Add | New asset data | Inserts row; returns Asset | Integration | ✅ |
 
 ### AssetItemRepository
 
 | # | Test | Input | Expected | Type | Present |
 |---|------|-------|----------|------|---------|
-| 13 | GetAll — has items | UserId with items | Returns all items for user | Integration | ❌ |
-| 14 | GetAll — empty | UserId with no items | Returns empty collection | Integration | ❌ |
-| 15 | GetById — exists | Existing userId + assetItemId | Returns AssetItem | Integration | ❌ |
-| 16 | GetById — not found | Non-existent IDs | Returns AssetItem.Empty | Integration | ❌ |
-| 17 | Add | New item data | Inserts row; returns AssetItem | Integration | ❌ |
-| 18 | Delete | Existing item | Deletes row | Integration | ❌ |
+| 13 | GetAll — has items | UserId with items | Returns all items for user | Integration | ✅ |
+| 14 | GetAll — empty | UserId with no items | Returns empty collection | Integration | ✅ |
+| 15 | GetById — exists | Existing userId + assetItemId | Returns AssetItem | Integration | ✅ |
+| 16 | GetById — not found | Non-existent IDs | Returns AssetItem.Empty | Integration | ✅ |
+| 17 | Add | New item data | Inserts row; returns AssetItem | Integration | ✅ |
+| 18 | Delete | Existing item | Deletes row | Integration | ✅ |
 
 ### TransactionRepository
 
 | # | Test | Input | Expected | Type | Present |
 |---|------|-------|----------|------|---------|
-| 19 | GetByAssetItemId — has transactions | AssetItemId with transactions | Returns all transactions | Integration | ❌ |
-| 20 | GetByAssetItemId — empty | AssetItemId with no transactions | Returns empty collection | Integration | ❌ |
-| 21 | GetById — exists | Existing IDs | Returns Transaction | Integration | ❌ |
-| 22 | GetById — not found | Non-existent IDs | Returns Transaction.Empty | Integration | ❌ |
-| 23 | Add | New transaction data | Inserts row; returns Transaction | Integration | ❌ |
-| 24 | Update | Existing transaction | Updates all mutable fields + UpdatedAt | Integration | ❌ |
-| 25 | Delete | Existing IDs | Deletes row | Integration | ❌ |
+| 19 | GetByAssetItemId — has transactions | AssetItemId with transactions | Returns all transactions | Integration | ✅ |
+| 20 | GetByAssetItemId — empty | AssetItemId with no transactions | Returns empty collection | Integration | ✅ |
+| 21 | GetById — exists | Existing IDs | Returns Transaction | Integration | ✅ |
+| 22 | GetById — not found | Non-existent IDs | Returns Transaction.Empty | Integration | ✅ |
+| 23 | Add | New transaction data | Inserts row; returns Transaction | Integration | ✅ |
+| 24 | Update | Existing transaction | Updates all mutable fields + UpdatedAt | Integration | ✅ |
+| 25 | Delete | Existing IDs | Deletes row | Integration | ✅ |
 
 ---
 
@@ -646,13 +646,13 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 
 | # | Test | Input | Expected | Type | Present |
 |---|------|-------|----------|------|---------|
-| 1 | User delete cascades to user_ids | Delete user row directly | user_ids rows deleted | Integration | ❌ |
-| 2 | User delete cascades to asset_items | Delete user row directly | asset_items rows deleted | Integration | ❌ |
-| 3 | User delete cascades to transactions | Delete user row directly | transactions rows deleted | Integration | ❌ |
-| 4 | Asset item delete cascades to transactions | Delete asset_item row directly | transactions rows deleted | Integration | ❌ |
+| 1 | User delete cascades to user_ids | Delete user row directly | user_ids rows deleted | Integration | ✅ |
+| 2 | User delete cascades to asset_items | Delete user row directly | asset_items rows deleted | Integration | ✅ |
+| 3 | User delete cascades to transactions | Delete user row directly | transactions rows deleted | Integration | ✅ |
+| 4 | Asset item delete cascades to transactions | Delete asset_item row directly | transactions rows deleted | Integration | ✅ |
 | 5 | Asset delete restricted when items exist | Delete asset with linked asset_items | FK violation error | Integration | ❌ |
-| 6 | Duplicate email rejected | Insert two users with same email | Unique constraint violation | Integration | ❌ |
-| 7 | Duplicate ExternalId rejected | Insert two assets with same ExternalId | Unique constraint violation | Integration | ❌ |
+| 6 | Duplicate email rejected | Insert two users with same email | Unique constraint violation | Integration | ✅ |
+| 7 | Duplicate ExternalId rejected | Insert two assets with same ExternalId | Unique constraint violation | Integration | ✅ |
 
 ---
 
