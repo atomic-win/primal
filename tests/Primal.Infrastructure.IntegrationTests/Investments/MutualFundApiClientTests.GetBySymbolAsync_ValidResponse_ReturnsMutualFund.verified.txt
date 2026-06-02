@@ -1,0 +1,7 @@
+﻿{
+  SchemeCode: 119551,
+  Name: Test Equity Fund,
+  SchemeType: Open Ended,
+  SchemeCategory: Equity,
+  Currency: INR
+}

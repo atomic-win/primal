@@ -18,8 +18,7 @@ public sealed class CachedTransactionRepositoryTests
 		var first = await cached.GetByAssetItemIdAsync(userId, assetItemId, CancellationToken.None);
 		var second = await cached.GetByAssetItemIdAsync(userId, assetItemId, CancellationToken.None);
 
-		await Assert.That(first.Count()).IsEqualTo(1);
-		await Assert.That(second.Count()).IsEqualTo(1);
+		await Verifier.Verify(new { first, second });
 	}
 
 	[Test]
@@ -35,7 +34,7 @@ public sealed class CachedTransactionRepositoryTests
 
 		var result = await cached.GetByAssetItemIdAsync(userId, assetItemId, CancellationToken.None);
 
-		await Assert.That(result.Count()).IsEqualTo(1);
+		await Verifier.Verify(result);
 	}
 
 	[Test]
@@ -54,7 +53,7 @@ public sealed class CachedTransactionRepositoryTests
 
 		var result = await cached.GetByIdAsync(userId, assetItemId, txn.Id, CancellationToken.None);
 
-		await Assert.That(result.Name).IsEqualTo("Updated");
+		await Verifier.Verify(result);
 	}
 
 	[Test]
@@ -72,7 +71,7 @@ public sealed class CachedTransactionRepositoryTests
 
 		var result = await cached.GetByAssetItemIdAsync(userId, assetItemId, CancellationToken.None);
 
-		await Assert.That(result.Count()).IsEqualTo(0);
+		await Verifier.Verify(result);
 	}
 
 	private static async Task<(CachedTransactionRepository Cached, UserId UserId, AssetItemId AssetItemId)> CreateTestContext()

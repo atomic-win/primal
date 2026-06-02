@@ -1,0 +1,9 @@
+﻿{
+  Email: test@example.com,
+  FirstName: Test,
+  LastName: User,
+  FullName: Test User,
+  PreferredCurrency: INR,
+  PreferredLocale: EN_IN,
+  Id: Guid_1
+}

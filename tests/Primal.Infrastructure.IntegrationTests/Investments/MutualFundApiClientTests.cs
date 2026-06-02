@@ -24,8 +24,7 @@ public sealed class MutualFundApiClientTests
 
 		var result = await client.GetBySymbolAsync("999999", CancellationToken.None);
 
-		await Assert.That(result.SchemeCode).IsEqualTo(string.Empty);
-		await Assert.That(result.Currency).IsEqualTo(Currency.Unknown);
+		await Verifier.Verify(result);
 	}
 
 	[Test]
@@ -48,9 +47,7 @@ public sealed class MutualFundApiClientTests
 
 		var result = await client.GetBySymbolAsync("119551", CancellationToken.None);
 
-		await Assert.That(result.SchemeCode).IsEqualTo("119551");
-		await Assert.That(result.Name).IsEqualTo("Test Equity Fund");
-		await Assert.That(result.Currency).IsEqualTo(Currency.INR);
+		await Verifier.Verify(result);
 	}
 
 	[Test]
@@ -60,7 +57,7 @@ public sealed class MutualFundApiClientTests
 
 		var result = await client.GetPricesAsync("999999", CancellationToken.None);
 
-		await Assert.That(result.Count).IsEqualTo(0);
+		await Verifier.Verify(result);
 	}
 
 	[Test]
@@ -80,9 +77,7 @@ public sealed class MutualFundApiClientTests
 
 		var result = await client.GetPricesAsync("119551", CancellationToken.None);
 
-		await Assert.That(result.Count).IsEqualTo(2);
-		await Assert.That(result[new DateOnly(2026, 1, 15)]).IsEqualTo(150.25m);
-		await Assert.That(result[new DateOnly(2026, 1, 16)]).IsEqualTo(151.00m);
+		await Verifier.Verify(result);
 	}
 
 	private static MutualFundApiClient CreateClient(string url, string content, HttpStatusCode statusCode = HttpStatusCode.OK)

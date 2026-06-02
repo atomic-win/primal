@@ -1,0 +1,9 @@
+﻿{
+  Date: 2026-01-15,
+  Name: Updated,
+  TransactionType: Buy,
+  AssetItemId: Guid_1,
+  Units: 20.0,
+  Price: 200.0,
+  Id: Guid_2
+}

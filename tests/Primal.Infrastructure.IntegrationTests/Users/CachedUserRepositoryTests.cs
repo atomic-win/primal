@@ -19,8 +19,7 @@ public sealed class CachedUserRepositoryTests
 		var first = await cached.GetUserAsync(user.Id, CancellationToken.None);
 		var second = await cached.GetUserAsync(user.Id, CancellationToken.None);
 
-		await Assert.That(first.Email).IsEqualTo("test@example.com");
-		await Assert.That(second.Email).IsEqualTo("test@example.com");
+		await Verifier.Verify(new { first, second });
 	}
 
 	[Test]
@@ -42,7 +41,6 @@ public sealed class CachedUserRepositoryTests
 		// Get should return updated data
 		var result = await cached.GetUserAsync(user.Id, CancellationToken.None);
 
-		await Assert.That(result.PreferredCurrency).IsEqualTo(Currency.INR);
-		await Assert.That(result.PreferredLocale).IsEqualTo(Locale.EN_IN);
+		await Verifier.Verify(result);
 	}
 }

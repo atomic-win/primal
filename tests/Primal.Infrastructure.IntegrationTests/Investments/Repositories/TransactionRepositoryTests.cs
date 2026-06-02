@@ -17,7 +17,7 @@ public sealed class TransactionRepositoryTests
 
 		var result = await repository.GetByAssetItemIdAsync(userId, assetItemId, CancellationToken.None);
 
-		await Assert.That(result.Count()).IsEqualTo(1);
+		await Verifier.Verify(result);
 	}
 
 	[Test]
@@ -27,7 +27,7 @@ public sealed class TransactionRepositoryTests
 
 		var result = await repository.GetByAssetItemIdAsync(userId, assetItemId, CancellationToken.None);
 
-		await Assert.That(result.Count()).IsEqualTo(0);
+		await Verifier.Verify(result);
 	}
 
 	[Test]
@@ -39,8 +39,7 @@ public sealed class TransactionRepositoryTests
 
 		var result = await repository.GetByIdAsync(userId, assetItemId, transaction.Id, CancellationToken.None);
 
-		await Assert.That(result.Id).IsEqualTo(transaction.Id);
-		await Assert.That(result.Name).IsEqualTo("Buy Units");
+		await Verifier.Verify(result);
 	}
 
 	[Test]
@@ -50,7 +49,7 @@ public sealed class TransactionRepositoryTests
 
 		var result = await repository.GetByIdAsync(userId, assetItemId, new TransactionId(Guid.NewGuid()), CancellationToken.None);
 
-		await Assert.That(result.Id).IsEqualTo(TransactionId.Empty);
+		await Verifier.Verify(result);
 	}
 
 	[Test]
@@ -65,9 +64,7 @@ public sealed class TransactionRepositoryTests
 
 		var result = await repository.GetByIdAsync(userId, assetItemId, transaction.Id, CancellationToken.None);
 
-		await Assert.That(result.Name).IsEqualTo("Updated Name");
-		await Assert.That(result.Units).IsEqualTo(20m);
-		await Assert.That(result.Price).IsEqualTo(200m);
+		await Verifier.Verify(result);
 	}
 
 	[Test]
@@ -81,7 +78,7 @@ public sealed class TransactionRepositoryTests
 
 		var result = await repository.GetByIdAsync(userId, assetItemId, transaction.Id, CancellationToken.None);
 
-		await Assert.That(result.Id).IsEqualTo(TransactionId.Empty);
+		await Verifier.Verify(result);
 	}
 
 	private static async Task<(TransactionRepository Repository, UserId UserId, AssetItemId AssetItemId)> CreateTestContext()

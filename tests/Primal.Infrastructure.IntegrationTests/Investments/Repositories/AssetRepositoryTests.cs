@@ -33,7 +33,7 @@ public sealed class AssetRepositoryTests
 
 		var result = await repository.GetByIdAsync(new AssetId(Guid.NewGuid()), CancellationToken.None);
 
-		await Assert.That(result).IsEqualTo(Asset.Empty);
+		await Verifier.Verify(result);
 	}
 
 	[Test]
@@ -52,7 +52,7 @@ public sealed class AssetRepositoryTests
 
 		var result = await repository.GetByExternalIdAsync("stock-aapl", CancellationToken.None);
 
-		await Assert.That(result.Id).IsEqualTo(asset.Id);
+		await Verifier.Verify(result);
 	}
 
 	[Test]
@@ -63,6 +63,6 @@ public sealed class AssetRepositoryTests
 
 		var result = await repository.GetByExternalIdAsync("non-existent", CancellationToken.None);
 
-		await Assert.That(result).IsEqualTo(Asset.Empty);
+		await Verifier.Verify(result);
 	}
 }

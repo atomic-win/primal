@@ -1,0 +1,20 @@
+﻿{
+  first: {
+    Email: test@example.com,
+    FirstName: Test,
+    LastName: User,
+    FullName: Test User,
+    PreferredCurrency: USD,
+    PreferredLocale: EN_US,
+    Id: Guid_1
+  },
+  second: {
+    Email: test@example.com,
+    FirstName: Test,
+    LastName: User,
+    FullName: Test User,
+    PreferredCurrency: USD,
+    PreferredLocale: EN_US,
+    Id: Guid_1
+  }
+}

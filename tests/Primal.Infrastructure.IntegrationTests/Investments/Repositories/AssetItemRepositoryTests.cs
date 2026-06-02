@@ -23,7 +23,7 @@ public sealed class AssetItemRepositoryTests
 
 		var result = await repository.GetAllAsync(user.Id, CancellationToken.None);
 
-		await Assert.That(result.Count()).IsEqualTo(1);
+		await Verifier.Verify(result);
 	}
 
 	[Test]
@@ -37,7 +37,7 @@ public sealed class AssetItemRepositoryTests
 
 		var result = await repository.GetAllAsync(user.Id, CancellationToken.None);
 
-		await Assert.That(result.Count()).IsEqualTo(0);
+		await Verifier.Verify(result);
 	}
 
 	[Test]
@@ -55,8 +55,7 @@ public sealed class AssetItemRepositoryTests
 
 		var result = await repository.GetByIdAsync(user.Id, item.Id, CancellationToken.None);
 
-		await Assert.That(result.Id).IsEqualTo(item.Id);
-		await Assert.That(result.Name).IsEqualTo("My Fund");
+		await Verifier.Verify(result);
 	}
 
 	[Test]
@@ -70,7 +69,7 @@ public sealed class AssetItemRepositoryTests
 
 		var result = await repository.GetByIdAsync(user.Id, new AssetItemId(Guid.NewGuid()), CancellationToken.None);
 
-		await Assert.That(result.Id).IsEqualTo(AssetItemId.Empty);
+		await Verifier.Verify(result);
 	}
 
 	[Test]
@@ -90,6 +89,6 @@ public sealed class AssetItemRepositoryTests
 
 		var result = await repository.GetByIdAsync(user.Id, item.Id, CancellationToken.None);
 
-		await Assert.That(result.Id).IsEqualTo(AssetItemId.Empty);
+		await Verifier.Verify(result);
 	}
 }

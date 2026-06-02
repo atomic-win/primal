@@ -1,0 +1,5 @@
+﻿{
+  Symbol: AAPL,
+  Name: Apple Inc.,
+  Currency: USD
+}

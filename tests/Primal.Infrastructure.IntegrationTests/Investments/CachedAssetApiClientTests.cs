@@ -54,7 +54,6 @@ public sealed class CachedAssetApiClientTests
 		var first = await client.GetOnOrBeforePriceAsync("119551", new DateOnly(2026, 1, 15), CancellationToken.None);
 		var second = await client.GetOnOrBeforePriceAsync("119551", new DateOnly(2026, 1, 15), CancellationToken.None);
 
-		await Assert.That(first).IsEqualTo(150.25m);
-		await Assert.That(second).IsEqualTo(150.25m);
+		await Verifier.Verify(new { first, second });
 	}
 }

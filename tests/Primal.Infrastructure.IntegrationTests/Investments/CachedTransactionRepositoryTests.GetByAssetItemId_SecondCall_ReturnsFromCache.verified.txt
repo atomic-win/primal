@@ -1,0 +1,24 @@
+﻿{
+  first: [
+    {
+      Date: 2026-01-15,
+      Name: Buy,
+      TransactionType: Buy,
+      AssetItemId: Guid_1,
+      Units: 10.0,
+      Price: 100.0,
+      Id: Guid_2
+    }
+  ],
+  second: [
+    {
+      Date: 2026-01-15,
+      Name: Buy,
+      TransactionType: Buy,
+      AssetItemId: Guid_1,
+      Units: 10.0,
+      Price: 100.0,
+      Id: Guid_2
+    }
+  ]
+}

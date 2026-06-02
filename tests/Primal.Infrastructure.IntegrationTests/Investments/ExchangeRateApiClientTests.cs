@@ -35,9 +35,7 @@ public sealed class ExchangeRateApiClientTests
 
 		var result = await client.GetExchangeRatesAsync(Currency.INR, Currency.USD, CancellationToken.None);
 
-		await Assert.That(result.Count).IsEqualTo(2);
-		await Assert.That(result[new DateOnly(2026, 1, 15)]).IsEqualTo(83.5m);
-		await Assert.That(result[new DateOnly(2026, 1, 16)]).IsEqualTo(84.0m);
+		await Verifier.Verify(result);
 	}
 
 	private static ExchangeRateApiClient CreateClient(string url, string content, string mediaType = "text/csv", HttpStatusCode statusCode = HttpStatusCode.OK)

@@ -1,0 +1,8 @@
+﻿{
+  Name: Test Stock,
+  AssetClass: Equity,
+  AssetType: Stock,
+  Currency: USD,
+  ExternalId: stock-aapl,
+  Id: Guid_1
+}

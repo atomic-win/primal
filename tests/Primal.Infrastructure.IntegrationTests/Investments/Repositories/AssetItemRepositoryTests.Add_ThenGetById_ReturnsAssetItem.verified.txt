@@ -1,0 +1,5 @@
+﻿{
+  AssetId: Guid_1,
+  Name: My Fund,
+  Id: Guid_2
+}

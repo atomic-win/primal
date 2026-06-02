@@ -24,8 +24,7 @@ public sealed class StockApiClientTests
 
 		var result = await client.GetBySymbolAsync("INVALID", CancellationToken.None);
 
-		await Assert.That(result.Symbol).IsEqualTo(string.Empty);
-		await Assert.That(result.Currency).IsEqualTo(Currency.Unknown);
+		await Verifier.Verify(result);
 	}
 
 	[Test]
@@ -35,7 +34,7 @@ public sealed class StockApiClientTests
 
 		var result = await client.GetBySymbolAsync("INVALID", CancellationToken.None);
 
-		await Assert.That(result.Symbol).IsEqualTo(string.Empty);
+		await Verifier.Verify(result);
 	}
 
 	[Test]
@@ -58,9 +57,7 @@ public sealed class StockApiClientTests
 
 		var result = await client.GetBySymbolAsync("AAPL", CancellationToken.None);
 
-		await Assert.That(result.Symbol).IsEqualTo("AAPL");
-		await Assert.That(result.Name).IsEqualTo("Apple Inc.");
-		await Assert.That(result.Currency).IsEqualTo(Currency.USD);
+		await Verifier.Verify(result);
 	}
 
 	[Test]
@@ -70,7 +67,7 @@ public sealed class StockApiClientTests
 
 		var result = await client.GetPricesAsync("INVALID", CancellationToken.None);
 
-		await Assert.That(result.Count).IsEqualTo(0);
+		await Verifier.Verify(result);
 	}
 
 	[Test]
@@ -91,9 +88,7 @@ public sealed class StockApiClientTests
 
 		var result = await client.GetPricesAsync("AAPL", CancellationToken.None);
 
-		await Assert.That(result.Count).IsEqualTo(2);
-		await Assert.That(result[new DateOnly(2026, 1, 15)]).IsEqualTo(150.50m);
-		await Assert.That(result[new DateOnly(2026, 1, 16)]).IsEqualTo(152.00m);
+		await Verifier.Verify(result);
 	}
 
 	private static StockApiClient CreateClient(string url, string content, HttpStatusCode statusCode = HttpStatusCode.OK)

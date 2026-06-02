@@ -1,0 +1,16 @@
+﻿{
+  first: [
+    {
+      AssetId: Guid_1,
+      Name: My Fund,
+      Id: Guid_2
+    }
+  ],
+  second: [
+    {
+      AssetId: Guid_1,
+      Name: My Fund,
+      Id: Guid_2
+    }
+  ]
+}

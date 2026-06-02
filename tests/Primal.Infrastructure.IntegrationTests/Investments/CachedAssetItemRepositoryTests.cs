@@ -18,8 +18,7 @@ public sealed class CachedAssetItemRepositoryTests
 		var first = await cached.GetAllAsync(userId, CancellationToken.None);
 		var second = await cached.GetAllAsync(userId, CancellationToken.None);
 
-		await Assert.That(first.Count()).IsEqualTo(1);
-		await Assert.That(second.Count()).IsEqualTo(1);
+		await Verifier.Verify(new { first, second });
 	}
 
 	[Test]
@@ -36,7 +35,7 @@ public sealed class CachedAssetItemRepositoryTests
 		// GetAll should return updated list
 		var result = await cached.GetAllAsync(userId, CancellationToken.None);
 
-		await Assert.That(result.Count()).IsEqualTo(1);
+		await Verifier.Verify(result);
 	}
 
 	[Test]
@@ -56,8 +55,7 @@ public sealed class CachedAssetItemRepositoryTests
 		var allResult = await cached.GetAllAsync(userId, CancellationToken.None);
 		var byIdResult = await cached.GetByIdAsync(userId, item.Id, CancellationToken.None);
 
-		await Assert.That(allResult.Count()).IsEqualTo(0);
-		await Assert.That(byIdResult.Id).IsEqualTo(AssetItemId.Empty);
+		await Verifier.Verify(new { allResult, byIdResult });
 	}
 
 	private static async Task<(CachedAssetItemRepository Cached, UserId UserId, AssetId AssetId)> CreateTestContext()
