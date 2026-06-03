@@ -1,0 +1,22 @@
+info:
+    name: google-login
+    type: http
+    seq: 1
+
+http:
+    method: POST
+    url: "{{baseUrl}}/api/auth/login/google"
+    body:
+        type: json
+        data: |-
+            {
+              "idToken": "{{idToken}}"
+            }
+    auth: inherit
+
+settings:
+    encodeUrl: true
+    timeout: 0
+    followRedirects: true
+    maxRedirects: 5
+

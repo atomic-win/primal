@@ -1,0 +1,14 @@
+info:
+  name: latest
+  type: http
+
+http:
+  method: GET
+  url: https://api.mfapi.in/mf/149039/latest
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

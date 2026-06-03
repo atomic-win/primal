@@ -1,0 +1,25 @@
+info:
+    name: get-valuations
+    type: http
+    seq: 4
+
+http:
+    method: GET
+    url: "{{baseUrl}}/api/asset-items/valuations?assetItemIds=019e78e1-e4bc-7d8b-b8a1-5a158d212bd9&currency=USD"
+    params:
+        - name: assetItemIds
+          value: 019e78e1-e4bc-7d8b-b8a1-5a158d212bd9
+          type: query
+        - name: currency
+          value: USD
+          type: query
+    auth:
+        type: bearer
+        token: "{{accessToken}}"
+
+settings:
+    encodeUrl: true
+    timeout: 0
+    followRedirects: true
+    maxRedirects: 5
+

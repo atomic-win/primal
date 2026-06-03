@@ -1,0 +1,18 @@
+info:
+    name: get-asset-item
+    type: http
+    seq: 2
+
+http:
+    method: GET
+    url: "{{baseUrl}}/api/asset-items/019e78e1-e4bc-7d8b-b8a1-5a158d212bd9"
+    auth:
+        type: bearer
+        token: "{{accessToken}}"
+
+settings:
+    encodeUrl: true
+    timeout: 0
+    followRedirects: true
+    maxRedirects: 5
+

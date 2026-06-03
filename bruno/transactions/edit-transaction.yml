@@ -1,0 +1,27 @@
+info:
+    name: edit-transaction
+    type: http
+    seq: 4
+
+http:
+    method: PATCH
+    url: "{{baseUrl}}/api/asset-items/{{assetItemId}}/transactions/{{transactionId}}"
+    body:
+        type: json
+        data: |-
+            {
+              "name": "Buy AAPL (edited)",
+              "transactionType": "Buy",
+              "units": 15,
+              "price": 150.00,
+              "amount": 2250.00
+            }
+    auth:
+        type: bearer
+        token: "{{accessToken}}"
+
+settings:
+    encodeUrl: true
+    timeout: 0
+    followRedirects: true
+    maxRedirects: 5

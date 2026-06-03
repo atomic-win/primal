@@ -1,0 +1,22 @@
+info:
+    name: get-all-by-asset-item-id
+    type: http
+    seq: 3
+
+http:
+    method: GET
+    url: "{{baseUrl}}/api/asset-items/019e78e1-e4bc-7d8b-b8a1-5a158d212bd9/transactions?currency=INR"
+    params:
+        - name: currency
+          value: INR
+          type: query
+    auth:
+        type: bearer
+        token: "{{accessToken}}"
+
+settings:
+    encodeUrl: true
+    timeout: 0
+    followRedirects: true
+    maxRedirects: 5
+

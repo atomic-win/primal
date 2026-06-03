@@ -1,0 +1,28 @@
+info:
+    name: time-series
+    type: http
+    seq: 2
+
+http:
+    method: get
+    url: "{{ALPHA_VANTAGE_BASE_URL}}/query?apikey={{ALPHA_VANTAGE_API_KEY}}&datatype=csv&function=TIME_SERIES_DAILY&symbol=cndx.l"
+    params:
+        - name: apikey
+          value: "{{ALPHA_VANTAGE_API_KEY}}"
+          type: query
+        - name: datatype
+          value: csv
+          type: query
+        - name: function
+          value: TIME_SERIES_DAILY
+          type: query
+        - name: symbol
+          value: cndx.l
+          type: query
+
+settings:
+    encodeUrl: true
+    timeout: 0
+    followRedirects: true
+    maxRedirects: 5
+
