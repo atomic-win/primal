@@ -4,5 +4,5 @@ internal enum RateType
 {
 	Stock,
 	MutualFund,
-	ExchangeRate,
+	Forex,
 }
