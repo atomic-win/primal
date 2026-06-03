@@ -22,7 +22,7 @@ internal static class RatesExtensions
 		this RateRepository rateRepository,
 		string symbol,
 		RateType rateType,
-		Func<Task<IReadOnlyDictionary<DateOnly, decimal>>> fetchRates,
+		Func<CancellationToken, Task<IReadOnlyDictionary<DateOnly, decimal>>> fetchRates,
 		CancellationToken cancellationToken)
 	{
 		var storedRates = await rateRepository.GetRecentRatesAsync(symbol, rateType, cancellationToken);
@@ -31,7 +31,7 @@ internal static class RatesExtensions
 			return storedRates;
 		}
 
-		var rates = await fetchRates();
+		var rates = await fetchRates(cancellationToken);
 		await rateRepository.AddRatesAsync(symbol, rateType, rates, cancellationToken);
 		return rates;
 	}

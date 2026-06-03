@@ -36,7 +36,7 @@ internal sealed class CachedExchangeRateApiClient : IExchangeRateApiClient
 			async entry => await this.rateRepository.GetOrFetchRatesAsync(
 				$"{fromCurrency}/{toCurrency}",
 				RateType.ExchangeRate,
-				() => this.exchangeRateApiClient.GetExchangeRatesAsync(fromCurrency, toCurrency, cancellationToken),
+				ct => this.exchangeRateApiClient.GetExchangeRatesAsync(fromCurrency, toCurrency, ct),
 				cancellationToken),
 			options: new HybridCacheEntryOptions
 			{
