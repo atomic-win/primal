@@ -9,13 +9,16 @@ internal sealed class CachedExchangeRateApiClient : IExchangeRateApiClient
 {
 	private readonly HybridCache hybridCache;
 	private readonly IExchangeRateApiClient exchangeRateApiClient;
+	private readonly RateRepository rateRepository;
 
 	internal CachedExchangeRateApiClient(
 		HybridCache hybridCache,
-		IExchangeRateApiClient exchangeRateApiClient)
+		IExchangeRateApiClient exchangeRateApiClient,
+		RateRepository rateRepository)
 	{
 		this.hybridCache = hybridCache;
 		this.exchangeRateApiClient = exchangeRateApiClient;
+		this.rateRepository = rateRepository;
 	}
 
 	public async Task<IReadOnlyDictionary<DateOnly, decimal>> GetExchangeRatesAsync(
@@ -30,7 +33,11 @@ internal sealed class CachedExchangeRateApiClient : IExchangeRateApiClient
 
 		return await this.hybridCache.GetOrCreateAsync(
 			$"exchange-rate/{fromCurrency}/{toCurrency}/rates",
-			async entry => await this.exchangeRateApiClient.GetExchangeRatesAsync(fromCurrency, toCurrency, cancellationToken),
+			async entry => await this.rateRepository.GetOrFetchRatesAsync(
+				$"{fromCurrency}/{toCurrency}",
+				RateRepository.ExchangeRateType,
+				() => this.exchangeRateApiClient.GetExchangeRatesAsync(fromCurrency, toCurrency, cancellationToken),
+				cancellationToken),
 			options: new HybridCacheEntryOptions
 			{
 				Flags = HybridCacheEntryFlags.None,

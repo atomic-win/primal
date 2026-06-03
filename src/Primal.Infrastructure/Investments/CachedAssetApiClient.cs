@@ -7,13 +7,19 @@ internal sealed class CachedAssetApiClient<T> : IAssetApiClient<T>
 {
 	private readonly HybridCache hybridCache;
 	private readonly IAssetApiClient<T> assetApiClient;
+	private readonly RateRepository rateRepository;
+	private readonly string rateType;
 
 	internal CachedAssetApiClient(
 		HybridCache hybridCache,
-		IAssetApiClient<T> assetApiClient)
+		IAssetApiClient<T> assetApiClient,
+		RateRepository rateRepository,
+		string rateType)
 	{
 		this.hybridCache = hybridCache;
 		this.assetApiClient = assetApiClient;
+		this.rateRepository = rateRepository;
+		this.rateType = rateType;
 	}
 
 	public async Task<T> GetBySymbolAsync(string symbol, CancellationToken cancellationToken)
@@ -32,7 +38,11 @@ internal sealed class CachedAssetApiClient<T> : IAssetApiClient<T>
 	{
 		return await this.hybridCache.GetOrCreateAsync(
 			$"asset/{typeof(T).Name}/{symbol}/prices",
-			async entry => await this.assetApiClient.GetPricesAsync(symbol, cancellationToken),
+			async entry => await this.rateRepository.GetOrFetchRatesAsync(
+				symbol,
+				this.rateType,
+				() => this.assetApiClient.GetPricesAsync(symbol, cancellationToken),
+				cancellationToken),
 			options: new HybridCacheEntryOptions
 			{
 				Flags = HybridCacheEntryFlags.None,

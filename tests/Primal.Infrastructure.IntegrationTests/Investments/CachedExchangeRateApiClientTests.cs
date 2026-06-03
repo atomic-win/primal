@@ -13,7 +13,7 @@ public sealed class CachedExchangeRateApiClientTests
 	{
 		var cache = TestCacheFactory.CreateHybridCache();
 		var innerClient = Substitute.For<IExchangeRateApiClient>();
-		var client = new CachedExchangeRateApiClient(cache, innerClient);
+		var client = new CachedExchangeRateApiClient(cache, innerClient, CreateRateRepository());
 
 		var result = await client.GetExchangeRatesAsync(Currency.USD, Currency.USD, CancellationToken.None);
 
@@ -26,7 +26,7 @@ public sealed class CachedExchangeRateApiClientTests
 	{
 		var cache = TestCacheFactory.CreateHybridCache();
 		var innerClient = Substitute.For<IExchangeRateApiClient>();
-		var client = new CachedExchangeRateApiClient(cache, innerClient);
+		var client = new CachedExchangeRateApiClient(cache, innerClient, CreateRateRepository());
 
 		var result = await client.GetOnOrBeforeExchangeRateAsync(Currency.INR, Currency.INR, new DateOnly(2024, 5, 31), CancellationToken.None);
 
@@ -44,11 +44,16 @@ public sealed class CachedExchangeRateApiClientTests
 		innerClient.GetExchangeRatesAsync(Currency.INR, Currency.USD, Arg.Any<CancellationToken>())
 			.Returns(rates);
 
-		var client = new CachedExchangeRateApiClient(cache, innerClient);
+		var client = new CachedExchangeRateApiClient(cache, innerClient, CreateRateRepository());
 
 		await client.GetExchangeRatesAsync(Currency.INR, Currency.USD, CancellationToken.None);
 		await client.GetExchangeRatesAsync(Currency.INR, Currency.USD, CancellationToken.None);
 
 		await innerClient.Received(1).GetExchangeRatesAsync(Currency.INR, Currency.USD, Arg.Any<CancellationToken>());
+	}
+
+	private static RateRepository CreateRateRepository()
+	{
+		return new RateRepository(TestDbFactory.CreateTestDatabase(), TimeProvider.System);
 	}
 }
