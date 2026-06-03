@@ -32,9 +32,9 @@ internal sealed class CachedExchangeRateApiClient : IExchangeRateApiClient
 		}
 
 		return await this.hybridCache.GetOrCreateAsync(
-			$"exchange-rate/{fromCurrency}/{toCurrency}/rates",
+			$"forex/{fromCurrency}{toCurrency}/rates",
 			async entry => await this.rateRepository.GetOrFetchRatesAsync(
-				$"{fromCurrency}/{toCurrency}",
+				$"{fromCurrency}{toCurrency}",
 				RateType.ExchangeRate,
 				ct => this.exchangeRateApiClient.GetExchangeRatesAsync(fromCurrency, toCurrency, ct),
 				cancellationToken),
@@ -57,7 +57,7 @@ internal sealed class CachedExchangeRateApiClient : IExchangeRateApiClient
 		}
 
 		return await this.hybridCache.GetOrCreateAsync(
-			$"exchange-rate/{fromCurrency}/{toCurrency}/rates/{date:yyyy-MM-dd}/on-or-before",
+			$"forex/{fromCurrency}{toCurrency}/rates/{date:yyyy-MM-dd}/on-or-before",
 			async entry => await this.GetOnOrBeforeExchangeRateInternalAsync(fromCurrency, toCurrency, date, cancellationToken),
 			cancellationToken: cancellationToken);
 	}
