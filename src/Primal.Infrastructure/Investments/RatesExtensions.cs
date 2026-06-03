@@ -21,7 +21,7 @@ internal static class RatesExtensions
 	internal static async Task<IReadOnlyDictionary<DateOnly, decimal>> GetOrFetchRatesAsync(
 		this RateRepository rateRepository,
 		string symbol,
-		string rateType,
+		RateType rateType,
 		Func<Task<IReadOnlyDictionary<DateOnly, decimal>>> fetchRates,
 		CancellationToken cancellationToken)
 	{

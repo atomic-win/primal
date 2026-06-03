@@ -9,10 +9,6 @@ namespace Primal.Infrastructure.Investments;
 
 internal sealed class RateRepository
 {
-	internal const string StockRateType = "Stock";
-	internal const string MutualFundRateType = "MutualFund";
-	internal const string ExchangeRateType = "ExchangeRate";
-
 	private static readonly int StalenessThresholdDays = 7;
 
 	private readonly DbConnectionFactory connectionFactory;
@@ -26,13 +22,13 @@ internal sealed class RateRepository
 
 	internal async Task<IReadOnlyDictionary<DateOnly, decimal>> GetRecentRatesAsync(
 		string symbol,
-		string rateType,
+		RateType rateType,
 		CancellationToken cancellationToken)
 	{
 		var normalizedSymbol = symbol.ToUpperInvariant();
 		var cutoffDate = DateOnly.FromDateTime(this.timeProvider.GetUtcNow().UtcDateTime)
 			.AddDays(-StalenessThresholdDays);
-		var parameters = new { Symbol = normalizedSymbol, RateType = rateType };
+		var parameters = new { Symbol = normalizedSymbol, RateType = rateType.ToString() };
 
 		using var connection = this.connectionFactory.CreateConnection();
 
@@ -61,7 +57,7 @@ internal sealed class RateRepository
 
 	internal async Task AddRatesAsync(
 		string symbol,
-		string rateType,
+		RateType rateType,
 		IReadOnlyDictionary<DateOnly, decimal> rates,
 		CancellationToken cancellationToken)
 	{
@@ -72,7 +68,8 @@ internal sealed class RateRepository
 
 		var now = this.timeProvider.GetUtcNow().ToString("O");
 		var normalizedSymbol = symbol.ToUpperInvariant();
-		var parameters = new { Symbol = normalizedSymbol, RateType = rateType };
+		var rateTypeString = rateType.ToString();
+		var parameters = new { Symbol = normalizedSymbol, RateType = rateTypeString };
 
 		using var connection = this.connectionFactory.CreateConnection();
 
@@ -105,7 +102,7 @@ internal sealed class RateRepository
 
 			valueClauses.Append(CultureInfo.InvariantCulture, $"(@Symbol{i}, @RateType{i}, @Date{i}, @Price{i}, @CreatedAt{i})");
 			dynamicParameters.Add($"Symbol{i}", normalizedSymbol);
-			dynamicParameters.Add($"RateType{i}", rateType);
+			dynamicParameters.Add($"RateType{i}", rateTypeString);
 			dynamicParameters.Add($"Date{i}", missingRates[i].Key.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
 			dynamicParameters.Add($"Price{i}", missingRates[i].Value.ToString(CultureInfo.InvariantCulture));
 			dynamicParameters.Add($"CreatedAt{i}", now);

@@ -8,13 +8,13 @@ internal sealed class CachedAssetApiClient<T> : IAssetApiClient<T>
 	private readonly HybridCache hybridCache;
 	private readonly IAssetApiClient<T> assetApiClient;
 	private readonly RateRepository rateRepository;
-	private readonly string rateType;
+	private readonly RateType rateType;
 
 	internal CachedAssetApiClient(
 		HybridCache hybridCache,
 		IAssetApiClient<T> assetApiClient,
 		RateRepository rateRepository,
-		string rateType)
+		RateType rateType)
 	{
 		this.hybridCache = hybridCache;
 		this.assetApiClient = assetApiClient;

@@ -37,7 +37,7 @@ public sealed class InfrastructureModule : Module
 			c.Resolve<HybridCache>(),
 			c.Resolve<MutualFundApiClient>(),
 			c.Resolve<RateRepository>(),
-			RateRepository.MutualFundRateType))
+			RateType.MutualFund))
 			.As<IAssetApiClient<MutualFund>>()
 			.SingleInstance();
 
@@ -45,7 +45,7 @@ public sealed class InfrastructureModule : Module
 			c.Resolve<HybridCache>(),
 			c.Resolve<StockApiClient>(),
 			c.Resolve<RateRepository>(),
-			RateRepository.StockRateType))
+			RateType.Stock))
 			.As<IAssetApiClient<Stock>>()
 			.SingleInstance();
 

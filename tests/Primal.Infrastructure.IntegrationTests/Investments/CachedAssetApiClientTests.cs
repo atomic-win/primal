@@ -17,7 +17,7 @@ public sealed class CachedAssetApiClientTests
 		inner.GetBySymbolAsync("119551", Arg.Any<CancellationToken>())
 			.Returns(new MutualFund("119551", "Test Fund", "Open", "Equity", Currency.INR));
 
-		var client = new CachedAssetApiClient<MutualFund>(cache, inner, CreateRateRepository(), RateRepository.MutualFundRateType);
+		var client = new CachedAssetApiClient<MutualFund>(cache, inner, CreateRateRepository(), RateType.MutualFund);
 
 		await client.GetBySymbolAsync("119551", CancellationToken.None);
 		await client.GetBySymbolAsync("119551", CancellationToken.None);
@@ -33,7 +33,7 @@ public sealed class CachedAssetApiClientTests
 		var prices = new Dictionary<DateOnly, decimal> { [new DateOnly(2026, 1, 15)] = 150.25m }.ToFrozenDictionary();
 		inner.GetPricesAsync("119551", Arg.Any<CancellationToken>()).Returns(prices);
 
-		var client = new CachedAssetApiClient<MutualFund>(cache, inner, CreateRateRepository(), RateRepository.MutualFundRateType);
+		var client = new CachedAssetApiClient<MutualFund>(cache, inner, CreateRateRepository(), RateType.MutualFund);
 
 		await client.GetPricesAsync("119551", CancellationToken.None);
 		await client.GetPricesAsync("119551", CancellationToken.None);
@@ -49,7 +49,7 @@ public sealed class CachedAssetApiClientTests
 		var prices = new Dictionary<DateOnly, decimal> { [new DateOnly(2026, 1, 15)] = 150.25m }.ToFrozenDictionary();
 		inner.GetPricesAsync("119551", Arg.Any<CancellationToken>()).Returns(prices);
 
-		var client = new CachedAssetApiClient<MutualFund>(cache, inner, CreateRateRepository(), RateRepository.MutualFundRateType);
+		var client = new CachedAssetApiClient<MutualFund>(cache, inner, CreateRateRepository(), RateType.MutualFund);
 
 		var first = await client.GetOnOrBeforePriceAsync("119551", new DateOnly(2026, 1, 15), CancellationToken.None);
 		var second = await client.GetOnOrBeforePriceAsync("119551", new DateOnly(2026, 1, 15), CancellationToken.None);
