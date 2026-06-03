@@ -20,6 +20,11 @@ public interface IAssetItemRepository
 		string name,
 		CancellationToken cancellationToken);
 
+	Task UpdateAsync(
+		UserId userId,
+		AssetItem assetItem,
+		CancellationToken cancellationToken);
+
 	Task DeleteAsync(
 		UserId userId,
 		AssetItemId assetItemId,

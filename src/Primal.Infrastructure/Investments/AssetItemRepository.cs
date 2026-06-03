@@ -82,6 +82,26 @@ internal sealed class AssetItemRepository : IAssetItemRepository
 			name);
 	}
 
+	public async Task UpdateAsync(
+		UserId userId,
+		AssetItem assetItem,
+		CancellationToken cancellationToken)
+	{
+		var now = this.timeProvider.GetUtcNow().ToString("O");
+
+		using var connection = this.connectionFactory.CreateConnection();
+
+		await connection.ExecuteAsync(
+			"UPDATE asset_items SET Name = @Name, UpdatedAt = @UpdatedAt WHERE UserId = @UserId AND Id = @Id",
+			new
+			{
+				Name = assetItem.Name,
+				UpdatedAt = now,
+				UserId = userId.Value.ToString("D", CultureInfo.InvariantCulture).ToUpperInvariant(),
+				Id = assetItem.Id.Value.ToString("D", CultureInfo.InvariantCulture).ToUpperInvariant(),
+			});
+	}
+
 	public async Task DeleteAsync(
 		UserId userId,
 		AssetItemId assetItemId,
