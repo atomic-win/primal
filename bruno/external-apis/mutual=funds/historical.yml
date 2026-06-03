@@ -1,0 +1,15 @@
+info:
+    name: historical
+    type: http
+    seq: 2
+
+http:
+    method: get
+    url: https://api.mfapi.in/mf/149039
+
+settings:
+    encodeUrl: true
+    timeout: 0
+    followRedirects: true
+    maxRedirects: 5
+

@@ -1,0 +1,34 @@
+info:
+    name: forex
+    type: http
+    seq: 3
+
+http:
+    method: get
+    url: "{{ALPHA_VANTAGE_BASE_URL}}/query?apikey={{ALPHA_VANTAGE_API_KEY}}&datatype=csv&function=FX_DAILY&from_symbol=USD&to_symbol=INR&outputsize=full"
+    params:
+        - name: apikey
+          value: "{{ALPHA_VANTAGE_API_KEY}}"
+          type: query
+        - name: datatype
+          value: csv
+          type: query
+        - name: function
+          value: FX_DAILY
+          type: query
+        - name: from_symbol
+          value: USD
+          type: query
+        - name: to_symbol
+          value: INR
+          type: query
+        - name: outputsize
+          value: full
+          type: query
+
+settings:
+    encodeUrl: true
+    timeout: 0
+    followRedirects: true
+    maxRedirects: 5
+
