@@ -38,10 +38,6 @@ internal sealed class CachedForexApiClient : IForexApiClient
 				RateType.Forex,
 				ct => this.forexApiClient.GetForexRatesAsync(fromCurrency, toCurrency, ct),
 				cancellationToken),
-			options: new HybridCacheEntryOptions
-			{
-				Flags = HybridCacheEntryFlags.None,
-			},
 			cancellationToken: cancellationToken);
 	}
 

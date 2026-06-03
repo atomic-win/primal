@@ -27,10 +27,6 @@ internal sealed class CachedAssetApiClient<T> : IAssetApiClient<T>
 		return await this.hybridCache.GetOrCreateAsync(
 			$"asset/{typeof(T).Name}/{symbol}",
 			async entry => await this.assetApiClient.GetBySymbolAsync(symbol, cancellationToken),
-			options: new HybridCacheEntryOptions
-			{
-				Flags = HybridCacheEntryFlags.None,
-			},
 			cancellationToken: cancellationToken);
 	}
 
@@ -43,10 +39,6 @@ internal sealed class CachedAssetApiClient<T> : IAssetApiClient<T>
 				this.rateType,
 				ct => this.assetApiClient.GetPricesAsync(symbol, ct),
 				cancellationToken),
-			options: new HybridCacheEntryOptions
-			{
-				Flags = HybridCacheEntryFlags.None,
-			},
 			cancellationToken: cancellationToken);
 	}
 
