@@ -1,0 +1,1 @@
+﻿{"id":"Guid_1","name":"Updated Fund Name","assetType":"MutualFund","assetClass":"Equity","currency":"INR"}

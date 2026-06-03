@@ -1,0 +1,1 @@
+﻿{"type":"https://www.rfc-editor.org/rfc/rfc7231#section-6.5.1","title":"Bad Request","status":400,"instance":"/api/asset-items/Guid_1","traceId":"Scrubbed","detail":"Name must not exceed 50 characters","errors":[{"name":"name","reason":"Name must not exceed 50 characters","code":"NAME_TOO_LONG"}]}
