@@ -49,16 +49,16 @@ public sealed class InfrastructureModule : Module
 			.As<IAssetApiClient<Stock>>()
 			.SingleInstance();
 
-		builder.Register(c => new ExchangeRateApiClient(
+		builder.Register(c => new ForexApiClient(
 			c.Resolve<IConfiguration>().GetValue<string>("InvestmentSettings:AlphaVantageApiKey"),
 			c.Resolve<IHttpClientFactory>()))
 			.SingleInstance();
 
-		builder.Register(c => new CachedExchangeRateApiClient(
+		builder.Register(c => new CachedForexApiClient(
 			c.Resolve<HybridCache>(),
-			c.Resolve<ExchangeRateApiClient>(),
+			c.Resolve<ForexApiClient>(),
 			c.Resolve<RateRepository>()))
-			.As<IExchangeRateApiClient>()
+			.As<IForexApiClient>()
 			.SingleInstance();
 	}
 

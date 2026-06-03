@@ -108,7 +108,7 @@ internal static class WireMockServerExtensions
 				.WithBody($"[\n\t\t\t\t\t{priceEntries}\n\t\t\t\t]"));
 	}
 
-	internal static void SetupExchangeRate(
+	internal static void SetupForexRate(
 		this WireMockServer server,
 		string date,
 		decimal closeRate)

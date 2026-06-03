@@ -30,7 +30,7 @@ internal sealed class PrimalE2EFactory : WebApplicationFactory<Program>
 
 	internal WireMockServer StockApi { get; } = WireMockServer.Start();
 
-	internal WireMockServer ExchangeRateApi { get; } = WireMockServer.Start();
+	internal WireMockServer ForexApi { get; } = WireMockServer.Start();
 
 	internal IIdTokenValidator IdTokenValidator { get; } = Substitute.For<IIdTokenValidator>();
 
@@ -74,7 +74,7 @@ internal sealed class PrimalE2EFactory : WebApplicationFactory<Program>
 		builder.UseSetting("InvestmentSettings:AlphaVantageApiKey", "test-alpha-key");
 		builder.UseSetting("InvestmentSettings:MutualFundApiBaseUrl", this.MutualFundApi.Url!);
 		builder.UseSetting("InvestmentSettings:StockApiBaseUrl", this.StockApi.Url!);
-		builder.UseSetting("InvestmentSettings:ExchangeRateApiBaseUrl", this.ExchangeRateApi.Url!);
+		builder.UseSetting("InvestmentSettings:ForexApiBaseUrl", this.ForexApi.Url!);
 
 		builder.ConfigureServices(services =>
 		{
@@ -97,7 +97,7 @@ internal sealed class PrimalE2EFactory : WebApplicationFactory<Program>
 	{
 		this.MutualFundApi.Stop();
 		this.StockApi.Stop();
-		this.ExchangeRateApi.Stop();
+		this.ForexApi.Stop();
 
 		if (File.Exists(this.dbPath))
 		{

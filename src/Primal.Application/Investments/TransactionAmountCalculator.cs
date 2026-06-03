@@ -8,7 +8,7 @@ public sealed class TransactionAmountCalculator : ITransactionAmountCalculator
 {
 	private readonly IAssetApiClient<MutualFund> mutualFundApiClient;
 	private readonly IAssetApiClient<Stock> stockApiClient;
-	private readonly IExchangeRateApiClient exchangeRateProvider;
+	private readonly IForexApiClient forexRateProvider;
 
 	private readonly IAssetItemRepository assetItemRepository;
 	private readonly IAssetRepository assetRepository;
@@ -16,13 +16,13 @@ public sealed class TransactionAmountCalculator : ITransactionAmountCalculator
 	public TransactionAmountCalculator(
 		IAssetApiClient<MutualFund> mutualFundApiClient,
 		IAssetApiClient<Stock> stockApiClient,
-		IExchangeRateApiClient exchangeRateProvider,
+		IForexApiClient forexRateProvider,
 		IAssetItemRepository assetItemRepository,
 		IAssetRepository assetRepository)
 	{
 		this.mutualFundApiClient = mutualFundApiClient;
 		this.stockApiClient = stockApiClient;
-		this.exchangeRateProvider = exchangeRateProvider;
+		this.forexRateProvider = forexRateProvider;
 		this.assetItemRepository = assetItemRepository;
 		this.assetRepository = assetRepository;
 	}
@@ -39,13 +39,13 @@ public sealed class TransactionAmountCalculator : ITransactionAmountCalculator
 			transaction.AssetItemId,
 			cancellationToken);
 
-		var exchangeRate = await this.exchangeRateProvider.GetOnOrBeforeExchangeRateAsync(
+		var forexRate = await this.forexRateProvider.GetOnOrBeforeForexRateAsync(
 			asset.Currency,
 			targetCurrency,
 			date,
 			cancellationToken);
 
-		return exchangeRate * (await this.GetAmountAsync(
+		return forexRate * (await this.GetAmountAsync(
 			asset,
 			transaction,
 			date,

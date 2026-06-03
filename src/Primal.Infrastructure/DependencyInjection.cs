@@ -57,9 +57,9 @@ public static class DependencyInjection
 		})
 		.SetHandlerLifetime(Timeout.InfiniteTimeSpan);
 
-		services.AddHttpClient<ExchangeRateApiClient>(client =>
+		services.AddHttpClient<ForexApiClient>(client =>
 		{
-			client.BaseAddress = new Uri(configuration["InvestmentSettings:ExchangeRateApiBaseUrl"]!);
+			client.BaseAddress = new Uri(configuration["InvestmentSettings:ForexApiBaseUrl"]!);
 		})
 		.ConfigurePrimaryHttpMessageHandler(() =>
 		{
