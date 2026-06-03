@@ -2,14 +2,14 @@ using Primal.Domain.Money;
 
 namespace Primal.Application.Investments;
 
-public interface IExchangeRateApiClient
+public interface IForexApiClient
 {
-	Task<IReadOnlyDictionary<DateOnly, decimal>> GetExchangeRatesAsync(
+	Task<IReadOnlyDictionary<DateOnly, decimal>> GetForexRatesAsync(
 		Currency from,
 		Currency to,
 		CancellationToken cancellationToken);
 
-	Task<decimal> GetOnOrBeforeExchangeRateAsync(
+	Task<decimal> GetOnOrBeforeForexRateAsync(
 		Currency from,
 		Currency to,
 		DateOnly date,

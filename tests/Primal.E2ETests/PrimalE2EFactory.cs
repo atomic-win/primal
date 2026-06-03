@@ -22,7 +22,6 @@ internal sealed class PrimalE2EFactory : WebApplicationFactory<Program>
 	private const string TestSecretKey = "super-secret-test-key-that-is-long-enough-for-hmac-sha256";
 
 	private readonly string dbPath = Path.Combine(Path.GetTempPath(), $"primal-e2e-{Guid.NewGuid()}.db");
-	private readonly string cacheDbPath = Path.Combine(Path.GetTempPath(), $"primal-e2e-cache-{Guid.NewGuid()}.db");
 
 	internal string DbPath => this.dbPath;
 
@@ -30,7 +29,7 @@ internal sealed class PrimalE2EFactory : WebApplicationFactory<Program>
 
 	internal WireMockServer StockApi { get; } = WireMockServer.Start();
 
-	internal WireMockServer ExchangeRateApi { get; } = WireMockServer.Start();
+	internal WireMockServer ForexApi { get; } = WireMockServer.Start();
 
 	internal IIdTokenValidator IdTokenValidator { get; } = Substitute.For<IIdTokenValidator>();
 
@@ -65,7 +64,6 @@ internal sealed class PrimalE2EFactory : WebApplicationFactory<Program>
 	protected override void ConfigureWebHost(IWebHostBuilder builder)
 	{
 		builder.UseSetting("ConnectionStrings:DefaultConnection", $"Data Source={this.dbPath}");
-		builder.UseSetting("ConnectionStrings:CacheConnection", this.cacheDbPath);
 		builder.UseSetting("TokenIssuerSettings:SecretKey", TestSecretKey);
 		builder.UseSetting("TokenIssuerSettings:Issuer", "TestIssuer");
 		builder.UseSetting("TokenIssuerSettings:Audience", "TestAudience");
@@ -74,7 +72,7 @@ internal sealed class PrimalE2EFactory : WebApplicationFactory<Program>
 		builder.UseSetting("InvestmentSettings:AlphaVantageApiKey", "test-alpha-key");
 		builder.UseSetting("InvestmentSettings:MutualFundApiBaseUrl", this.MutualFundApi.Url!);
 		builder.UseSetting("InvestmentSettings:StockApiBaseUrl", this.StockApi.Url!);
-		builder.UseSetting("InvestmentSettings:ExchangeRateApiBaseUrl", this.ExchangeRateApi.Url!);
+		builder.UseSetting("InvestmentSettings:ForexApiBaseUrl", this.ForexApi.Url!);
 
 		builder.ConfigureServices(services =>
 		{
@@ -97,16 +95,11 @@ internal sealed class PrimalE2EFactory : WebApplicationFactory<Program>
 	{
 		this.MutualFundApi.Stop();
 		this.StockApi.Stop();
-		this.ExchangeRateApi.Stop();
+		this.ForexApi.Stop();
 
 		if (File.Exists(this.dbPath))
 		{
 			File.Delete(this.dbPath);
-		}
-
-		if (File.Exists(this.cacheDbPath))
-		{
-			File.Delete(this.cacheDbPath);
 		}
 	}
 }

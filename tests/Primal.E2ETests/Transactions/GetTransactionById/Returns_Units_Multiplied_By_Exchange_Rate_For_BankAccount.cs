@@ -11,7 +11,7 @@ public sealed class Returns_Units_Multiplied_By_Exchange_Rate_For_BankAccount
 		await using var factory = new PrimalE2EFactory();
 		_ = factory.CreateClient();
 
-		factory.ExchangeRateApi.SetupExchangeRate(date: "2026-01-15", closeRate: 2m);
+		factory.ForexApi.SetupForexRate(date: "2026-01-15", closeRate: 2m);
 
 		var userId = await factory.CreateUserAsync();
 		var client = factory.CreateAuthenticatedClient(userId);

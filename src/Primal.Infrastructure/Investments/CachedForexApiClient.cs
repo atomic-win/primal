@@ -5,20 +5,23 @@ using Primal.Domain.Money;
 
 namespace Primal.Infrastructure.Investments;
 
-internal sealed class CachedExchangeRateApiClient : IExchangeRateApiClient
+internal sealed class CachedForexApiClient : IForexApiClient
 {
 	private readonly HybridCache hybridCache;
-	private readonly IExchangeRateApiClient exchangeRateApiClient;
+	private readonly IForexApiClient forexApiClient;
+	private readonly RateRepository rateRepository;
 
-	internal CachedExchangeRateApiClient(
+	internal CachedForexApiClient(
 		HybridCache hybridCache,
-		IExchangeRateApiClient exchangeRateApiClient)
+		IForexApiClient forexApiClient,
+		RateRepository rateRepository)
 	{
 		this.hybridCache = hybridCache;
-		this.exchangeRateApiClient = exchangeRateApiClient;
+		this.forexApiClient = forexApiClient;
+		this.rateRepository = rateRepository;
 	}
 
-	public async Task<IReadOnlyDictionary<DateOnly, decimal>> GetExchangeRatesAsync(
+	public async Task<IReadOnlyDictionary<DateOnly, decimal>> GetForexRatesAsync(
 		Currency fromCurrency,
 		Currency toCurrency,
 		CancellationToken cancellationToken)
@@ -29,16 +32,16 @@ internal sealed class CachedExchangeRateApiClient : IExchangeRateApiClient
 		}
 
 		return await this.hybridCache.GetOrCreateAsync(
-			$"exchange-rate/{fromCurrency}/{toCurrency}/rates",
-			async entry => await this.exchangeRateApiClient.GetExchangeRatesAsync(fromCurrency, toCurrency, cancellationToken),
-			options: new HybridCacheEntryOptions
-			{
-				Flags = HybridCacheEntryFlags.None,
-			},
+			$"forex/{fromCurrency}{toCurrency}/rates",
+			async entry => await this.rateRepository.GetOrFetchRatesAsync(
+				$"{fromCurrency}{toCurrency}",
+				RateType.Forex,
+				ct => this.forexApiClient.GetForexRatesAsync(fromCurrency, toCurrency, ct),
+				cancellationToken),
 			cancellationToken: cancellationToken);
 	}
 
-	public async Task<decimal> GetOnOrBeforeExchangeRateAsync(
+	public async Task<decimal> GetOnOrBeforeForexRateAsync(
 		Currency fromCurrency,
 		Currency toCurrency,
 		DateOnly date,
@@ -50,18 +53,18 @@ internal sealed class CachedExchangeRateApiClient : IExchangeRateApiClient
 		}
 
 		return await this.hybridCache.GetOrCreateAsync(
-			$"exchange-rate/{fromCurrency}/{toCurrency}/rates/{date:yyyy-MM-dd}/on-or-before",
-			async entry => await this.GetOnOrBeforeExchangeRateInternalAsync(fromCurrency, toCurrency, date, cancellationToken),
+			$"forex/{fromCurrency}{toCurrency}/rates/{date:yyyy-MM-dd}/on-or-before",
+			async entry => await this.GetOnOrBeforeForexRateInternalAsync(fromCurrency, toCurrency, date, cancellationToken),
 			cancellationToken: cancellationToken);
 	}
 
-	private async Task<decimal> GetOnOrBeforeExchangeRateInternalAsync(
+	private async Task<decimal> GetOnOrBeforeForexRateInternalAsync(
 		Currency fromCurrency,
 		Currency toCurrency,
 		DateOnly date,
 		CancellationToken cancellationToken)
 	{
-		var rates = await this.GetExchangeRatesAsync(
+		var rates = await this.GetForexRatesAsync(
 			fromCurrency,
 			toCurrency,
 			cancellationToken);

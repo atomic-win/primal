@@ -12,7 +12,7 @@ public sealed class Returns_Buy_Units_Times_Price_Multiplied_By_Exchange_Rate
 		_ = factory.CreateClient();
 
 		factory.StockApi.SetupStockSearch(symbol: "AAPL");
-		factory.ExchangeRateApi.SetupExchangeRate(date: "2026-01-15", closeRate: 83m);
+		factory.ForexApi.SetupForexRate(date: "2026-01-15", closeRate: 83m);
 
 		var userId = await factory.CreateUserAsync();
 		var client = factory.CreateAuthenticatedClient(userId);

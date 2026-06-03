@@ -19,6 +19,11 @@ public sealed class InfrastructureModule : Module
 
 	private void RegisterInvestments(ContainerBuilder builder)
 	{
+		builder.Register(c => new RateRepository(
+			c.Resolve<DbConnectionFactory>(),
+			c.Resolve<TimeProvider>()))
+			.SingleInstance();
+
 		builder.Register(c => new MutualFundApiClient(
 			c.Resolve<IHttpClientFactory>()))
 			.SingleInstance();
@@ -30,25 +35,30 @@ public sealed class InfrastructureModule : Module
 
 		builder.Register(c => new CachedAssetApiClient<MutualFund>(
 			c.Resolve<HybridCache>(),
-			c.Resolve<MutualFundApiClient>()))
+			c.Resolve<MutualFundApiClient>(),
+			c.Resolve<RateRepository>(),
+			RateType.MutualFund))
 			.As<IAssetApiClient<MutualFund>>()
 			.SingleInstance();
 
 		builder.Register(c => new CachedAssetApiClient<Stock>(
 			c.Resolve<HybridCache>(),
-			c.Resolve<StockApiClient>()))
+			c.Resolve<StockApiClient>(),
+			c.Resolve<RateRepository>(),
+			RateType.Stock))
 			.As<IAssetApiClient<Stock>>()
 			.SingleInstance();
 
-		builder.Register(c => new ExchangeRateApiClient(
+		builder.Register(c => new ForexApiClient(
 			c.Resolve<IConfiguration>().GetValue<string>("InvestmentSettings:AlphaVantageApiKey"),
 			c.Resolve<IHttpClientFactory>()))
 			.SingleInstance();
 
-		builder.Register(c => new CachedExchangeRateApiClient(
+		builder.Register(c => new CachedForexApiClient(
 			c.Resolve<HybridCache>(),
-			c.Resolve<ExchangeRateApiClient>()))
-			.As<IExchangeRateApiClient>()
+			c.Resolve<ForexApiClient>(),
+			c.Resolve<RateRepository>()))
+			.As<IForexApiClient>()
 			.SingleInstance();
 	}
 

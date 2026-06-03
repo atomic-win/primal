@@ -17,4 +17,22 @@ internal static class RatesExtensions
 		throw new InvalidOperationException(
 			$"No rate found for date {date} or within the lookback period.");
 	}
+
+	internal static async Task<IReadOnlyDictionary<DateOnly, decimal>> GetOrFetchRatesAsync(
+		this RateRepository rateRepository,
+		string symbol,
+		RateType rateType,
+		Func<CancellationToken, Task<IReadOnlyDictionary<DateOnly, decimal>>> fetchRates,
+		CancellationToken cancellationToken)
+	{
+		var storedRates = await rateRepository.GetRecentRatesAsync(symbol, rateType, cancellationToken);
+		if (storedRates.Count > 0)
+		{
+			return storedRates;
+		}
+
+		var rates = await fetchRates(cancellationToken);
+		await rateRepository.AddRatesAsync(symbol, rateType, rates, cancellationToken);
+		return rates;
+	}
 }

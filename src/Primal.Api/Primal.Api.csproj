@@ -20,7 +20,6 @@
 		<PackageReference Include="FastEndpoints" />
 		<PackageReference Include="FastEndpoints.Security" />
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" />
-		<PackageReference Include="NeoSmart.Caching.Sqlite.AspNetCore" />
 	</ItemGroup>
 
 </Project>

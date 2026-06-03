@@ -12,6 +12,7 @@ internal static class DatabaseInitializer
 		CreateUserTables(connection);
 		CreateAssetTables(connection);
 		CreateTransactionTable(connection);
+		CreateRateTable(connection);
 	}
 
 	private static void CreateUserTables(System.Data.IDbConnection connection)
@@ -89,6 +90,20 @@ internal static class DatabaseInitializer
 				UpdatedAt TEXT NOT NULL,
 				FOREIGN KEY (AssetItemId) REFERENCES asset_items(Id) ON DELETE CASCADE,
 				FOREIGN KEY (UserId) REFERENCES users(Id) ON DELETE CASCADE
+			);
+			""");
+	}
+
+	private static void CreateRateTable(System.Data.IDbConnection connection)
+	{
+		connection.Execute("""
+			CREATE TABLE IF NOT EXISTS rates (
+				Symbol TEXT NOT NULL,
+				RateType TEXT NOT NULL,
+				Date TEXT NOT NULL,
+				Price TEXT NOT NULL,
+				CreatedAt TEXT NOT NULL,
+				PRIMARY KEY (Symbol, RateType, Date)
 			);
 			""");
 	}

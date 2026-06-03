@@ -11,7 +11,7 @@ public sealed class Returns_Transactions_With_Cross_Currency
 		await using var factory = new PrimalE2EFactory();
 		_ = factory.CreateClient();
 
-		factory.ExchangeRateApi.SetupExchangeRate(date: "2026-01-15", closeRate: 83.5m);
+		factory.ForexApi.SetupForexRate(date: "2026-01-15", closeRate: 83.5m);
 
 		var userId = await factory.CreateUserAsync();
 		var client = factory.CreateAuthenticatedClient(userId);
