@@ -16,6 +16,8 @@ internal static class ErrorCodes
 		internal const string CurrencyRequired = "CURRENCY_REQUIRED";
 		internal const string CurrencyNotAllowed = "CURRENCY_NOT_ALLOWED";
 		internal const string NameRequired = "NAME_REQUIRED";
+		internal const string NameTooShort = "NAME_TOO_SHORT";
+		internal const string NameTooLong = "NAME_TOO_LONG";
 		internal const string MutualFundNotFound = "MUTUAL_FUND_NOT_FOUND";
 		internal const string StockNotFound = "STOCK_NOT_FOUND";
 	}

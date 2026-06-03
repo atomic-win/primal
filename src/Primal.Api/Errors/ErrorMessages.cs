@@ -10,6 +10,8 @@ internal static class ErrorMessages
 		internal const string AssetTypeUnknown = "Asset type cannot be Unknown";
 		internal const string AssetClassInvalid = "Asset class '{0}' is not valid for MutualFund asset type";
 		internal const string NameRequired = "Name cannot be empty";
+		internal const string NameTooShort = "Name must be at least 3 characters long";
+		internal const string NameTooLong = "Name must not exceed 50 characters";
 		internal const string MutualFundNotFound = "Mutual fund not found";
 		internal const string StockNotFound = "Stock not found";
 		internal const string CurrencyRequired = "Currency must be provided";

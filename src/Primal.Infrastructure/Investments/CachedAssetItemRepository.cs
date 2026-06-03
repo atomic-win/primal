@@ -58,6 +58,25 @@ internal sealed class CachedAssetItemRepository : IAssetItemRepository
 		return assetItem;
 	}
 
+	public async Task UpdateAsync(
+		UserId userId,
+		AssetItem assetItem,
+		CancellationToken cancellationToken)
+	{
+		await this.assetItemRepository.UpdateAsync(
+			userId,
+			assetItem,
+			cancellationToken);
+
+		await this.hybridCache.RemoveAsync(
+			$"users/{userId.Value}/assetItems",
+			cancellationToken: cancellationToken);
+
+		await this.hybridCache.RemoveAsync(
+			$"users/{userId.Value}/assetItems/{assetItem.Id.Value}",
+			cancellationToken: cancellationToken);
+	}
+
 	public async Task DeleteAsync(
 		UserId userId,
 		AssetItemId assetItemId,
