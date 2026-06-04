@@ -43,6 +43,7 @@ When adding CRUD operations, update all layers:
 - `Primal.Api/Errors`: Add new `ErrorCodes` and `ErrorMessages` constants if needed.
 - `bruno/`: Add a `.yml` request file for the new endpoint.
 - `TESTS.md`: Add test scenarios for the new endpoint and update the summary table.
+- `AGENTS.md`: Update this file to reflect any new conventions, patterns, or behavioral changes.
 
 ### Error Handling Pattern
 
@@ -100,6 +101,7 @@ For PATCH endpoints that partially update an entity:
 - `Stock` and `ETF` asset types are derived from AlphaVantage `SYMBOL_SEARCH` response `type` field (`Equity` → `Stock`, `ETF` → `ETF`). Users send `AssetType=Stock` in the request; the actual type is resolved server-side.
 - `ETF` cannot be set directly in requests — the validator rejects it.
 - Unsupported symbol types (anything other than `Equity` or `ETF`) throw `NotSupportedException`.
+- ETF behaves identically to Stock at runtime: same allowed transaction types (Buy, Sell, Dividend), same price lookup via `AlphaVantageApiClient`, and same invested-value calculation (Buy minus Sell) in valuations.
 
 ## Key Files Reference
 
@@ -112,3 +114,7 @@ For PATCH endpoints that partially update an entity:
 | `tests/Primal.E2ETests/WireMockServerExtensions.cs` | WireMock stub helpers for AlphaVantage and MutualFund APIs |
 | `tests/Primal.E2ETests/HttpClientExtensions.cs` | Helper methods for creating test data |
 | `TESTS.md` | All test scenarios with counts — must be kept in sync |
+
+## Maintenance
+
+- **Keep `AGENTS.md` up to date.** After every code change, update this file to reflect new conventions, patterns, asset type behavior, or architectural decisions. This is the primary onboarding document for contributors and AI agents.
