@@ -4,6 +4,7 @@ using System.Globalization;
 using CsvHelper;
 using CsvHelper.Configuration.Attributes;
 using Primal.Application.Investments;
+using Primal.Domain.Investments;
 using Primal.Domain.Money;
 
 namespace Primal.Infrastructure.Investments;
@@ -38,6 +39,7 @@ internal sealed class AlphaVantageApiClient : IAssetApiClient<Stock>, IForexApiC
 				return new Stock(
 					Symbol: string.Empty,
 					Name: string.Empty,
+					AssetType: AssetType.Unknown,
 					Currency: Currency.Unknown);
 			}
 
@@ -48,12 +50,22 @@ internal sealed class AlphaVantageApiClient : IAssetApiClient<Stock>, IForexApiC
 				return new Stock(
 					Symbol: string.Empty,
 					Name: string.Empty,
+					AssetType: AssetType.Unknown,
 					Currency: Currency.Unknown);
 			}
+
+			var assetType = match.Type switch
+			{
+				"Equity" => AssetType.Stock,
+				"ETF" => AssetType.ETF,
+				_ => throw new NotSupportedException(
+					$"Unsupported symbol type '{match.Type}' for symbol '{match.Symbol}'."),
+			};
 
 			return new Stock(
 				Symbol: match.Symbol,
 				Name: match.Name,
+				AssetType: assetType,
 				Currency: currency);
 		}
 	}
@@ -134,6 +146,9 @@ internal sealed class AlphaVantageApiClient : IAssetApiClient<Stock>, IForexApiC
 
 		[Name("name")]
 		public string Name { get; init; }
+
+		[Name("type")]
+		public string Type { get; init; }
 
 		[Name("currency")]
 		public string Currency { get; init; }

@@ -12,4 +12,5 @@ public enum AssetType
 	MutualFund,
 	Stock,
 	Bond,
+	ETF,
 }

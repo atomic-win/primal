@@ -1,0 +1,1 @@
+﻿{"id":"Guid_1","name":"iShares NASDAQ 100 ETF","assetType":"ETF","assetClass":"Equity","currency":"USD"}

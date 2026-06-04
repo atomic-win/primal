@@ -49,6 +49,27 @@ public sealed class AlphaVantageApiClientTests
 	}
 
 	[Test]
+	public async Task GetBySymbolAsync_EtfResponse_ReturnsEtf()
+	{
+		var csv = "symbol,name,type,region,marketOpen,marketClose,timezone,currency,matchScore\nCNDX.LON,iShares NASDAQ 100 UCITS ETF USD (Acc),ETF,United Kingdom,08:00,16:30,UTC+01,USD,1.0000\n";
+		var client = CreateClient("*", csv);
+
+		var result = await client.GetBySymbolAsync("CNDX.LON", CancellationToken.None);
+
+		await Verifier.Verify(result);
+	}
+
+	[Test]
+	public async Task GetBySymbolAsync_UnsupportedType_ThrowsNotSupportedException()
+	{
+		var csv = "symbol,name,type,region,marketOpen,marketClose,timezone,currency,matchScore\nGLD,SPDR Gold Trust,Commodity,United States,09:30,16:00,UTC-04,USD,1.0000\n";
+		var client = CreateClient("*", csv);
+
+		await Assert.ThrowsAsync<NotSupportedException>(
+			() => client.GetBySymbolAsync("GLD", CancellationToken.None));
+	}
+
+	[Test]
 	public async Task GetPricesAsync_EmptyCsv_ReturnsEmptyDictionary()
 	{
 		var csv = "timestamp,open,high,low,close,volume\n";

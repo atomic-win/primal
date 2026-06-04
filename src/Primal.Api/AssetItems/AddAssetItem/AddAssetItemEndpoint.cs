@@ -96,8 +96,8 @@ internal sealed class AddAssetItemEndpoint : Endpoint<AddAssetItemRequest, Asset
 		return await this.assetRepository.AddAsync(
 			stock.Name,
 			AssetClass.Equity,
-			AssetType.Stock,
-			Currency.USD,
+			stock.AssetType,
+			stock.Currency,
 			$"stock-{stock.Symbol.ToLowerInvariant()}",
 			ct);
 	}
