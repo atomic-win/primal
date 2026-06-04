@@ -1,0 +1,1 @@
+﻿{"type":"https://www.rfc-editor.org/rfc/rfc7231#section-6.5.1","title":"Bad Request","status":400,"instance":"/api/asset-items","traceId":"Scrubbed","detail":"Asset type ETF cannot be set directly; it is derived from the symbol","errors":[{"name":"assetType","reason":"Asset type ETF cannot be set directly; it is derived from the symbol","code":"ASSET_TYPE_ETF_NOT_ALLOWED"}]}

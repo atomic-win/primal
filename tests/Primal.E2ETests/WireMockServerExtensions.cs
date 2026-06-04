@@ -69,15 +69,12 @@ internal static class WireMockServerExtensions
 
 	internal static void SetupStockSearch(this WireMockServer server, string symbol)
 	{
-		server
-			.Given(Request.Create()
-				.WithPath("/query")
-				.WithParam("function", "SYMBOL_SEARCH")
-				.UsingGet())
-			.RespondWith(Response.Create()
-				.WithStatusCode(200)
-				.WithHeader("Content-Type", "text/csv")
-				.WithBody($"symbol,name,type,region,marketOpen,marketClose,timezone,currency,matchScore\n{symbol},Apple Inc.,Equity,United States,09:30,16:00,UTC-04,USD,1.0000\n"));
+		server.SetupSymbolSearch(symbol, type: "Equity");
+	}
+
+	internal static void SetupEtfSearch(this WireMockServer server, string symbol, string currency = "USD")
+	{
+		server.SetupSymbolSearch(symbol, type: "ETF", currency: currency);
 	}
 
 	internal static void SetupStockSearchEmpty(this WireMockServer server)
@@ -125,5 +122,18 @@ internal static class WireMockServerExtensions
 				.WithStatusCode(200)
 				.WithHeader("Content-Type", "text/csv")
 				.WithBody($"timestamp,open,high,low,close\n{date},{closeRate},{closeRate},{closeRate},{closeRate}\n"));
+	}
+
+	private static void SetupSymbolSearch(this WireMockServer server, string symbol, string type, string currency = "USD")
+	{
+		server
+			.Given(Request.Create()
+				.WithPath("/query")
+				.WithParam("function", "SYMBOL_SEARCH")
+				.UsingGet())
+			.RespondWith(Response.Create()
+				.WithStatusCode(200)
+				.WithHeader("Content-Type", "text/csv")
+				.WithBody($"symbol,name,type,region,marketOpen,marketClose,timezone,currency,matchScore\n{symbol},Apple Inc.,{type},United States,09:30,16:00,UTC-04,{currency},1.0000\n"));
 	}
 }

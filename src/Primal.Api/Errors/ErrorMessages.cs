@@ -8,6 +8,7 @@ internal static class ErrorMessages
 		internal const string IdsRequired = "At least one asset item ID must be provided";
 		internal const string NotFound = "Asset item not found";
 		internal const string AssetTypeUnknown = "Asset type cannot be Unknown";
+		internal const string AssetTypeETFNotAllowed = "Asset type ETF cannot be set directly; it is derived from the symbol";
 		internal const string AssetClassInvalid = "Asset class '{0}' is not valid for MutualFund asset type";
 		internal const string NameRequired = "Name cannot be empty";
 		internal const string NameTooShort = "Name must be at least 3 characters long";

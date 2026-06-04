@@ -8,6 +8,7 @@ internal static class ErrorCodes
 		internal const string IdsRequired = "ASSET_ITEM_IDS_REQUIRED";
 		internal const string NotFound = "ASSET_ITEM_NOT_FOUND";
 		internal const string AssetTypeUnknown = "ASSET_TYPE_UNKNOWN";
+		internal const string AssetTypeETFNotAllowed = "ASSET_TYPE_ETF_NOT_ALLOWED";
 		internal const string AssetClassRequired = "ASSET_CLASS_REQUIRED";
 		internal const string AssetClassNotAllowed = "ASSET_CLASS_NOT_ALLOWED";
 		internal const string AssetClassInvalid = "ASSET_CLASS_INVALID";

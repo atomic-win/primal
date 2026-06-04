@@ -1,5 +1,6 @@
 ﻿{
   Symbol: AAPL,
   Name: Apple Inc.,
+  AssetType: Stock,
   Currency: USD
 }

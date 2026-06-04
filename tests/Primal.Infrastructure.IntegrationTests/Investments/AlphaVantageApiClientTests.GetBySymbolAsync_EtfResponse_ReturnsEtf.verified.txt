@@ -1,0 +1,6 @@
+﻿{
+  Symbol: CNDX.LON,
+  Name: iShares NASDAQ 100 UCITS ETF USD (Acc),
+  AssetType: ETF,
+  Currency: USD
+}

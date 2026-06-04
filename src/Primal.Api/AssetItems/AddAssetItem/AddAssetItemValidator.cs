@@ -44,9 +44,14 @@ internal sealed class AddAssetItemValidator : Validator<AddAssetItemRequest>
 			.WithMessage(ErrorMessages.AssetItem.AssetTypeUnknown)
 			.WithErrorCode(ErrorCodes.AssetItem.AssetTypeUnknown);
 
+		this.RuleFor(x => x.AssetType)
+			.NotEqual(AssetType.ETF)
+			.WithMessage(ErrorMessages.AssetItem.AssetTypeETFNotAllowed)
+			.WithErrorCode(ErrorCodes.AssetItem.AssetTypeETFNotAllowed);
+
 		this.RuleFor(x => x.AssetClass)
 			.Must((req, assetClass) => assetClass != AssetClass.Unknown)
-			.When(req => req.AssetType != AssetType.Stock && req.AssetType != AssetType.Bond)
+			.When(req => req.AssetType != AssetType.Stock && req.AssetType != AssetType.Bond && req.AssetType != AssetType.ETF)
 			.WithMessage(req => $"Asset class must be specified for {req.AssetType} asset type")
 			.WithErrorCode(ErrorCodes.AssetItem.AssetClassRequired);
 
@@ -79,7 +84,7 @@ internal sealed class AddAssetItemValidator : Validator<AddAssetItemRequest>
 
 		this.RuleFor(x => x.ExternalId)
 			.Empty()
-			.When(req => req.AssetType != AssetType.MutualFund && req.AssetType != AssetType.Stock && req.AssetType != AssetType.Unknown)
+			.When(req => req.AssetType != AssetType.MutualFund && req.AssetType != AssetType.Stock && req.AssetType != AssetType.Unknown && req.AssetType != AssetType.ETF)
 			.WithMessage(req => $"ExternalId must not be specified for {req.AssetType} asset type")
 			.WithErrorCode(ErrorCodes.AssetItem.ExternalIdNotAllowed);
 	}
@@ -88,7 +93,7 @@ internal sealed class AddAssetItemValidator : Validator<AddAssetItemRequest>
 	{
 		this.RuleFor(x => x.Currency)
 			.Must(currency => currency != Currency.Unknown)
-			.When(req => req.AssetType != AssetType.MutualFund && req.AssetType != AssetType.Stock)
+			.When(req => req.AssetType != AssetType.MutualFund && req.AssetType != AssetType.Stock && req.AssetType != AssetType.ETF)
 			.WithMessage(req => $"Currency must be specified for {req.AssetType} asset type")
 			.WithErrorCode(ErrorCodes.AssetItem.CurrencyRequired);
 
