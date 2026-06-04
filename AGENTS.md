@@ -88,6 +88,19 @@ For PATCH endpoints that partially update an entity:
 - Use `internal sealed` for all non-public classes.
 - Central package management via `Directory.Packages.props`.
 
+## External APIs
+
+- **AlphaVantage** (`AlphaVantageApiClient`): Single client for stocks, ETFs, and forex. Uses CSV endpoints (`SYMBOL_SEARCH`, `TIME_SERIES_DAILY`, `FX_DAILY`). Implements both `IAssetApiClient<Stock>` and `IForexApiClient`.
+- **MutualFund API** (`MutualFundApiClient`): Indian mutual fund data from `api.mfapi.in`. Implements `IAssetApiClient<MutualFund>`.
+- Both API clients are wrapped with caching decorators (`CachedAssetApiClient<T>`, `CachedForexApiClient`) and rate persistence via `RateRepository`.
+- Config keys: `InvestmentSettings:AlphaVantageApiKey`, `InvestmentSettings:AlphaVantageBaseUrl`, `InvestmentSettings:MutualFundApiBaseUrl`.
+
+### Asset Type Derivation
+
+- `Stock` and `ETF` asset types are derived from AlphaVantage `SYMBOL_SEARCH` response `type` field (`Equity` → `Stock`, `ETF` → `ETF`). Users send `AssetType=Stock` in the request; the actual type is resolved server-side.
+- `ETF` cannot be set directly in requests — the validator rejects it.
+- Unsupported symbol types (anything other than `Equity` or `ETF`) throw `NotSupportedException`.
+
 ## Key Files Reference
 
 | File | Purpose |
@@ -96,5 +109,6 @@ For PATCH endpoints that partially update an entity:
 | `src/Primal.Api/Errors/ErrorMessages.cs` | All validation error message constants |
 | `src/Primal.Api/Errors/ErrorFactory.cs` | Factory for not-found `ValidationFailure` instances |
 | `tests/Primal.E2ETests/PrimalE2EFactory.cs` | Test server factory with WireMock, FakeTimeProvider, JWT auth |
+| `tests/Primal.E2ETests/WireMockServerExtensions.cs` | WireMock stub helpers for AlphaVantage and MutualFund APIs |
 | `tests/Primal.E2ETests/HttpClientExtensions.cs` | Helper methods for creating test data |
 | `TESTS.md` | All test scenarios with counts — must be kept in sync |
