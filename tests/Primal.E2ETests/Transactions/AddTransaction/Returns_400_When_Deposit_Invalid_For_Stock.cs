@@ -12,7 +12,7 @@ public sealed class Returns_400_When_Deposit_Invalid_For_Stock
 		await using var factory = new PrimalE2EFactory();
 		_ = factory.CreateClient();
 
-		factory.StockApi.SetupStockSearch(symbol: "AAPL");
+		factory.AlphaVantageApi.SetupStockSearch(symbol: "AAPL");
 
 		var userId = await factory.CreateUserAsync();
 		var client = factory.CreateAuthenticatedClient(userId);

@@ -11,8 +11,8 @@ public sealed class Returns_Stock_Invested_From_Buy_Minus_Sell
 		await using var factory = new PrimalE2EFactory();
 		_ = factory.CreateClient();
 
-		factory.StockApi.SetupStockSearch(symbol: "AAPL");
-		factory.StockApi.SetupStockPrices(
+		factory.AlphaVantageApi.SetupStockSearch(symbol: "AAPL");
+		factory.AlphaVantageApi.SetupStockPrices(
 			prices: [("2026-05-15", 150.0m), ("2026-05-20", 155.0m), ("2026-06-01", 180.0m), ("2026-05-31", 178.0m)]);
 
 		var userId = await factory.CreateUserAsync();

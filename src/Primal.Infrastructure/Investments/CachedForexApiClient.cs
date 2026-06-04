@@ -36,7 +36,7 @@ internal sealed class CachedForexApiClient : IForexApiClient
 			async entry => await this.rateRepository.GetOrFetchRatesAsync(
 				$"{fromCurrency}{toCurrency}",
 				RateType.Forex,
-				ct => this.forexApiClient.GetForexRatesAsync(fromCurrency, toCurrency, ct),
+				async ct => await this.forexApiClient.GetForexRatesAsync(fromCurrency, toCurrency, ct),
 				cancellationToken),
 			cancellationToken: cancellationToken);
 	}

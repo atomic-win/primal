@@ -37,7 +37,7 @@ internal sealed class CachedAssetApiClient<T> : IAssetApiClient<T>
 			async entry => await this.rateRepository.GetOrFetchRatesAsync(
 				symbol,
 				this.rateType,
-				ct => this.assetApiClient.GetPricesAsync(symbol, ct),
+				async ct => await this.assetApiClient.GetPricesAsync(symbol, ct),
 				cancellationToken),
 			cancellationToken: cancellationToken);
 	}

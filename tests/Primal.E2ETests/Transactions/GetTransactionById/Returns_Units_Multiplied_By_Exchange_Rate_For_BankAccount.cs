@@ -11,7 +11,7 @@ public sealed class Returns_Units_Multiplied_By_Exchange_Rate_For_BankAccount
 		await using var factory = new PrimalE2EFactory();
 		_ = factory.CreateClient();
 
-		factory.ForexApi.SetupForexRate(date: "2026-01-15", closeRate: 2m);
+		factory.AlphaVantageApi.SetupForexRate(date: "2026-05-28", closeRate: 2m);
 
 		var userId = await factory.CreateUserAsync();
 		var client = factory.CreateAuthenticatedClient(userId);
@@ -25,7 +25,7 @@ public sealed class Returns_Units_Multiplied_By_Exchange_Rate_For_BankAccount
 
 		var transaction = await client.AddTransactionAsync(
 			assetItemId: assetItem.Id,
-			date: "2026-01-15",
+			date: "2026-05-28",
 			name: "Deposit",
 			transactionType: "Deposit",
 			units: 0m,

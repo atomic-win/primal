@@ -33,6 +33,6 @@ internal static class RatesExtensions
 
 		var rates = await fetchRates(cancellationToken);
 		await rateRepository.AddRatesAsync(symbol, rateType, rates, cancellationToken);
-		return rates;
+		return await rateRepository.GetRecentRatesAsync(symbol, rateType, cancellationToken);
 	}
 }

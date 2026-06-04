@@ -44,22 +44,9 @@ public static class DependencyInjection
 		})
 		.SetHandlerLifetime(Timeout.InfiniteTimeSpan);
 
-		services.AddHttpClient<StockApiClient>(client =>
+		services.AddHttpClient<AlphaVantageApiClient>(client =>
 		{
-			client.BaseAddress = new Uri(configuration["InvestmentSettings:StockApiBaseUrl"]!);
-		})
-		.ConfigurePrimaryHttpMessageHandler(() =>
-		{
-			return new SocketsHttpHandler()
-			{
-				PooledConnectionLifetime = TimeSpan.FromMinutes(15),
-			};
-		})
-		.SetHandlerLifetime(Timeout.InfiniteTimeSpan);
-
-		services.AddHttpClient<ForexApiClient>(client =>
-		{
-			client.BaseAddress = new Uri(configuration["InvestmentSettings:ForexApiBaseUrl"]!);
+			client.BaseAddress = new Uri(configuration["InvestmentSettings:AlphaVantageBaseUrl"]!);
 		})
 		.ConfigurePrimaryHttpMessageHandler(() =>
 		{

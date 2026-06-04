@@ -1,3 +1,4 @@
+using System.Globalization;
 using WireMock.RequestBuilders;
 using WireMock.ResponseBuilders;
 using WireMock.Server;
@@ -69,43 +70,45 @@ internal static class WireMockServerExtensions
 	internal static void SetupStockSearch(this WireMockServer server, string symbol)
 	{
 		server
-			.Given(Request.Create().WithPath("/stable/search-symbol").UsingGet())
+			.Given(Request.Create()
+				.WithPath("/query")
+				.WithParam("function", "SYMBOL_SEARCH")
+				.UsingGet())
 			.RespondWith(Response.Create()
 				.WithStatusCode(200)
-				.WithHeader("Content-Type", "application/json")
-				.WithBody($$"""
-				[
-					{
-						"symbol": "{{symbol}}",
-						"name": "Apple Inc.",
-						"currency": "USD"
-					}
-				]
-				"""));
+				.WithHeader("Content-Type", "text/csv")
+				.WithBody($"symbol,name,type,region,marketOpen,marketClose,timezone,currency,matchScore\n{symbol},Apple Inc.,Equity,United States,09:30,16:00,UTC-04,USD,1.0000\n"));
 	}
 
 	internal static void SetupStockSearchEmpty(this WireMockServer server)
 	{
 		server
-			.Given(Request.Create().WithPath("/stable/search-symbol").UsingGet())
+			.Given(Request.Create()
+				.WithPath("/query")
+				.WithParam("function", "SYMBOL_SEARCH")
+				.UsingGet())
 			.RespondWith(Response.Create()
 				.WithStatusCode(200)
-				.WithHeader("Content-Type", "application/json")
-				.WithBody("[]"));
+				.WithHeader("Content-Type", "text/csv")
+				.WithBody("symbol,name,type,region,marketOpen,marketClose,timezone,currency,matchScore\n"));
 	}
 
 	internal static void SetupStockPrices(
 		this WireMockServer server,
 		IReadOnlyCollection<(string Date, decimal Price)> prices)
 	{
-		var priceEntries = string.Join(",\n\t\t\t\t\t", prices.Select(p => $$"""{ "date": "{{p.Date}}", "price": {{p.Price}} }"""));
+		var priceRows = string.Join("\n", prices.Select(p =>
+			string.Create(CultureInfo.InvariantCulture, $"{p.Date},{p.Price},{p.Price},{p.Price},{p.Price},1000")));
 
 		server
-			.Given(Request.Create().WithPath("/stable/historical-price-eod/light").UsingGet())
+			.Given(Request.Create()
+				.WithPath("/query")
+				.WithParam("function", "TIME_SERIES_DAILY")
+				.UsingGet())
 			.RespondWith(Response.Create()
 				.WithStatusCode(200)
-				.WithHeader("Content-Type", "application/json")
-				.WithBody($"[\n\t\t\t\t\t{priceEntries}\n\t\t\t\t]"));
+				.WithHeader("Content-Type", "text/csv")
+				.WithBody($"timestamp,open,high,low,close,volume\n{priceRows}\n"));
 	}
 
 	internal static void SetupForexRate(
@@ -114,7 +117,10 @@ internal static class WireMockServerExtensions
 		decimal closeRate)
 	{
 		server
-			.Given(Request.Create().WithPath("/query").UsingGet())
+			.Given(Request.Create()
+				.WithPath("/query")
+				.WithParam("function", "FX_DAILY")
+				.UsingGet())
 			.RespondWith(Response.Create()
 				.WithStatusCode(200)
 				.WithHeader("Content-Type", "text/csv")
