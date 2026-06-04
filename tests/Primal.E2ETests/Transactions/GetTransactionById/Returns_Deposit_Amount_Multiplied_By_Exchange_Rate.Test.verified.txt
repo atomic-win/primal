@@ -1,1 +1,1 @@
-﻿{"id":"Guid_1","date":"2026-01-15","name":"Deposit","transactionType":"Deposit","assetItemId":"Guid_2","units":0,"price":0,"amount":8200}
+﻿{"id":"Guid_1","date":"2026-05-28","name":"Deposit","transactionType":"Deposit","assetItemId":"Guid_2","units":0,"price":0,"amount":8200}

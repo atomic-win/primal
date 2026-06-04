@@ -28,8 +28,8 @@ public sealed class InfrastructureModule : Module
 			c.Resolve<IHttpClientFactory>()))
 			.SingleInstance();
 
-		builder.Register(c => new StockApiClient(
-			apiKey: c.Resolve<IConfiguration>().GetValue<string>("InvestmentSettings:FMPApiKey"),
+		builder.Register(c => new AlphaVantageApiClient(
+			apiKey: c.Resolve<IConfiguration>().GetValue<string>("InvestmentSettings:AlphaVantageApiKey"),
 			httpClientFactory: c.Resolve<IHttpClientFactory>()))
 			.SingleInstance();
 
@@ -43,20 +43,15 @@ public sealed class InfrastructureModule : Module
 
 		builder.Register(c => new CachedAssetApiClient<Stock>(
 			c.Resolve<HybridCache>(),
-			c.Resolve<StockApiClient>(),
+			c.Resolve<AlphaVantageApiClient>(),
 			c.Resolve<RateRepository>(),
 			RateType.Stock))
 			.As<IAssetApiClient<Stock>>()
 			.SingleInstance();
 
-		builder.Register(c => new ForexApiClient(
-			c.Resolve<IConfiguration>().GetValue<string>("InvestmentSettings:AlphaVantageApiKey"),
-			c.Resolve<IHttpClientFactory>()))
-			.SingleInstance();
-
 		builder.Register(c => new CachedForexApiClient(
 			c.Resolve<HybridCache>(),
-			c.Resolve<ForexApiClient>(),
+			c.Resolve<AlphaVantageApiClient>(),
 			c.Resolve<RateRepository>()))
 			.As<IForexApiClient>()
 			.SingleInstance();

@@ -11,8 +11,8 @@ public sealed class Returns_Buy_Units_Times_Price_Multiplied_By_Exchange_Rate
 		await using var factory = new PrimalE2EFactory();
 		_ = factory.CreateClient();
 
-		factory.StockApi.SetupStockSearch(symbol: "AAPL");
-		factory.ForexApi.SetupForexRate(date: "2026-01-15", closeRate: 83m);
+		factory.AlphaVantageApi.SetupStockSearch(symbol: "AAPL");
+		factory.AlphaVantageApi.SetupForexRate(date: "2026-05-28", closeRate: 83m);
 
 		var userId = await factory.CreateUserAsync();
 		var client = factory.CreateAuthenticatedClient(userId);
@@ -26,7 +26,7 @@ public sealed class Returns_Buy_Units_Times_Price_Multiplied_By_Exchange_Rate
 
 		var transaction = await client.AddTransactionAsync(
 			assetItemId: assetItem.Id,
-			date: "2026-01-15",
+			date: "2026-05-28",
 			name: "Buy AAPL",
 			transactionType: "Buy",
 			units: 3m,

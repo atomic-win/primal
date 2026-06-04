@@ -49,7 +49,9 @@ public sealed class CachedAssetApiClientTests
 		var prices = new Dictionary<DateOnly, decimal> { [new DateOnly(2026, 1, 15)] = 150.25m }.ToFrozenDictionary();
 		inner.GetPricesAsync("119551", Arg.Any<CancellationToken>()).Returns(prices);
 
-		var client = new CachedAssetApiClient<MutualFund>(cache, inner, CreateRateRepository(), RateType.MutualFund);
+		var timeProvider = new Microsoft.Extensions.Time.Testing.FakeTimeProvider(
+			new DateTimeOffset(2026, 1, 15, 12, 0, 0, TimeSpan.Zero));
+		var client = new CachedAssetApiClient<MutualFund>(cache, inner, CreateRateRepository(timeProvider), RateType.MutualFund);
 
 		var first = await client.GetOnOrBeforePriceAsync("119551", new DateOnly(2026, 1, 15), CancellationToken.None);
 		var second = await client.GetOnOrBeforePriceAsync("119551", new DateOnly(2026, 1, 15), CancellationToken.None);
@@ -57,8 +59,8 @@ public sealed class CachedAssetApiClientTests
 		await Verifier.Verify(new { first, second });
 	}
 
-	private static RateRepository CreateRateRepository()
+	private static RateRepository CreateRateRepository(TimeProvider timeProvider = null)
 	{
-		return new RateRepository(TestDbFactory.CreateTestDatabase(), TimeProvider.System);
+		return new RateRepository(TestDbFactory.CreateTestDatabase(), timeProvider ?? TimeProvider.System);
 	}
 }

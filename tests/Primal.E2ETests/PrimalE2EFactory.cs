@@ -27,9 +27,7 @@ internal sealed class PrimalE2EFactory : WebApplicationFactory<Program>
 
 	internal WireMockServer MutualFundApi { get; } = WireMockServer.Start();
 
-	internal WireMockServer StockApi { get; } = WireMockServer.Start();
-
-	internal WireMockServer ForexApi { get; } = WireMockServer.Start();
+	internal WireMockServer AlphaVantageApi { get; } = WireMockServer.Start();
 
 	internal IIdTokenValidator IdTokenValidator { get; } = Substitute.For<IIdTokenValidator>();
 
@@ -68,11 +66,9 @@ internal sealed class PrimalE2EFactory : WebApplicationFactory<Program>
 		builder.UseSetting("TokenIssuerSettings:Issuer", "TestIssuer");
 		builder.UseSetting("TokenIssuerSettings:Audience", "TestAudience");
 		builder.UseSetting("TokenIssuerSettings:AccessTokenValidity", "60");
-		builder.UseSetting("InvestmentSettings:FMPApiKey", "test-api-key");
 		builder.UseSetting("InvestmentSettings:AlphaVantageApiKey", "test-alpha-key");
 		builder.UseSetting("InvestmentSettings:MutualFundApiBaseUrl", this.MutualFundApi.Url!);
-		builder.UseSetting("InvestmentSettings:StockApiBaseUrl", this.StockApi.Url!);
-		builder.UseSetting("InvestmentSettings:ForexApiBaseUrl", this.ForexApi.Url!);
+		builder.UseSetting("InvestmentSettings:AlphaVantageBaseUrl", this.AlphaVantageApi.Url!);
 
 		builder.ConfigureServices(services =>
 		{
@@ -94,8 +90,7 @@ internal sealed class PrimalE2EFactory : WebApplicationFactory<Program>
 	protected override void Dispose(bool disposing)
 	{
 		this.MutualFundApi.Stop();
-		this.StockApi.Stop();
-		this.ForexApi.Stop();
+		this.AlphaVantageApi.Stop();
 
 		if (File.Exists(this.dbPath))
 		{

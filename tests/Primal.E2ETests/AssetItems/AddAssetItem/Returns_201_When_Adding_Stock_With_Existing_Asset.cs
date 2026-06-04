@@ -12,7 +12,7 @@ public sealed class Returns_201_When_Adding_Stock_With_Existing_Asset
 		await using var factory = new PrimalE2EFactory();
 		_ = factory.CreateClient();
 
-		factory.StockApi.SetupStockSearch(symbol: "AAPL");
+		factory.AlphaVantageApi.SetupStockSearch(symbol: "AAPL");
 
 		var userId = await factory.CreateUserAsync();
 		var client = factory.CreateAuthenticatedClient(userId);
