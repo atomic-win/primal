@@ -22,7 +22,7 @@ internal static class TransactionValidationExtensions
 			AssetType.MutualFund =>
 				transactionType == TransactionType.Buy ||
 				transactionType == TransactionType.Sell,
-			AssetType.Stock =>
+			AssetType.Stock or AssetType.ETF =>
 				transactionType == TransactionType.Buy ||
 				transactionType == TransactionType.Sell ||
 				transactionType == TransactionType.Dividend,

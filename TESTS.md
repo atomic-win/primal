@@ -203,33 +203,34 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 | 23 | MutualFund: Invested from Buy minus Sell | MF with Buy(10u@100) then Sell(3u) | InvestedValue = remaining 7 units × buy price | E2E | ✅ |
 | 24 | FixedDeposit: Invested from Deposit minus Withdrawal | FD with Deposit then partial Withdrawal | InvestedValue = remaining deposit amount | E2E | ✅ |
 | 25 | Stock: Invested from Buy minus Sell | Stock with Buy then partial Sell | InvestedValue = remaining units × buy price | E2E | ✅ |
-| 26 | Full offset → zero invested | Buy 10u then Sell 10u | InvestedValue = 0 | E2E | ✅ |
-| 27 | Partial offset | Buy 10u@100, Sell 3u | InvestedValue = 7u × buy price (adjusted) | E2E | ✅ |
+| 26 | ETF: Invested from Buy minus Sell | ETF (derived) with Buy then partial Sell | InvestedValue = remaining units × buy price; CurrentValue uses market price | E2E | ✅ |
+| 27 | Full offset → zero invested | Buy 10u then Sell 10u | InvestedValue = 0 | E2E | ✅ |
+| 28 | Partial offset | Buy 10u@100, Sell 3u | InvestedValue = 7u × buy price (adjusted) | E2E | ✅ |
 
 ### Valuations — XIRR
 
 | # | Test | Input | Expected | Type | Present |
 |---|------|-------|----------|------|---------|
-| 28 | No transactions → XIRR = 0 | Empty transactions | XirrPercent = 0 | E2E | ✅ |
-| 29 | All < 1 year: YearDiff normalized | Single Buy transaction from 3 months ago | XIRR calculated with YearDiff=1.0 | E2E | ✅ |
-| 30 | Transactions > 1 year | Buy from 2 years ago | XIRR uses actual YearDiff | E2E | ✅ |
-| 31 | Positive return scenario | Buy low, current price higher | XirrPercent > 0 | E2E | ✅ |
-| 32 | Negative return scenario | Buy high, current price lower | XirrPercent < 0 | E2E | ✅ |
-| 33 | Same-date transactions grouped | Two Buy transactions on same date | YearDiff grouped, amounts summed | E2E | ✅ |
+| 29 | No transactions → XIRR = 0 | Empty transactions | XirrPercent = 0 | E2E | ✅ |
+| 30 | All < 1 year: YearDiff normalized | Single Buy transaction from 3 months ago | XIRR calculated with YearDiff=1.0 | E2E | ✅ |
+| 31 | Transactions > 1 year | Buy from 2 years ago | XIRR uses actual YearDiff | E2E | ✅ |
+| 32 | Positive return scenario | Buy low, current price higher | XirrPercent > 0 | E2E | ✅ |
+| 33 | Negative return scenario | Buy high, current price lower | XirrPercent < 0 | E2E | ✅ |
+| 34 | Same-date transactions grouped | Two Buy transactions on same date | YearDiff grouped, amounts summed | E2E | ✅ |
 
 ### Valuations — cross-currency
 
 | # | Test | Input | Expected | Type | Present |
 |---|------|-------|----------|------|---------|
-| 34 | Same currency → no exchange rate | INR asset, Currency=INR | Values computed without exchange rate conversion | E2E | ✅ |
-| 35 | Cross-currency conversion | INR asset, Currency=USD | Values converted using exchange rate | E2E | ✅ |
+| 35 | Same currency → no exchange rate | INR asset, Currency=INR | Values computed without exchange rate conversion | E2E | ✅ |
+| 36 | Cross-currency conversion | INR asset, Currency=USD | Values converted using exchange rate | E2E | ✅ |
 
 ### Valuations — CalculateInitialAmount date handling
 
 | # | Test | Input | Expected | Type | Present |
 |---|------|-------|----------|------|---------|
-| 36 | Deposit uses valuationDate | Deposit transaction | Amount calculated at valuation date exchange rate | E2E | ✅ |
-| 37 | Buy uses transaction.Date | Buy transaction | Amount calculated at transaction date price | E2E | ✅ |
+| 37 | Deposit uses valuationDate | Deposit transaction | Amount calculated at valuation date exchange rate | E2E | ✅ |
+| 38 | Buy uses transaction.Date | Buy transaction | Amount calculated at transaction date price | E2E | ✅ |
 
 ---
 
@@ -308,17 +309,21 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 | 52 | Stock + Sell | Stock, Sell | Passes | E2E | ✅ |
 | 53 | Stock + Dividend | Stock, Dividend | Passes | E2E | ✅ |
 | 54 | Stock + Deposit | Stock, Deposit | 400 `TRANSACTION_TYPE_INVALID` | E2E | ✅ |
-| 55 | Wallet + Deposit | Wallet, Deposit | Passes | E2E | ✅ |
-| 56 | Wallet + Withdrawal | Wallet, Withdrawal | Passes | E2E | ✅ |
-| 57 | Wallet + Interest | Wallet, Interest | 400 `TRANSACTION_TYPE_INVALID` | E2E | ✅ |
-| 58 | TradingAccount + Deposit | TradingAccount, Deposit | Passes | E2E | ✅ |
-| 59 | TradingAccount + Withdrawal | TradingAccount, Withdrawal | Passes | E2E | ✅ |
-| 60 | TradingAccount + Buy | TradingAccount, Buy | 400 `TRANSACTION_TYPE_INVALID` | E2E | ✅ |
-| 61 | Bond + Deposit | Bond, Deposit | Passes | E2E | ✅ |
-| 62 | Bond + Withdrawal | Bond, Withdrawal | Passes | E2E | ✅ |
-| 63 | Bond + Interest | Bond, Interest | Passes | E2E | ✅ |
-| 64 | Bond + Buy | Bond, Buy | 400 `TRANSACTION_TYPE_INVALID` | E2E | ✅ |
-| 65 | Bond + SelfInterest | Bond, SelfInterest | 400 `TRANSACTION_TYPE_INVALID` | E2E | ✅ |
+| 55 | ETF + Buy | ETF (derived from Stock symbol), Buy | Passes | E2E | ✅ |
+| 56 | ETF + Sell | ETF, Sell | Passes | E2E | ✅ |
+| 57 | ETF + Dividend | ETF, Dividend | Passes | E2E | ✅ |
+| 58 | ETF + Deposit | ETF, Deposit | 400 `TRANSACTION_TYPE_INVALID` | E2E | ✅ |
+| 59 | Wallet + Deposit | Wallet, Deposit | Passes | E2E | ✅ |
+| 60 | Wallet + Withdrawal | Wallet, Withdrawal | Passes | E2E | ✅ |
+| 61 | Wallet + Interest | Wallet, Interest | 400 `TRANSACTION_TYPE_INVALID` | E2E | ✅ |
+| 62 | TradingAccount + Deposit | TradingAccount, Deposit | Passes | E2E | ✅ |
+| 63 | TradingAccount + Withdrawal | TradingAccount, Withdrawal | Passes | E2E | ✅ |
+| 64 | TradingAccount + Buy | TradingAccount, Buy | 400 `TRANSACTION_TYPE_INVALID` | E2E | ✅ |
+| 65 | Bond + Deposit | Bond, Deposit | Passes | E2E | ✅ |
+| 66 | Bond + Withdrawal | Bond, Withdrawal | Passes | E2E | ✅ |
+| 67 | Bond + Interest | Bond, Interest | Passes | E2E | ✅ |
+| 68 | Bond + Buy | Bond, Buy | 400 `TRANSACTION_TYPE_INVALID` | E2E | ✅ |
+| 69 | Bond + SelfInterest | Bond, SelfInterest | 400 `TRANSACTION_TYPE_INVALID` | E2E | ✅ |
 
 > **Note:** An existing test `Returns_400_When_Buy_Invalid_For_Wallet` covers Wallet + Buy (invalid) which is not listed above but is an additional valid scenario.
 
@@ -326,20 +331,20 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 
 | # | Test | Input | Expected | Type | Present |
 |---|------|-------|----------|------|---------|
-| 66 | Empty AssetItemId skips type check | `AssetItemId: Guid.Empty, TransactionType: Buy` | 400 `ASSET_ITEM_ID_REQUIRED` only (no type error) | E2E | ✅ |
-| 67 | Unknown type skips type check | `TransactionType: Unknown, valid AssetItemId` | 400 `TRANSACTION_TYPE_REQUIRED` only | E2E | ✅ |
-| 68 | Missing asset item skips type check | AssetItemId not in DB | Validator passes type check; handler returns 404 | E2E | ✅ |
+| 70 | Empty AssetItemId skips type check | `AssetItemId: Guid.Empty, TransactionType: Buy` | 400 `ASSET_ITEM_ID_REQUIRED` only (no type error) | E2E | ✅ |
+| 71 | Unknown type skips type check | `TransactionType: Unknown, valid AssetItemId` | 400 `TRANSACTION_TYPE_REQUIRED` only | E2E | ✅ |
+| 72 | Missing asset item skips type check | AssetItemId not in DB | Validator passes type check; handler returns 404 | E2E | ✅ |
 
 ### Handler
 
 | # | Test | Input | Expected | Type | Present |
 |---|------|-------|----------|------|---------|
-| 69 | Returns 404 for missing asset item | Valid request; AssetItemId not in DB | 404 `ASSET_ITEM_NOT_FOUND` | E2E | ✅ |
-| 70 | Creates Buy transaction | MutualFund, Buy, Units=10, Price=100 | 201; stored Units=10, Price=100, Amount=0 | E2E | ✅ |
-| 71 | Creates Sell transaction | MutualFund, Sell, Units=5, Price=120 | 201; stored Units=5, Price=120, Amount=0 | E2E | ✅ |
-| 72 | Creates Deposit transaction | BankAccount, Deposit, Amount=5000 | 201; stored Units=0, Price=0, Amount=5000 | E2E | ✅ |
-| 73 | Creates Withdrawal transaction | BankAccount, Withdrawal, Amount=1000 | 201; stored Units=0, Price=0, Amount=1000 | E2E | ✅ |
-| 74 | Response has zeroed amounts | Any valid creation | 201; response Units=0, Price=0, Amount=0 | E2E | ✅ |
+| 73 | Returns 404 for missing asset item | Valid request; AssetItemId not in DB | 404 `ASSET_ITEM_NOT_FOUND` | E2E | ✅ |
+| 74 | Creates Buy transaction | MutualFund, Buy, Units=10, Price=100 | 201; stored Units=10, Price=100, Amount=0 | E2E | ✅ |
+| 75 | Creates Sell transaction | MutualFund, Sell, Units=5, Price=120 | 201; stored Units=5, Price=120, Amount=0 | E2E | ✅ |
+| 76 | Creates Deposit transaction | BankAccount, Deposit, Amount=5000 | 201; stored Units=0, Price=0, Amount=5000 | E2E | ✅ |
+| 77 | Creates Withdrawal transaction | BankAccount, Withdrawal, Amount=1000 | 201; stored Units=0, Price=0, Amount=1000 | E2E | ✅ |
+| 78 | Response has zeroed amounts | Any valid creation | 201; response Units=0, Price=0, Amount=0 | E2E | ✅ |
 
 ---
 
@@ -685,8 +690,8 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 | 6. GET /api/asset-items/{id} | 3 | 3 | 0 |
 | 7. DELETE /api/asset-items/{id} | 4 | 4 | 0 |
 | 8. PATCH /api/asset-items/{id} | 6 | 6 | 0 |
-| 9. GET /api/asset-items/valuations | 35 | 35 | 0 |
-| 10. POST .../transactions | 68 | 68 | 0 |
+| 9. GET /api/asset-items/valuations | 36 | 36 | 0 |
+| 10. POST .../transactions | 72 | 72 | 0 |
 | 11. GET .../transactions | 6 | 6 | 0 |
 | 12. GET .../transactions/{id} | 9 | 9 | 0 |
 | 13. PATCH .../transactions/{id} | 22 | 22 | 0 |
@@ -700,4 +705,4 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 | 21. Caching (Integration) | 15 | 15 | 0 |
 | 22. Repositories (Integration) | 28 | 28 | 0 |
 | 23. DB Schema (Integration) | 7 | 7 | 0 |
-| **Total** | **331** | **331** | **0** |
+| **Total** | **336** | **336** | **0** |
