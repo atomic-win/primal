@@ -173,7 +173,7 @@ internal sealed class GetValuationsEndpoint : Endpoint<GetValuationsRequest, IAs
 		var investedValue = asset.AssetType switch
 		{
 			AssetType.BankAccount or AssetType.Wallet or AssetType.TradingAccount or AssetType.Bond => currentValue,
-			AssetType.FixedDeposit or AssetType.EPF or AssetType.PPF or AssetType.MutualFund or AssetType.Stock => await this.CalculateInvestedValueAsync(
+			AssetType.FixedDeposit or AssetType.EPF or AssetType.PPF or AssetType.MutualFund or AssetType.Stock or AssetType.ETF => await this.CalculateInvestedValueAsync(
 				userId,
 				transactionsWithinValuationDate,
 				valuationDate,

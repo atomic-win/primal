@@ -97,7 +97,7 @@ public sealed class TransactionAmountCalculator : ITransactionAmountCalculator
 		DateOnly date,
 		CancellationToken cancellationToken)
 	{
-		if (asset.AssetType != AssetType.MutualFund && asset.AssetType != AssetType.Stock)
+		if (asset.AssetType != AssetType.MutualFund && asset.AssetType != AssetType.Stock && asset.AssetType != AssetType.ETF)
 		{
 			return 1m;
 		}
