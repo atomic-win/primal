@@ -70,6 +70,8 @@ internal static class DatabaseInitializer
 				FOREIGN KEY (UserId) REFERENCES users(Id) ON DELETE CASCADE,
 				FOREIGN KEY (AssetId) REFERENCES assets(Id) ON DELETE RESTRICT
 			);
+
+			CREATE INDEX IF NOT EXISTS IX_asset_items_UserId ON asset_items (UserId);
 			""");
 	}
 
@@ -91,6 +93,8 @@ internal static class DatabaseInitializer
 				FOREIGN KEY (AssetItemId) REFERENCES asset_items(Id) ON DELETE CASCADE,
 				FOREIGN KEY (UserId) REFERENCES users(Id) ON DELETE CASCADE
 			);
+
+			CREATE INDEX IF NOT EXISTS IX_transactions_UserId_AssetItemId ON transactions (UserId, AssetItemId);
 			""");
 	}
 

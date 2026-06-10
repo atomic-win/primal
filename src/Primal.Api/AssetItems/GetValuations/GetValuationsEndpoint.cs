@@ -114,10 +114,8 @@ internal sealed class GetValuationsEndpoint : Endpoint<GetValuationsRequest, IAs
 		Currency currency,
 		CancellationToken ct)
 	{
-		var valuationInputs = new List<ValuationInput>(capacity: assetItems.Count);
-		foreach (var assetItem in assetItems)
-		{
-			valuationInputs.Add(await this.cache.GetOrCreateAsync(
+		var valuationInputs = await Task.WhenAll(assetItems.Select(assetItem =>
+			this.cache.GetOrCreateAsync(
 				key: $"users/{userId.Value}/assetItems/{assetItem.Id.Value}/valuationInput?valuationDate={valuationDate}&currency={currency}",
 				async _ => await this.CalculateValuationInputAsync(
 					userId,
@@ -126,8 +124,7 @@ internal sealed class GetValuationsEndpoint : Endpoint<GetValuationsRequest, IAs
 					currency,
 					ct),
 				tags: new[] { $"users/{userId.Value}/assetItems/{assetItem.Id.Value}/valuations" },
-				cancellationToken: ct));
-		}
+				cancellationToken: ct).AsTask()));
 
 		if (!valuationInputs.SelectMany(i => i.XirrInputs).Any())
 		{
@@ -182,14 +179,13 @@ internal sealed class GetValuationsEndpoint : Endpoint<GetValuationsRequest, IAs
 			_ => throw new InvalidOperationException($"Unsupported asset type: {asset.AssetType}"),
 		};
 
-		var xirrInputs = transactionsWithinValuationDate
-			.Select(async transaction => await this.MapToXirrInputAsync(
+		var xirrInputs = (await Task.WhenAll(transactionsWithinValuationDate
+			.Select(transaction => this.MapToXirrInputAsync(
 				userId,
 				transaction,
 				valuationDate,
 				currency,
-				ct))
-			.Select(t => t.Result)
+				ct))))
 			.ToImmutableArray();
 
 		return new ValuationInput
