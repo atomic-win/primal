@@ -1,5 +1,6 @@
 using System.Collections.Frozen;
 using System.Collections.Immutable;
+using System.Data.Common;
 using System.Globalization;
 using System.Text;
 using Dapper;
@@ -71,7 +72,7 @@ internal sealed class RateRepository
 		var rateTypeString = rateType.ToString();
 		var parameters = new { Symbol = normalizedSymbol, RateType = rateTypeString };
 
-		using var connection = this.connectionFactory.CreateConnection();
+		using var connection = (DbConnection)this.connectionFactory.CreateConnection();
 
 		var existingDates = await connection.QueryAsync<string>(
 			new CommandDefinition(
@@ -90,10 +91,39 @@ internal sealed class RateRepository
 			return;
 		}
 
+		await connection.OpenAsync(cancellationToken);
+		using var transaction = await connection.BeginTransactionAsync(cancellationToken);
+
+		const int batchSize = 500;
+		for (int batchStart = 0; batchStart < missingRates.Count; batchStart += batchSize)
+		{
+			var batch = missingRates.Skip(batchStart).Take(batchSize).ToList();
+			await InsertRatesBatchAsync(
+				connection,
+				transaction,
+				normalizedSymbol,
+				rateTypeString,
+				now,
+				batch,
+				cancellationToken);
+		}
+
+		await transaction.CommitAsync(cancellationToken);
+	}
+
+	private static async Task InsertRatesBatchAsync(
+		DbConnection connection,
+		DbTransaction transaction,
+		string normalizedSymbol,
+		string rateTypeString,
+		string now,
+		IReadOnlyList<KeyValuePair<DateOnly, decimal>> batch,
+		CancellationToken cancellationToken)
+	{
 		var valueClauses = new StringBuilder();
 		var dynamicParameters = new DynamicParameters();
 
-		for (int i = 0; i < missingRates.Count; i++)
+		for (int i = 0; i < batch.Count; i++)
 		{
 			if (i > 0)
 			{
@@ -103,8 +133,8 @@ internal sealed class RateRepository
 			valueClauses.Append(CultureInfo.InvariantCulture, $"(@Symbol{i}, @RateType{i}, @Date{i}, @Price{i}, @CreatedAt{i})");
 			dynamicParameters.Add($"Symbol{i}", normalizedSymbol);
 			dynamicParameters.Add($"RateType{i}", rateTypeString);
-			dynamicParameters.Add($"Date{i}", missingRates[i].Key.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
-			dynamicParameters.Add($"Price{i}", missingRates[i].Value.ToString(CultureInfo.InvariantCulture));
+			dynamicParameters.Add($"Date{i}", batch[i].Key.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
+			dynamicParameters.Add($"Price{i}", batch[i].Value.ToString(CultureInfo.InvariantCulture));
 			dynamicParameters.Add($"CreatedAt{i}", now);
 		}
 
@@ -112,6 +142,7 @@ internal sealed class RateRepository
 			new CommandDefinition(
 				$"INSERT INTO rates (Symbol, RateType, Date, Price, CreatedAt) VALUES {valueClauses}",
 				dynamicParameters,
+				transaction: transaction,
 				cancellationToken: cancellationToken));
 	}
 
