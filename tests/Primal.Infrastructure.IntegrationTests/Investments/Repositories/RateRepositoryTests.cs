@@ -105,6 +105,25 @@ public sealed class RateRepositoryTests
 	}
 
 	[Test]
+	public async Task GetRecentRates_DataExactlyOnCutoff_ReturnsEmpty()
+	{
+		// Arrange
+		var (repository, _) = CreateRepository();
+		var rates = new Dictionary<DateOnly, decimal>
+		{
+			[new DateOnly(2026, 5, 25)] = 150.25m,
+		}.ToFrozenDictionary();
+
+		await repository.AddRatesAsync("AAPL", RateType.Stock, rates, CancellationToken.None);
+
+		// Act
+		var result = await repository.GetRecentRatesAsync("AAPL", RateType.Stock, CancellationToken.None);
+
+		// Assert
+		await Verifier.Verify(result);
+	}
+
+	[Test]
 	public async Task GetRecentRates_DifferentRateTypes_AreIsolated()
 	{
 		// Arrange

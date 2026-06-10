@@ -662,6 +662,20 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 | 24 | Update | Existing transaction | Updates all mutable fields + UpdatedAt | Integration | ✅ |
 | 25 | Delete | Existing IDs | Deletes row | Integration | ✅ |
 
+### RateRepository
+
+| # | Test | Input | Expected | Type | Present |
+|---|------|-------|----------|------|---------|
+| 26 | GetRecentRates — no data | Non-existent symbol | Returns empty dictionary | Integration | ✅ |
+| 27 | AddRates then GetRecentRates | Add 3 rates | Returns all 3 rates | Integration | ✅ |
+| 28 | AddRates — empty dictionary | Empty rates dictionary | Does not throw | Integration | ✅ |
+| 29 | AddRates — duplicate call | Overlapping rates batches | Only writes missing dates; originals unchanged | Integration | ✅ |
+| 30 | GetRecentRates — stale data | Latest rate older than threshold | Returns empty dictionary | Integration | ✅ |
+| 31 | GetRecentRates — data exactly on cutoff | Latest rate date equals cutoff | Returns empty dictionary | Integration | ✅ |
+| 32 | GetRecentRates — different rate types | Stock + MutualFund for same symbol | Results are isolated by rate type | Integration | ✅ |
+| 33 | GetRecentRates — different symbols | AAPL + GOOG same rate type | Results are isolated by symbol | Integration | ✅ |
+| 34 | AddRates — normalizes symbol to upper case | Add with lowercase symbol | Retrievable with uppercase symbol | Integration | ✅ |
+
 ---
 
 ## 23. Database Schema Constraints (Integration)
@@ -703,6 +717,6 @@ All scenarios grouped by endpoint. Columns: Test, Input, Expected, Type (E2E/Int
 | 19. RatesExtensions (Integration) | 6 | 6 | 0 |
 | 20. API Clients (Integration) | 16 | 16 | 0 |
 | 21. Caching (Integration) | 15 | 15 | 0 |
-| 22. Repositories (Integration) | 28 | 28 | 0 |
+| 22. Repositories (Integration) | 34 | 34 | 0 |
 | 23. DB Schema (Integration) | 7 | 7 | 0 |
-| **Total** | **336** | **336** | **0** |
+| **Total** | **339** | **339** | **0** |

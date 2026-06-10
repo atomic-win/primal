@@ -39,7 +39,7 @@ internal sealed class RateRepository
 				cancellationToken: cancellationToken));
 
 		if (latestDate is null
-			|| DateOnly.ParseExact(latestDate, "yyyy-MM-dd", CultureInfo.InvariantCulture) < cutoffDate)
+			|| DateOnly.ParseExact(latestDate, "yyyy-MM-dd", CultureInfo.InvariantCulture) <= cutoffDate)
 		{
 			return ImmutableDictionary<DateOnly, decimal>.Empty;
 		}
