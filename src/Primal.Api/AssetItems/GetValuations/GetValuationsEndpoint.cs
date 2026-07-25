@@ -486,7 +486,6 @@ internal sealed class GetValuationsEndpoint : Endpoint<GetValuationsRequest, IRe
 	{
 		// hashing the assetItemIds to avoid long cache keys and potential issues with special characters
 		var assetItemIdsHash = assetItemIds.Order()
-			.Select(id => id.Value)
 			.Aggregate(0, (hash, id) => HashCode.Combine(hash, id.GetHashCode()));
 
 		return $"users/{userId.Value}/asset-items/valuations?date={valuationDate:yyyy-MM-dd}&currency={currency}&assetItemIdsHash={assetItemIdsHash}";
