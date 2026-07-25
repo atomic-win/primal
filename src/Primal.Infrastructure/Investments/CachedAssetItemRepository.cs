@@ -23,7 +23,7 @@ internal sealed class CachedAssetItemRepository : IAssetItemRepository
 		CancellationToken cancellationToken)
 	{
 		return await this.cache.GetOrCreateAsync(
-			$"users/{userId.Value}/assetItems",
+			userId.AssetItemsKey(),
 			async entry => await this.assetItemRepository.GetAllAsync(userId, cancellationToken),
 			cancellationToken: cancellationToken);
 	}
@@ -34,7 +34,7 @@ internal sealed class CachedAssetItemRepository : IAssetItemRepository
 		CancellationToken cancellationToken)
 	{
 		return await this.cache.GetOrCreateAsync(
-			$"users/{userId.Value}/assetItems/{assetItemId.Value}",
+			userId.AssetItemKey(assetItemId),
 			async entry => await this.assetItemRepository.GetByIdAsync(userId, assetItemId, cancellationToken),
 			cancellationToken: cancellationToken);
 	}
@@ -52,7 +52,7 @@ internal sealed class CachedAssetItemRepository : IAssetItemRepository
 			cancellationToken);
 
 		await this.cache.RemoveAsync(
-			$"users/{userId.Value}/assetItems",
+			userId.AssetItemsKey(),
 			cancellationToken: cancellationToken);
 
 		return assetItem;
@@ -69,11 +69,11 @@ internal sealed class CachedAssetItemRepository : IAssetItemRepository
 			cancellationToken);
 
 		await this.cache.RemoveAsync(
-			$"users/{userId.Value}/assetItems",
+			userId.AssetItemsKey(),
 			cancellationToken: cancellationToken);
 
 		await this.cache.RemoveAsync(
-			$"users/{userId.Value}/assetItems/{assetItem.Id.Value}",
+			userId.AssetItemKey(assetItem.Id),
 			cancellationToken: cancellationToken);
 	}
 
@@ -88,11 +88,11 @@ internal sealed class CachedAssetItemRepository : IAssetItemRepository
 			cancellationToken);
 
 		await this.cache.RemoveAsync(
-			$"users/{userId.Value}/assetItems",
+			userId.AssetItemsKey(),
 			cancellationToken: cancellationToken);
 
 		await this.cache.RemoveAsync(
-			$"users/{userId.Value}/assetItems/{assetItemId.Value}",
+			userId.AssetItemKey(assetItemId),
 			cancellationToken: cancellationToken);
 	}
 }

@@ -7,6 +7,7 @@ using Primal.Application.Investments;
 using Primal.Domain.Investments;
 using Primal.Domain.Money;
 using Primal.Domain.Users;
+using Primal.Infrastructure.Investments;
 
 namespace Primal.Api.AssetItems;
 
@@ -497,7 +498,7 @@ internal sealed class GetValuationsEndpoint : Endpoint<GetValuationsRequest, IRe
 		DateOnly valuationDate)
 	{
 		return assetItemIds
-			.Select(assetItemId => $"users/{userId.Value}/asset-items/{assetItemId.Value}/valuations?date={valuationDate:yyyy-MM-dd}")
+			.Select(assetItemId => userId.ValuationTag(assetItemId, valuationDate))
 			.ToImmutableArray();
 	}
 

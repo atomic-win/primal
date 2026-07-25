@@ -28,12 +28,12 @@ internal sealed class CachedTransactionRepository : ITransactionRepository
 		CancellationToken cancellationToken)
 	{
 		return await this.cache.GetOrCreateAsync(
-			$"users/{userId.Value}/assetItems/{assetItemId.Value}/transactions",
+			userId.TransactionsKey(assetItemId),
 			async entry => (await this.transactionRepository.GetByAssetItemIdAsync(
 				userId,
 				assetItemId,
 				cancellationToken)).ToImmutableArray(),
-			tags: new[] { $"users/{userId.Value}/assetItems/{assetItemId.Value}/transactions" },
+			tags: new[] { userId.TransactionsKey(assetItemId) },
 			cancellationToken: cancellationToken);
 	}
 
@@ -44,13 +44,13 @@ internal sealed class CachedTransactionRepository : ITransactionRepository
 		CancellationToken cancellationToken)
 	{
 		return await this.cache.GetOrCreateAsync(
-			$"users/{userId.Value}/assetItems/{assetItemId.Value}/transactions/{transactionId.Value}",
+			userId.TransactionKey(assetItemId, transactionId),
 			async entry => await this.transactionRepository.GetByIdAsync(
 				userId,
 				assetItemId,
 				transactionId,
 				cancellationToken),
-			tags: new[] { $"users/{userId.Value}/assetItems/{assetItemId.Value}/transactions" },
+			tags: new[] { userId.TransactionsKey(assetItemId) },
 			cancellationToken: cancellationToken);
 	}
 
@@ -134,14 +134,14 @@ internal sealed class CachedTransactionRepository : ITransactionRepository
 		CancellationToken cancellationToken)
 	{
 		await this.cache.RemoveByTagAsync(
-			$"users/{userId.Value}/assetItems/{assetItemId.Value}/transactions",
+			userId.TransactionsKey(assetItemId),
 			cancellationToken: cancellationToken);
 
 		var valuationDates = this.timeProvider.GetValuationDates(transactionDate);
 
 		await Task.WhenAll(valuationDates.Select(valuationDate =>
 			this.cache.RemoveByTagAsync(
-				$"users/{userId.Value}/asset-items/{assetItemId.Value}/valuations?date={valuationDate:yyyy-MM-dd}",
+				userId.ValuationTag(assetItemId, valuationDate),
 				cancellationToken: cancellationToken).AsTask()));
 	}
 }
