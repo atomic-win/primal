@@ -18,6 +18,9 @@ public static class CacheKeyExtensions
 	public static string ValuationTag(this UserId userId, AssetItemId assetItemId, DateOnly valuationDate)
 		=> $"users/{userId.Value}/asset-items/{assetItemId.Value}/valuations/{valuationDate:yyyy-MM-dd}";
 
+	public static string ValuationInputKey(this UserId userId, AssetItemId assetItemId, DateOnly valuationDate, Currency currency)
+		=> $"users/{userId.Value}/asset-items/{assetItemId.Value}/valuation-inputs/{valuationDate:yyyy-MM-dd}/{currency}";
+
 	// User
 	internal static string UserKey(this UserId userId)
 		=> $"users/{userId.Value}";
