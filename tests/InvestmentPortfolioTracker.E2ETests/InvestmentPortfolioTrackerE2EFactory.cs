@@ -1,0 +1,100 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+using InvestmentPortfolioTracker.Core.Users;
+using InvestmentPortfolioTracker.Domain.Users;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IdentityModel.Tokens;
+using NSubstitute;
+using WireMock.Server;
+
+#nullable enable
+
+namespace InvestmentPortfolioTracker.E2ETests;
+
+internal sealed class InvestmentPortfolioTrackerE2EFactory : WebApplicationFactory<Program>
+{
+	internal static readonly DateTimeOffset FrozenTime = new(2026, 6, 1, 12, 0, 0, TimeSpan.Zero);
+
+	private const string TestSecretKey = "super-secret-test-key-that-is-long-enough-for-hmac-sha256";
+
+	private readonly string dbPath = Path.Combine(Path.GetTempPath(), $"ipt-e2e-{Guid.NewGuid()}.db");
+
+	internal string DbPath => this.dbPath;
+
+	internal WireMockServer MutualFundApi { get; } = WireMockServer.Start();
+
+	internal WireMockServer AlphaVantageApi { get; } = WireMockServer.Start();
+
+	internal IIdTokenValidator IdTokenValidator { get; } = Substitute.For<IIdTokenValidator>();
+
+	internal string CreateToken(UserId userId)
+	{
+		var key = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(TestSecretKey));
+		var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+		var claims = new[]
+		{
+			new Claim(JwtRegisteredClaimNames.Sub, userId.Value.ToString("D")),
+		};
+
+		var token = new JwtSecurityToken(
+			issuer: "TestIssuer",
+			audience: "TestAudience",
+			claims: claims,
+			expires: DateTime.UtcNow.AddMinutes(60),
+			signingCredentials: credentials);
+
+		return new JwtSecurityTokenHandler().WriteToken(token);
+	}
+
+	internal HttpClient CreateAuthenticatedClient(UserId userId)
+	{
+		var client = this.CreateClient();
+		client.DefaultRequestHeaders.Authorization =
+			new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", this.CreateToken(userId));
+		return client;
+	}
+
+	protected override void ConfigureWebHost(IWebHostBuilder builder)
+	{
+		builder.UseSetting("ConnectionStrings:DefaultConnection", $"Data Source={this.dbPath}");
+		builder.UseSetting("TokenIssuerSettings:SecretKey", TestSecretKey);
+		builder.UseSetting("TokenIssuerSettings:Issuer", "TestIssuer");
+		builder.UseSetting("TokenIssuerSettings:Audience", "TestAudience");
+		builder.UseSetting("TokenIssuerSettings:AccessTokenValidity", "60");
+		builder.UseSetting("InvestmentSettings:AlphaVantageApiKey", "test-alpha-key");
+		builder.UseSetting("InvestmentSettings:MutualFundApiBaseUrl", this.MutualFundApi.Url!);
+		builder.UseSetting("InvestmentSettings:AlphaVantageBaseUrl", this.AlphaVantageApi.Url!);
+
+		builder.ConfigureServices(services =>
+		{
+			var descriptors = services.Where(d => d.ServiceType == typeof(TimeProvider)).ToList();
+			foreach (var descriptor in descriptors)
+			{
+				services.Remove(descriptor);
+			}
+
+			services.AddSingleton<TimeProvider>(new Microsoft.Extensions.Time.Testing.FakeTimeProvider(FrozenTime));
+		});
+
+		builder.ConfigureTestServices(services =>
+		{
+			services.AddSingleton(this.IdTokenValidator);
+		});
+	}
+
+	protected override void Dispose(bool disposing)
+	{
+		this.MutualFundApi.Stop();
+		this.AlphaVantageApi.Stop();
+
+		if (File.Exists(this.dbPath))
+		{
+			File.Delete(this.dbPath);
+		}
+	}
+}

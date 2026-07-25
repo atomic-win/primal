@@ -1,0 +1,20 @@
+using System.Collections.Concurrent;
+using System.Data;
+using InvestmentPortfolioTracker.Infrastructure.Persistence;
+
+namespace InvestmentPortfolioTracker.Infrastructure.IntegrationTests;
+
+internal static class TestDbFactory
+{
+	private static readonly ConcurrentBag<IDbConnection> KeepAliveConnections = [];
+
+	internal static DbConnectionFactory CreateTestDatabase()
+	{
+		var connectionFactory = new DbConnectionFactory($"Data Source=file:{Guid.NewGuid()}?mode=memory&cache=shared;Foreign Keys=False");
+		var keepAliveConnection = connectionFactory.CreateConnection();
+		keepAliveConnection.Open();
+		KeepAliveConnections.Add(keepAliveConnection);
+		DatabaseInitializer.Initialize(connectionFactory);
+		return connectionFactory;
+	}
+}

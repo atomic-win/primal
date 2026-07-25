@@ -1,0 +1,503 @@
+using System.Collections.Frozen;
+using System.Collections.Immutable;
+using FastEndpoints;
+using InvestmentPortfolioTracker.Api.Errors;
+using InvestmentPortfolioTracker.Core.Investments;
+using InvestmentPortfolioTracker.Domain.Investments;
+using InvestmentPortfolioTracker.Domain.Money;
+using InvestmentPortfolioTracker.Domain.Users;
+using InvestmentPortfolioTracker.Infrastructure;
+using Microsoft.Extensions.Caching.Hybrid;
+
+namespace InvestmentPortfolioTracker.Api.AssetItems;
+
+[HttpGet("/api/asset-items/valuations")]
+internal sealed class GetValuationsEndpoint : Endpoint<GetValuationsRequest, IReadOnlyList<ValuationResponse>>
+{
+	private readonly HybridCache cache;
+	private readonly TimeProvider timeProvider;
+
+	private readonly IAssetRepository assetRepository;
+	private readonly IAssetItemRepository assetItemRepository;
+	private readonly ITransactionRepository transactionRepository;
+	private readonly ITransactionAmountCalculator transactionAmountCalculator;
+
+	public GetValuationsEndpoint(
+		HybridCache cache,
+		TimeProvider timeProvider,
+		IAssetRepository assetRepository,
+		IAssetItemRepository assetItemRepository,
+		ITransactionRepository transactionRepository,
+		ITransactionAmountCalculator transactionAmountCalculator)
+	{
+		this.cache = cache;
+		this.timeProvider = timeProvider;
+		this.assetRepository = assetRepository;
+		this.assetItemRepository = assetItemRepository;
+		this.transactionRepository = transactionRepository;
+		this.transactionAmountCalculator = transactionAmountCalculator;
+	}
+
+	public override async Task HandleAsync(GetValuationsRequest req, CancellationToken ct)
+	{
+		var userId = new UserId(req.UserId);
+		var assetItemIds = (req.AssetItemIds ?? Array.Empty<Guid>())
+			.Distinct()
+			.Order()
+			.Select(id => new AssetItemId(id)).ToImmutableArray();
+
+		var assetItems = await this.ValidateRequestParameters(userId, assetItemIds, req.Currency, ct);
+		this.ThrowIfAnyErrors();
+
+		var valuations = await this.CalculateValuationsAsync(userId, assetItems, req.Currency, ct);
+		await this.Send.OkAsync(valuations, ct);
+	}
+
+	private async Task<IReadOnlyList<AssetItem>> ValidateRequestParameters(
+		UserId userId,
+		IReadOnlyCollection<AssetItemId> assetItemIds,
+		Currency currency,
+		CancellationToken ct)
+	{
+		if (currency == Currency.Unknown)
+		{
+			this.AddError(ErrorMessages.AssetItem.CurrencyRequired, ErrorCodes.AssetItem.CurrencyRequired);
+		}
+
+		if (assetItemIds.Count == 0)
+		{
+			this.AddError(ErrorMessages.AssetItem.IdsRequired, ErrorCodes.AssetItem.IdsRequired);
+		}
+
+		var assetItems = new List<AssetItem>(capacity: assetItemIds.Count);
+		foreach (var assetItemId in assetItemIds)
+		{
+			var assetItem = await this.assetItemRepository.GetByIdAsync(userId, assetItemId, ct);
+			if (assetItem.Id == AssetItemId.Empty)
+			{
+				this.AddError($"Asset item with ID '{assetItemId.Value}' not found", ErrorCodes.AssetItem.NotFound);
+				continue;
+			}
+
+			assetItems.Add(assetItem);
+		}
+
+		return assetItems;
+	}
+
+	private async Task<IReadOnlyList<ValuationResponse>> CalculateValuationsAsync(
+		UserId userId,
+		IReadOnlyList<AssetItem> assetItems,
+		Currency currency,
+		CancellationToken ct)
+	{
+		var transactionsByAssetItem = await this.GetTransactionsByAssetItemAsync(userId, assetItems, ct);
+
+		return await Task.WhenAll(this.GetValuationDates(transactionsByAssetItem)
+			.Select(valuationDate => this.CalculateValuationAsync(
+				userId,
+				transactionsByAssetItem,
+				valuationDate,
+				currency,
+				ct)));
+	}
+
+	private async Task<IReadOnlyDictionary<AssetItemId, IReadOnlyList<Transaction>>> GetTransactionsByAssetItemAsync(
+		UserId userId,
+		IReadOnlyList<AssetItem> assetItems,
+		CancellationToken ct)
+	{
+		var results = await Task.WhenAll(assetItems.Select(async assetItem =>
+		{
+			var transactions = await this.transactionRepository.GetByAssetItemIdAsync(userId, assetItem.Id, ct);
+			return KeyValuePair.Create<AssetItemId, IReadOnlyList<Transaction>>(assetItem.Id, transactions.ToImmutableArray());
+		}));
+
+		return results.ToFrozenDictionary();
+	}
+
+	private async Task<ValuationResponse> CalculateValuationAsync(
+		UserId userId,
+		IReadOnlyDictionary<AssetItemId, IReadOnlyList<Transaction>> transactionsByAssetItem,
+		DateOnly valuationDate,
+		Currency currency,
+		CancellationToken ct)
+	{
+		var assetItemIds = transactionsByAssetItem.Values
+			.SelectMany(transactions => transactions)
+			.Where(transaction => transaction.Date <= valuationDate)
+			.Select(transaction => transaction.AssetItemId)
+			.Distinct()
+			.ToImmutableArray();
+
+		return await this.cache.GetOrCreateAsync(
+			key: userId.ValuationKey(assetItemIds, valuationDate, currency),
+			async _ =>
+			{
+				var valuationInputs = await Task.WhenAll(assetItemIds.Select(assetItemId =>
+						this.cache.GetOrCreateAsync(
+							key: userId.ValuationInputKey(assetItemId, valuationDate, currency),
+							async _ => await this.CalculateValuationInputAsync(
+								userId,
+								await this.assetItemRepository.GetByIdAsync(userId, assetItemId, ct),
+								transactionsByAssetItem[assetItemId],
+								valuationDate,
+								currency,
+								ct),
+							tags: new[] { userId.ValuationTag(assetItemId, valuationDate) },
+							cancellationToken: ct).AsTask()));
+
+				if (!valuationInputs.SelectMany(i => i.XirrInputs).Any())
+				{
+					return new ValuationResponse(
+						Date: valuationDate,
+						InvestedValue: 0,
+						CurrentValue: 0,
+						XirrPercent: 0);
+				}
+
+				return new ValuationResponse(
+					Date: valuationDate,
+					InvestedValue: Math.Round(valuationInputs.Sum(i => i.InvestedValue), 2),
+					CurrentValue: Math.Round(valuationInputs.Sum(i => i.CurrentValue), 2),
+					XirrPercent: Math.Round(100 * this.CalculateXirr(valuationInputs.SelectMany(i => i.XirrInputs).ToImmutableArray()), 2));
+			},
+			tags: assetItemIds.Select(id => userId.ValuationTag(id, valuationDate)).ToImmutableArray(),
+			cancellationToken: ct).AsTask();
+	}
+
+	private async Task<ValuationInput> CalculateValuationInputAsync(
+		UserId userId,
+		AssetItem assetItem,
+		IReadOnlyList<Transaction> allTransactions,
+		DateOnly valuationDate,
+		Currency currency,
+		CancellationToken ct)
+	{
+		var asset = await this.assetRepository.GetByIdAsync(assetItem.AssetId, ct);
+
+		var transactionsWithinValuationDate = allTransactions
+			.Where(t => t.Date <= valuationDate)
+			.ToImmutableArray();
+
+		var currentValue = await this.CalculateCurrentValueAsync(
+			userId,
+			transactionsWithinValuationDate,
+			valuationDate,
+			currency,
+			ct);
+
+		var investedValue = asset.AssetType switch
+		{
+			AssetType.BankAccount or AssetType.Wallet or AssetType.TradingAccount or AssetType.Bond => currentValue,
+			AssetType.FixedDeposit or AssetType.EPF or AssetType.PPF or AssetType.MutualFund or AssetType.Stock or AssetType.ETF => await this.CalculateInvestedValueAsync(
+				userId,
+				transactionsWithinValuationDate,
+				valuationDate,
+				currency,
+				ct),
+			_ => throw new InvalidOperationException($"Unsupported asset type: {asset.AssetType}"),
+		};
+
+		var xirrInputs = (await Task.WhenAll(transactionsWithinValuationDate
+			.Select(transaction => this.MapToXirrInputAsync(
+				userId,
+				transaction,
+				valuationDate,
+				currency,
+				ct))))
+			.ToImmutableArray();
+
+		return new ValuationInput
+		{
+			InvestedValue = investedValue,
+			CurrentValue = currentValue,
+			XirrInputs = xirrInputs,
+		};
+	}
+
+	private async Task<XirrInput> MapToXirrInputAsync(
+		UserId userId,
+		Transaction transaction,
+		DateOnly valuationDate,
+		Currency currency,
+		CancellationToken ct)
+	{
+		return new XirrInput
+		{
+			YearDiff = (valuationDate.DayNumber - transaction.Date.DayNumber) / 365.25,
+			TransactionAmount = await this.CalculateXIRRTransactionAmountAsync(
+				userId,
+				transaction,
+				valuationDate,
+				currency,
+				ct),
+			BalanceAmount = await this.CalculateXIRRBalanceAmountAsync(
+				userId,
+				transaction,
+				valuationDate,
+				currency,
+				ct),
+		};
+	}
+
+	private async Task<decimal> CalculateXIRRTransactionAmountAsync(
+		UserId userId,
+		Transaction transaction,
+		DateOnly valuationDate,
+		Currency currency,
+		CancellationToken ct)
+	{
+		return transaction.TransactionType switch
+		{
+			TransactionType.Buy or TransactionType.Deposit or TransactionType.InterestPenalty => await this.CalculateInitialAmountAsync(
+				userId,
+				transaction,
+				valuationDate,
+				currency,
+				ct),
+			TransactionType.Sell or TransactionType.Withdrawal or TransactionType.Interest or TransactionType.Dividend => -await this.CalculateInitialAmountAsync(
+				userId,
+				transaction,
+				valuationDate,
+				currency,
+				ct),
+			_ => 0m,
+		};
+	}
+
+	private async Task<decimal> CalculateXIRRBalanceAmountAsync(
+		UserId userId,
+		Transaction transaction,
+		DateOnly valuationDate,
+		Currency currency,
+		CancellationToken ct)
+	{
+		return transaction.TransactionType switch
+		{
+			TransactionType.Buy or TransactionType.Deposit or TransactionType.SelfInterest => await this.CalculateCurrentAmountAsync(
+				userId,
+				transaction,
+				valuationDate,
+				currency,
+				ct),
+			TransactionType.Sell or TransactionType.Withdrawal or TransactionType.InterestPenalty => -await this.CalculateCurrentAmountAsync(
+				userId,
+				transaction,
+				valuationDate,
+				currency,
+				ct),
+			_ => 0m,
+		};
+	}
+
+	private async Task<decimal> CalculateInvestedValueAsync(
+		UserId userId,
+		IEnumerable<Transaction> transactions,
+		DateOnly valuationDate,
+		Currency currency,
+		CancellationToken ct)
+	{
+		// !!! NOTE: This method calculates the invested value for only a single asset item
+		decimal withdrawnAmount = transactions
+			.Where(t => t.TransactionType == TransactionType.Withdrawal ||
+						t.TransactionType == TransactionType.InterestPenalty)
+			.Sum(t => t.Amount);
+
+		decimal withdrawnUnits = transactions
+			.Where(t => t.TransactionType == TransactionType.Sell)
+			.Sum(t => t.Units);
+
+		decimal investedValue = 0;
+
+		foreach (var transaction in transactions.OrderBy(t => t.Date))
+		{
+			if (transaction.TransactionType != TransactionType.Deposit &&
+				transaction.TransactionType != TransactionType.Buy)
+			{
+				continue;
+			}
+
+			var currentTransactionWithDrawnAmount = Math.Min(withdrawnAmount, transaction.Amount);
+			var currentTransactionWithDrawnUnits = Math.Min(withdrawnUnits, transaction.Units);
+
+			withdrawnAmount -= currentTransactionWithDrawnAmount;
+			withdrawnUnits -= currentTransactionWithDrawnUnits;
+
+			if (transaction.Amount == currentTransactionWithDrawnAmount &&
+				transaction.Units == currentTransactionWithDrawnUnits)
+			{
+				continue;
+			}
+
+			var newTransaction = new Transaction(
+				transaction.Id,
+				transaction.Date,
+				transaction.Name,
+				transaction.TransactionType,
+				transaction.AssetItemId,
+				transaction.Units - currentTransactionWithDrawnUnits,
+				transaction.Price,
+				transaction.Amount - currentTransactionWithDrawnAmount);
+
+			investedValue += await this.CalculateInitialAmountAsync(
+				userId,
+				newTransaction,
+				valuationDate,
+				currency,
+				ct);
+		}
+
+		return investedValue;
+	}
+
+	private async Task<decimal> CalculateCurrentValueAsync(
+		UserId userId,
+		IEnumerable<Transaction> transactions,
+		DateOnly valuationDate,
+		Currency currency,
+		CancellationToken ct)
+	{
+		var amounts = await Task.WhenAll(
+			transactions.Select(async transaction =>
+			{
+				return transaction.TransactionType switch
+				{
+					TransactionType.Buy or TransactionType.Deposit or TransactionType.SelfInterest => await this.CalculateCurrentAmountAsync(
+						userId,
+						transaction,
+						valuationDate,
+						currency,
+						ct),
+					TransactionType.Sell => -await this.CalculateInitialAmountAsync(
+						userId,
+						transaction,
+						valuationDate,
+						currency,
+						ct),
+					TransactionType.Withdrawal or TransactionType.InterestPenalty => -await this.CalculateCurrentAmountAsync(
+						userId,
+						transaction,
+						valuationDate,
+						currency,
+						ct),
+					_ => 0m,
+				};
+			}).ToImmutableArray());
+
+		return amounts.Sum();
+	}
+
+	private async Task<decimal> CalculateInitialAmountAsync(
+		UserId userId,
+		Transaction transaction,
+		DateOnly valuationDate,
+		Currency currency,
+		CancellationToken ct)
+	{
+		return await this.transactionAmountCalculator.CalculateAmountAsync(
+			userId,
+			transaction,
+			transaction.TransactionType == TransactionType.Deposit || transaction.TransactionType == TransactionType.Withdrawal ? valuationDate : transaction.Date,
+			currency,
+			ct);
+	}
+
+	private async Task<decimal> CalculateCurrentAmountAsync(
+		UserId userId,
+		Transaction transaction,
+		DateOnly valuationDate,
+		Currency currency,
+		CancellationToken ct)
+	{
+		return await this.transactionAmountCalculator.CalculateAmountAsync(
+			userId,
+			transaction,
+			valuationDate,
+			currency,
+			ct);
+	}
+
+	private decimal CalculateXirr(
+		IReadOnlyCollection<XirrInput> xirrInputs)
+	{
+		if (xirrInputs.Count == 0)
+		{
+			return 0;
+		}
+
+		xirrInputs = xirrInputs
+			.GroupBy(i => i.YearDiff)
+			.Select(g => new XirrInput
+			{
+				YearDiff = g.Key,
+				TransactionAmount = g.Sum(i => i.TransactionAmount),
+				BalanceAmount = g.Sum(i => i.BalanceAmount),
+			})
+			.ToImmutableArray();
+
+		decimal balanceAmount = xirrInputs.Sum(i => i.BalanceAmount);
+
+		var allLessThanYear = xirrInputs.All(i => i.YearDiff < 1);
+
+		var inValues = xirrInputs
+			.Where(i => i.TransactionAmount != 0)
+			.Select(i => new
+			{
+				YearDiff = allLessThanYear && balanceAmount != 0 ? 1.0 : i.YearDiff,
+				Value = i.TransactionAmount,
+			})
+			.ToImmutableArray();
+
+		decimal xirrLowerBound = -1;
+		decimal xirrUpperBound = 1;
+
+		while (xirrUpperBound - xirrLowerBound > 0.0001m)
+		{
+			decimal xirr = (xirrLowerBound + xirrUpperBound) / 2;
+			decimal npv = inValues
+				.Sum(i => i.Value * (decimal)Math.Pow((double)(1 + xirr), (double)i.YearDiff));
+
+			if (npv > balanceAmount)
+			{
+				xirrUpperBound = xirr;
+			}
+			else
+			{
+				xirrLowerBound = xirr;
+			}
+		}
+
+		return (xirrLowerBound + xirrUpperBound) / 2;
+	}
+
+	private IReadOnlyList<DateOnly> GetValuationDates(
+		IReadOnlyDictionary<AssetItemId, IReadOnlyList<Transaction>> transactionsByAssetItem)
+	{
+		var earliestDate = transactionsByAssetItem.Values
+			.SelectMany(transactions => transactions)
+			.Select(transaction => transaction.Date)
+			.DefaultIfEmpty(DateOnly.FromDateTime(this.timeProvider.GetUtcNow().UtcDateTime))
+			.Min();
+
+		return this.timeProvider.GetValuationDates(earliestDate);
+	}
+
+	private sealed class ValuationInput
+	{
+		public required decimal InvestedValue { get; init; }
+
+		public required decimal CurrentValue { get; init; }
+
+		public required IReadOnlyCollection<XirrInput> XirrInputs { get; init; }
+	}
+
+	private sealed class XirrInput
+	{
+		public required double YearDiff { get; init; }
+
+		public required decimal TransactionAmount { get; init; }
+
+		public required decimal BalanceAmount { get; init; }
+	}
+}

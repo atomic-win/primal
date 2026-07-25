@@ -2,21 +2,21 @@
 
 ## Project Overview
 
-Primal is a .NET 10 backend API for an investment portfolio tracker, built with FastEndpoints, Autofac, and SQLite.
+InvestmentPortfolioTracker is a .NET 10 backend API for an investment portfolio tracker, built with FastEndpoints, Autofac, and SQLite.
 
 ## Architecture
 
 ```
 src/
-  Primal.Domain/          # Domain models, value objects, enums
-  Primal.Application/     # Interfaces, business logic (TransactionAmountCalculator)
-  Primal.Infrastructure/  # Repositories, API clients, caching, persistence
-  Primal.Api/             # FastEndpoints, validators, DTOs, Program.cs
+  InvestmentPortfolioTracker.Domain/          # Domain models, value objects, enums
+  InvestmentPortfolioTracker.Core/     # Interfaces, business logic (TransactionAmountCalculator)
+  InvestmentPortfolioTracker.Infrastructure/  # Repositories, API clients, caching, persistence
+  InvestmentPortfolioTracker.Api/             # FastEndpoints, validators, DTOs, Program.cs
 tests/
-  Primal.Domain.UnitTests/                # Domain model contract tests
-  Primal.Api.UnitTests/                   # Validator tests
-  Primal.Infrastructure.IntegrationTests/ # Repository, API client, cache tests
-  Primal.E2ETests/                        # End-to-end HTTP tests (primary test suite)
+  InvestmentPortfolioTracker.Domain.UnitTests/                # Domain model contract tests
+  InvestmentPortfolioTracker.Api.UnitTests/                   # Validator tests
+  InvestmentPortfolioTracker.Infrastructure.IntegrationTests/ # Repository, API client, cache tests
+  InvestmentPortfolioTracker.E2ETests/                        # End-to-end HTTP tests (primary test suite)
 bruno/                    # Bruno API collection (YAML format)
 ```
 
@@ -31,16 +31,16 @@ All tests use the [TUnit](https://github.com/thomhurst/TUnit) framework with [Ve
 
 ## Adding a New Endpoint
 
-Each endpoint lives in its own folder under `Primal.Api/{Resource}/{Action}/` with three files:
+Each endpoint lives in its own folder under `InvestmentPortfolioTracker.Api/{Resource}/{Action}/` with three files:
 
 1. **Request** (`{Action}Request.cs`): Record with `[FromClaim]` for UserId, route/body params.
 2. **Validator** (`{Action}Validator.cs`): Extends `Validator<TRequest>`. Use `ErrorCodes` and `ErrorMessages` constants. For long validators, extract rules into private methods (MA0051 enforces max 60 lines per method).
 3. **Endpoint** (`{Action}Endpoint.cs`): Extends `Endpoint<TRequest>` or `Endpoint<TRequest, TResponse>`. Use `[Http{Verb}("route")]` attribute. Use `ErrorFactory` for 404s.
 
 When adding CRUD operations, update all layers:
-- `Primal.Application`: Add method to the repository interface (e.g., `IAssetItemRepository`).
-- `Primal.Infrastructure`: Implement in both the repository (e.g., `AssetItemRepository`) and its cached decorator (e.g., `CachedAssetItemRepository`). Cached decorators must invalidate relevant cache keys after mutations.
-- `Primal.Api/Errors`: Add new `ErrorCodes` and `ErrorMessages` constants if needed.
+- `InvestmentPortfolioTracker.Core`: Add method to the repository interface (e.g., `IAssetItemRepository`).
+- `InvestmentPortfolioTracker.Infrastructure`: Implement in both the repository (e.g., `AssetItemRepository`) and its cached decorator (e.g., `CachedAssetItemRepository`). Cached decorators must invalidate relevant cache keys after mutations.
+- `InvestmentPortfolioTracker.Api/Errors`: Add new `ErrorCodes` and `ErrorMessages` constants if needed.
 - `bruno/`: Add a `.yml` request file for the new endpoint.
 - `TESTS.md`: Add test scenarios for the new endpoint and update the summary table.
 - `AGENTS.md`: Update this file to reflect any new conventions, patterns, or behavioral changes.
@@ -70,13 +70,13 @@ For PATCH endpoints that partially update an entity:
 - **E2E tests are the primary test suite.** Only add unit/integration tests for logic that cannot be exercised via HTTP endpoints.
 - Each E2E test is a single class in its own file, named after the expected behavior (e.g., `Returns_400_When_Name_Is_Empty`).
 - Use `Verifier.Verify(body)` for assertions — avoid manual `Assert.That` chains in E2E tests.
-- E2E tests use `PrimalE2EFactory` with WireMock for external APIs and `FakeTimeProvider` frozen at `2026-06-01`.
+- E2E tests use `InvestmentPortfolioTrackerE2EFactory` with WireMock for external APIs and `FakeTimeProvider` frozen at `2026-06-01`.
 - Snapshot files (`.verified.txt`) are committed to the repo and reviewed in PRs. Run new tests once to generate `.received.txt`, verify the content, then rename to `.verified.txt`.
 - Exception tests (`Assert.Throws`) and mock verification (`Received`/`DidNotReceive`) are kept as-is — snapshots don't apply there.
 - Use bare `// Arrange`, `// Act`, `// Assert` comments — no extra descriptions.
 - Tests run with `[assembly: NotInParallel]` in E2E to avoid port/DB conflicts.
 - Helper methods like `AddAssetItemAsync` and `AddTransactionAsync` are in `HttpClientExtensions.cs` for reuse across tests.
-- TUnit filter syntax for running specific tests: `--treenode-filter "/Primal.E2ETests/Primal.E2ETests.Namespace.ClassName/**"`.
+- TUnit filter syntax for running specific tests: `--treenode-filter "/InvestmentPortfolioTracker.E2ETests/InvestmentPortfolioTracker.E2ETests.Namespace.ClassName/**"`.
 - After adding or modifying tests, run `dotnet test` and ensure the total count in `TESTS.md` stays accurate.
 
 ## Code Style
@@ -107,12 +107,12 @@ For PATCH endpoints that partially update an entity:
 
 | File | Purpose |
 |------|---------|
-| `src/Primal.Api/Errors/ErrorCodes.cs` | All validation error code constants |
-| `src/Primal.Api/Errors/ErrorMessages.cs` | All validation error message constants |
-| `src/Primal.Api/Errors/ErrorFactory.cs` | Factory for not-found `ValidationFailure` instances |
-| `tests/Primal.E2ETests/PrimalE2EFactory.cs` | Test server factory with WireMock, FakeTimeProvider, JWT auth |
-| `tests/Primal.E2ETests/WireMockServerExtensions.cs` | WireMock stub helpers for AlphaVantage and MutualFund APIs |
-| `tests/Primal.E2ETests/HttpClientExtensions.cs` | Helper methods for creating test data |
+| `src/InvestmentPortfolioTracker.Api/Errors/ErrorCodes.cs` | All validation error code constants |
+| `src/InvestmentPortfolioTracker.Api/Errors/ErrorMessages.cs` | All validation error message constants |
+| `src/InvestmentPortfolioTracker.Api/Errors/ErrorFactory.cs` | Factory for not-found `ValidationFailure` instances |
+| `tests/InvestmentPortfolioTracker.E2ETests/InvestmentPortfolioTrackerE2EFactory.cs` | Test server factory with WireMock, FakeTimeProvider, JWT auth |
+| `tests/InvestmentPortfolioTracker.E2ETests/WireMockServerExtensions.cs` | WireMock stub helpers for AlphaVantage and MutualFund APIs |
+| `tests/InvestmentPortfolioTracker.E2ETests/HttpClientExtensions.cs` | Helper methods for creating test data |
 | `TESTS.md` | All test scenarios with counts — must be kept in sync |
 
 ## Maintenance

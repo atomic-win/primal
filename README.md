@@ -1,4 +1,4 @@
-# primal
+# investment-portfolio-tracker
 
 Backend API Server for [Investment Portfolio Tracker](https://github.com/atomic-win/investment-portfolio-tracker)
 
@@ -19,14 +19,14 @@ dotnet test
 
 | Project | Description |
 |---------|-------------|
-| `src/Primal.Api` | HTTP endpoints, validators, DTOs |
-| `src/Primal.Application` | Interfaces, business logic |
-| `src/Primal.Domain` | Domain models, value objects |
-| `src/Primal.Infrastructure` | Repositories, API clients, persistence |
-| `tests/Primal.E2ETests` | End-to-end HTTP tests (primary suite) |
-| `tests/Primal.Domain.UnitTests` | Domain model contract tests |
-| `tests/Primal.Api.UnitTests` | Validator tests |
-| `tests/Primal.Infrastructure.IntegrationTests` | Repository and API client tests |
+| `src/InvestmentPortfolioTracker.Api` | HTTP endpoints, validators, DTOs |
+| `src/InvestmentPortfolioTracker.Core` | Interfaces, business logic |
+| `src/InvestmentPortfolioTracker.Domain` | Domain models, value objects |
+| `src/InvestmentPortfolioTracker.Infrastructure` | Repositories, API clients, persistence |
+| `tests/InvestmentPortfolioTracker.E2ETests` | End-to-end HTTP tests (primary suite) |
+| `tests/InvestmentPortfolioTracker.Domain.UnitTests` | Domain model contract tests |
+| `tests/InvestmentPortfolioTracker.Api.UnitTests` | Validator tests |
+| `tests/InvestmentPortfolioTracker.Infrastructure.IntegrationTests` | Repository and API client tests |
 
 ## License & Usage Notice
 
