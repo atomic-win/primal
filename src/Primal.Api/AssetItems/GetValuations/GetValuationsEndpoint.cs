@@ -93,13 +93,17 @@ internal sealed class GetValuationsEndpoint : Endpoint<GetValuationsRequest, IRe
 		var transactionsByAssetItem = await this.GetTransactionsByAssetItemAsync(userId, assetItems, ct);
 
 		return await Task.WhenAll(this.GetValuationDates(transactionsByAssetItem)
-			.Select(valuationDate => this.CalculateValuationAsync(
-				userId,
-				assetItems,
-				transactionsByAssetItem,
-				valuationDate,
-				currency,
-				ct)));
+			.Select(valuationDate => this.cache.GetOrCreateAsync(
+				key: this.GetValuationCacheKey(userId, transactionsByAssetItem, valuationDate, currency),
+				async _ => await this.CalculateValuationAsync(
+					userId,
+					assetItems,
+					transactionsByAssetItem,
+					valuationDate,
+					currency,
+					ct),
+				tags: this.GetValuationCacheTags(userId, transactionsByAssetItem, valuationDate),
+				cancellationToken: ct).AsTask()));
 	}
 
 	private async Task<IReadOnlyDictionary<AssetItemId, IReadOnlyList<Transaction>>> GetTransactionsByAssetItemAsync(
@@ -457,24 +461,48 @@ internal sealed class GetValuationsEndpoint : Endpoint<GetValuationsRequest, IRe
 	private IReadOnlyList<DateOnly> GetValuationDates(
 		IReadOnlyDictionary<AssetItemId, IReadOnlyList<Transaction>> transactionsByAssetItem)
 	{
-		var today = DateOnly.FromDateTime(this.timeProvider.GetUtcNow().UtcDateTime);
-		var dates = new List<DateOnly> { today };
-
 		var earliestDate = transactionsByAssetItem.Values
 			.SelectMany(transactions => transactions)
 			.Select(transaction => transaction.Date)
-			.DefaultIfEmpty(today)
+			.DefaultIfEmpty(DateOnly.FromDateTime(this.timeProvider.GetUtcNow().UtcDateTime))
 			.Min();
 
-		var endOfMonth = new DateOnly(today.Year, today.Month, 1).AddDays(-1);
+		return this.timeProvider.GetValuationDates(earliestDate);
+	}
 
-		while (endOfMonth >= earliestDate)
-		{
-			dates.Add(endOfMonth);
-			endOfMonth = new DateOnly(endOfMonth.Year, endOfMonth.Month, 1).AddDays(-1);
-		}
+	private string GetValuationCacheKey(
+		UserId userId,
+		IReadOnlyDictionary<AssetItemId, IReadOnlyList<Transaction>> transactionsByAssetItem,
+		DateOnly valuationDate,
+		Currency currency)
+	{
+		var assetItemIds = transactionsByAssetItem.Values
+			.SelectMany(transactions => transactions)
+			.Where(transaction => transaction.Date <= valuationDate)
+			.Select(transaction => transaction.AssetItemId)
+			.Distinct()
+			.Order()
+			.ToImmutableArray();
 
-		return dates;
+		return $"users/{userId.Value}/asset-items/valuations?date={valuationDate:yyyy-MM-dd}&currency={currency}&assetItemIds={string.Join(',', assetItemIds.Select(id => id.Value))}";
+	}
+
+	private IReadOnlyList<string> GetValuationCacheTags(
+		UserId userId,
+		IReadOnlyDictionary<AssetItemId, IReadOnlyList<Transaction>> transactionsByAssetItem,
+		DateOnly valuationDate)
+	{
+		var assetItemIds = transactionsByAssetItem.Values
+			.SelectMany(transactions => transactions)
+			.Where(transaction => transaction.Date <= valuationDate)
+			.Select(transaction => transaction.AssetItemId)
+			.Distinct()
+			.Order()
+			.ToImmutableArray();
+
+		return assetItemIds
+			.Select(assetItemId => $"users/{userId.Value}/asset-items/{assetItemId.Value}/valuations?date={valuationDate:yyyy-MM-dd}")
+			.ToImmutableArray();
 	}
 
 	private sealed class ValuationInput
