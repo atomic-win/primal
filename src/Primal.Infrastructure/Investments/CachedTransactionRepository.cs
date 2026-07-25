@@ -8,14 +8,17 @@ namespace Primal.Infrastructure.Investments;
 
 internal sealed class CachedTransactionRepository : ITransactionRepository
 {
-	private readonly HybridCache hybridCache;
+	private readonly HybridCache cache;
+	private readonly TimeProvider timeProvider;
 	private readonly ITransactionRepository transactionRepository;
 
 	internal CachedTransactionRepository(
-		HybridCache hybridCache,
+		HybridCache cache,
+		TimeProvider timeProvider,
 		ITransactionRepository transactionRepository)
 	{
-		this.hybridCache = hybridCache;
+		this.cache = cache;
+		this.timeProvider = timeProvider;
 		this.transactionRepository = transactionRepository;
 	}
 
@@ -24,13 +27,13 @@ internal sealed class CachedTransactionRepository : ITransactionRepository
 		AssetItemId assetItemId,
 		CancellationToken cancellationToken)
 	{
-		return await this.hybridCache.GetOrCreateAsync(
-			$"users/{userId.Value}/assetItems/{assetItemId.Value}/transactions",
+		return await this.cache.GetOrCreateAsync(
+			userId.TransactionsKey(assetItemId),
 			async entry => (await this.transactionRepository.GetByAssetItemIdAsync(
 				userId,
 				assetItemId,
 				cancellationToken)).ToImmutableArray(),
-			tags: new[] { $"users/{userId.Value}/assetItems/{assetItemId.Value}/transactions" },
+			tags: new[] { userId.TransactionsKey(assetItemId) },
 			cancellationToken: cancellationToken);
 	}
 
@@ -40,14 +43,14 @@ internal sealed class CachedTransactionRepository : ITransactionRepository
 		TransactionId transactionId,
 		CancellationToken cancellationToken)
 	{
-		return await this.hybridCache.GetOrCreateAsync(
-			$"users/{userId.Value}/assetItems/{assetItemId.Value}/transactions/{transactionId.Value}",
+		return await this.cache.GetOrCreateAsync(
+			userId.TransactionKey(assetItemId, transactionId),
 			async entry => await this.transactionRepository.GetByIdAsync(
 				userId,
 				assetItemId,
 				transactionId,
 				cancellationToken),
-			tags: new[] { $"users/{userId.Value}/assetItems/{assetItemId.Value}/transactions" },
+			tags: new[] { userId.TransactionsKey(assetItemId) },
 			cancellationToken: cancellationToken);
 	}
 
@@ -76,6 +79,7 @@ internal sealed class CachedTransactionRepository : ITransactionRepository
 		await this.InvalidateCacheAsync(
 			userId,
 			assetItemId,
+			date,
 			cancellationToken);
 
 		return transaction;
@@ -94,6 +98,7 @@ internal sealed class CachedTransactionRepository : ITransactionRepository
 		await this.InvalidateCacheAsync(
 			userId,
 			transaction.AssetItemId,
+			transaction.Date,
 			cancellationToken);
 	}
 
@@ -103,6 +108,12 @@ internal sealed class CachedTransactionRepository : ITransactionRepository
 		TransactionId transactionId,
 		CancellationToken cancellationToken)
 	{
+		var transaction = await this.GetByIdAsync(
+			userId,
+			assetItemId,
+			transactionId,
+			cancellationToken);
+
 		await this.transactionRepository.DeleteAsync(
 			userId,
 			assetItemId,
@@ -112,20 +123,25 @@ internal sealed class CachedTransactionRepository : ITransactionRepository
 		await this.InvalidateCacheAsync(
 			userId,
 			assetItemId,
+			transaction.Date,
 			cancellationToken);
 	}
 
 	private async Task InvalidateCacheAsync(
 		UserId userId,
 		AssetItemId assetItemId,
+		DateOnly transactionDate,
 		CancellationToken cancellationToken)
 	{
-		await this.hybridCache.RemoveByTagAsync(
-			$"users/{userId.Value}/assetItems/{assetItemId.Value}/transactions",
+		await this.cache.RemoveByTagAsync(
+			userId.TransactionsKey(assetItemId),
 			cancellationToken: cancellationToken);
 
-		await this.hybridCache.RemoveByTagAsync(
-			$"users/{userId.Value}/assetItems/{assetItemId.Value}/valuations",
-			cancellationToken: cancellationToken);
+		var valuationDates = this.timeProvider.GetValuationDates(transactionDate);
+
+		await Task.WhenAll(valuationDates.Select(valuationDate =>
+			this.cache.RemoveByTagAsync(
+				userId.ValuationTag(assetItemId, valuationDate),
+				cancellationToken: cancellationToken).AsTask()));
 	}
 }

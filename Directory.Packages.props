@@ -27,6 +27,6 @@
     <PackageVersion Include="RichardSzalay.MockHttp" Version="7.0.0" />
     <PackageVersion Include="TUnit" Version="1.47.0" />
     <PackageVersion Include="Verify.TUnit" Version="31.18.0" />
-    <PackageVersion Include="WireMock.Net" Version="1.7.0" />
+    <PackageVersion Include="WireMock.Net" Version="2.13.0" />
   </ItemGroup>
 </Project>

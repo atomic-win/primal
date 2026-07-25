@@ -7,16 +7,16 @@ namespace Primal.Infrastructure.Investments;
 
 internal sealed class CachedForexApiClient : IForexApiClient
 {
-	private readonly HybridCache hybridCache;
+	private readonly HybridCache cache;
 	private readonly IForexApiClient forexApiClient;
 	private readonly RateRepository rateRepository;
 
 	internal CachedForexApiClient(
-		HybridCache hybridCache,
+		HybridCache cache,
 		IForexApiClient forexApiClient,
 		RateRepository rateRepository)
 	{
-		this.hybridCache = hybridCache;
+		this.cache = cache;
 		this.forexApiClient = forexApiClient;
 		this.rateRepository = rateRepository;
 	}
@@ -31,8 +31,8 @@ internal sealed class CachedForexApiClient : IForexApiClient
 			return ImmutableDictionary<DateOnly, decimal>.Empty;
 		}
 
-		return await this.hybridCache.GetOrCreateAsync(
-			$"forex/{fromCurrency}{toCurrency}/rates",
+		return await this.cache.GetOrCreateAsync(
+			CacheKeyExtensions.ForexRatesKey(fromCurrency, toCurrency),
 			async entry => await this.rateRepository.GetOrFetchRatesAsync(
 				$"{fromCurrency}{toCurrency}",
 				RateType.Forex,
@@ -52,8 +52,8 @@ internal sealed class CachedForexApiClient : IForexApiClient
 			return 1m;
 		}
 
-		return await this.hybridCache.GetOrCreateAsync(
-			$"forex/{fromCurrency}{toCurrency}/rates/{date:yyyy-MM-dd}/on-or-before",
+		return await this.cache.GetOrCreateAsync(
+			CacheKeyExtensions.ForexOnOrBeforeRateKey(fromCurrency, toCurrency, date),
 			async entry => await this.GetOnOrBeforeForexRateInternalAsync(fromCurrency, toCurrency, date, cancellationToken),
 			cancellationToken: cancellationToken);
 	}

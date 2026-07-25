@@ -5,18 +5,18 @@ namespace Primal.Infrastructure.Investments;
 
 internal sealed class CachedAssetApiClient<T> : IAssetApiClient<T>
 {
-	private readonly HybridCache hybridCache;
+	private readonly HybridCache cache;
 	private readonly IAssetApiClient<T> assetApiClient;
 	private readonly RateRepository rateRepository;
 	private readonly RateType rateType;
 
 	internal CachedAssetApiClient(
-		HybridCache hybridCache,
+		HybridCache cache,
 		IAssetApiClient<T> assetApiClient,
 		RateRepository rateRepository,
 		RateType rateType)
 	{
-		this.hybridCache = hybridCache;
+		this.cache = cache;
 		this.assetApiClient = assetApiClient;
 		this.rateRepository = rateRepository;
 		this.rateType = rateType;
@@ -24,16 +24,16 @@ internal sealed class CachedAssetApiClient<T> : IAssetApiClient<T>
 
 	public async Task<T> GetBySymbolAsync(string symbol, CancellationToken cancellationToken)
 	{
-		return await this.hybridCache.GetOrCreateAsync(
-			$"asset/{typeof(T).Name}/{symbol}",
+		return await this.cache.GetOrCreateAsync(
+			CacheKeyExtensions.AssetApiKey<T>(symbol),
 			async entry => await this.assetApiClient.GetBySymbolAsync(symbol, cancellationToken),
 			cancellationToken: cancellationToken);
 	}
 
 	public async Task<IReadOnlyDictionary<DateOnly, decimal>> GetPricesAsync(string symbol, CancellationToken cancellationToken)
 	{
-		return await this.hybridCache.GetOrCreateAsync(
-			$"asset/{typeof(T).Name}/{symbol}/prices",
+		return await this.cache.GetOrCreateAsync(
+			CacheKeyExtensions.AssetApiPricesKey<T>(symbol),
 			async entry => await this.rateRepository.GetOrFetchRatesAsync(
 				symbol,
 				this.rateType,
@@ -44,8 +44,8 @@ internal sealed class CachedAssetApiClient<T> : IAssetApiClient<T>
 
 	public async Task<decimal> GetOnOrBeforePriceAsync(string symbol, DateOnly date, CancellationToken cancellationToken)
 	{
-		return await this.hybridCache.GetOrCreateAsync(
-			$"asset/{typeof(T).Name}/{symbol}/prices/{date:yyyy-MM-dd}/on-or-before",
+		return await this.cache.GetOrCreateAsync(
+			CacheKeyExtensions.AssetApiOnOrBeforePriceKey<T>(symbol, date),
 			async entry => await this.GetOnOrBeforeValueAsyncInternal(symbol, date, cancellationToken),
 			cancellationToken: cancellationToken);
 	}

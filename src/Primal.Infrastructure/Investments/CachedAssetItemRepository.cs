@@ -7,14 +7,14 @@ namespace Primal.Infrastructure.Investments;
 
 internal sealed class CachedAssetItemRepository : IAssetItemRepository
 {
-	private readonly HybridCache hybridCache;
+	private readonly HybridCache cache;
 	private readonly IAssetItemRepository assetItemRepository;
 
 	internal CachedAssetItemRepository(
-		HybridCache hybridCache,
+		HybridCache cache,
 		IAssetItemRepository assetItemRepository)
 	{
-		this.hybridCache = hybridCache;
+		this.cache = cache;
 		this.assetItemRepository = assetItemRepository;
 	}
 
@@ -22,8 +22,8 @@ internal sealed class CachedAssetItemRepository : IAssetItemRepository
 		UserId userId,
 		CancellationToken cancellationToken)
 	{
-		return await this.hybridCache.GetOrCreateAsync(
-			$"users/{userId.Value}/assetItems",
+		return await this.cache.GetOrCreateAsync(
+			userId.AssetItemsKey(),
 			async entry => await this.assetItemRepository.GetAllAsync(userId, cancellationToken),
 			cancellationToken: cancellationToken);
 	}
@@ -33,8 +33,8 @@ internal sealed class CachedAssetItemRepository : IAssetItemRepository
 		AssetItemId assetItemId,
 		CancellationToken cancellationToken)
 	{
-		return await this.hybridCache.GetOrCreateAsync(
-			$"users/{userId.Value}/assetItems/{assetItemId.Value}",
+		return await this.cache.GetOrCreateAsync(
+			userId.AssetItemKey(assetItemId),
 			async entry => await this.assetItemRepository.GetByIdAsync(userId, assetItemId, cancellationToken),
 			cancellationToken: cancellationToken);
 	}
@@ -51,8 +51,8 @@ internal sealed class CachedAssetItemRepository : IAssetItemRepository
 			name,
 			cancellationToken);
 
-		await this.hybridCache.RemoveAsync(
-			$"users/{userId.Value}/assetItems",
+		await this.cache.RemoveAsync(
+			userId.AssetItemsKey(),
 			cancellationToken: cancellationToken);
 
 		return assetItem;
@@ -68,12 +68,12 @@ internal sealed class CachedAssetItemRepository : IAssetItemRepository
 			assetItem,
 			cancellationToken);
 
-		await this.hybridCache.RemoveAsync(
-			$"users/{userId.Value}/assetItems",
+		await this.cache.RemoveAsync(
+			userId.AssetItemsKey(),
 			cancellationToken: cancellationToken);
 
-		await this.hybridCache.RemoveAsync(
-			$"users/{userId.Value}/assetItems/{assetItem.Id.Value}",
+		await this.cache.RemoveAsync(
+			userId.AssetItemKey(assetItem.Id),
 			cancellationToken: cancellationToken);
 	}
 
@@ -87,12 +87,12 @@ internal sealed class CachedAssetItemRepository : IAssetItemRepository
 			assetItemId,
 			cancellationToken);
 
-		await this.hybridCache.RemoveAsync(
-			$"users/{userId.Value}/assetItems",
+		await this.cache.RemoveAsync(
+			userId.AssetItemsKey(),
 			cancellationToken: cancellationToken);
 
-		await this.hybridCache.RemoveAsync(
-			$"users/{userId.Value}/assetItems/{assetItemId.Value}",
+		await this.cache.RemoveAsync(
+			userId.AssetItemKey(assetItemId),
 			cancellationToken: cancellationToken);
 	}
 }

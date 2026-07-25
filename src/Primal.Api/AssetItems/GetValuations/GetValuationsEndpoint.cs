@@ -7,6 +7,7 @@ using Primal.Application.Investments;
 using Primal.Domain.Investments;
 using Primal.Domain.Money;
 using Primal.Domain.Users;
+using Primal.Infrastructure;
 
 namespace Primal.Api.AssetItems;
 
@@ -95,7 +96,6 @@ internal sealed class GetValuationsEndpoint : Endpoint<GetValuationsRequest, IRe
 		return await Task.WhenAll(this.GetValuationDates(transactionsByAssetItem)
 			.Select(valuationDate => this.CalculateValuationAsync(
 				userId,
-				assetItems,
 				transactionsByAssetItem,
 				valuationDate,
 				currency,
@@ -118,39 +118,52 @@ internal sealed class GetValuationsEndpoint : Endpoint<GetValuationsRequest, IRe
 
 	private async Task<ValuationResponse> CalculateValuationAsync(
 		UserId userId,
-		IReadOnlyList<AssetItem> assetItems,
 		IReadOnlyDictionary<AssetItemId, IReadOnlyList<Transaction>> transactionsByAssetItem,
 		DateOnly valuationDate,
 		Currency currency,
 		CancellationToken ct)
 	{
-		var valuationInputs = await Task.WhenAll(assetItems.Select(assetItem =>
-			this.cache.GetOrCreateAsync(
-				key: $"users/{userId.Value}/assetItems/{assetItem.Id.Value}/valuationInput?valuationDate={valuationDate}&currency={currency}",
-				async _ => await this.CalculateValuationInputAsync(
-					userId,
-					assetItem,
-					transactionsByAssetItem[assetItem.Id],
-					valuationDate,
-					currency,
-					ct),
-				tags: new[] { $"users/{userId.Value}/assetItems/{assetItem.Id.Value}/valuations" },
-				cancellationToken: ct).AsTask()));
+		var assetItemIds = transactionsByAssetItem.Values
+			.SelectMany(transactions => transactions)
+			.Where(transaction => transaction.Date <= valuationDate)
+			.Select(transaction => transaction.AssetItemId)
+			.Distinct()
+			.ToImmutableArray();
 
-		if (!valuationInputs.SelectMany(i => i.XirrInputs).Any())
-		{
-			return new ValuationResponse(
-				Date: valuationDate,
-				InvestedValue: 0,
-				CurrentValue: 0,
-				XirrPercent: 0);
-		}
+		return await this.cache.GetOrCreateAsync(
+			key: userId.ValuationKey(assetItemIds, valuationDate, currency),
+			async _ =>
+			{
+				var valuationInputs = await Task.WhenAll(assetItemIds.Select(assetItemId =>
+						this.cache.GetOrCreateAsync(
+							key: userId.ValuationInputKey(assetItemId, valuationDate, currency),
+							async _ => await this.CalculateValuationInputAsync(
+								userId,
+								await this.assetItemRepository.GetByIdAsync(userId, assetItemId, ct),
+								transactionsByAssetItem[assetItemId],
+								valuationDate,
+								currency,
+								ct),
+							tags: new[] { userId.ValuationTag(assetItemId, valuationDate) },
+							cancellationToken: ct).AsTask()));
 
-		return new ValuationResponse(
-			Date: valuationDate,
-			InvestedValue: Math.Round(valuationInputs.Sum(i => i.InvestedValue), 2),
-			CurrentValue: Math.Round(valuationInputs.Sum(i => i.CurrentValue), 2),
-			XirrPercent: Math.Round(100 * this.CalculateXirr(valuationInputs.SelectMany(i => i.XirrInputs).ToImmutableArray()), 2));
+				if (!valuationInputs.SelectMany(i => i.XirrInputs).Any())
+				{
+					return new ValuationResponse(
+						Date: valuationDate,
+						InvestedValue: 0,
+						CurrentValue: 0,
+						XirrPercent: 0);
+				}
+
+				return new ValuationResponse(
+					Date: valuationDate,
+					InvestedValue: Math.Round(valuationInputs.Sum(i => i.InvestedValue), 2),
+					CurrentValue: Math.Round(valuationInputs.Sum(i => i.CurrentValue), 2),
+					XirrPercent: Math.Round(100 * this.CalculateXirr(valuationInputs.SelectMany(i => i.XirrInputs).ToImmutableArray()), 2));
+			},
+			tags: assetItemIds.Select(id => userId.ValuationTag(id, valuationDate)).ToImmutableArray(),
+			cancellationToken: ct).AsTask();
 	}
 
 	private async Task<ValuationInput> CalculateValuationInputAsync(
@@ -461,24 +474,13 @@ internal sealed class GetValuationsEndpoint : Endpoint<GetValuationsRequest, IRe
 	private IReadOnlyList<DateOnly> GetValuationDates(
 		IReadOnlyDictionary<AssetItemId, IReadOnlyList<Transaction>> transactionsByAssetItem)
 	{
-		var today = DateOnly.FromDateTime(this.timeProvider.GetUtcNow().UtcDateTime);
-		var dates = new List<DateOnly> { today };
-
 		var earliestDate = transactionsByAssetItem.Values
 			.SelectMany(transactions => transactions)
 			.Select(transaction => transaction.Date)
-			.DefaultIfEmpty(today)
+			.DefaultIfEmpty(DateOnly.FromDateTime(this.timeProvider.GetUtcNow().UtcDateTime))
 			.Min();
 
-		var endOfMonth = new DateOnly(today.Year, today.Month, 1).AddDays(-1);
-
-		while (endOfMonth >= earliestDate)
-		{
-			dates.Add(endOfMonth);
-			endOfMonth = new DateOnly(endOfMonth.Year, endOfMonth.Month, 1).AddDays(-1);
-		}
-
-		return dates;
+		return this.timeProvider.GetValuationDates(earliestDate);
 	}
 
 	private sealed class ValuationInput
