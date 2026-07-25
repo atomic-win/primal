@@ -1,4 +1,3 @@
-using System.Globalization;
 using Primal.Domain.Investments;
 using Primal.Domain.Users;
 
@@ -7,7 +6,7 @@ namespace Primal.Infrastructure.Investments;
 public static class CacheKeyExtensions
 {
 	public static string ValuationTag(this UserId userId, AssetItemId assetItemId, DateOnly valuationDate)
-		=> string.Create(CultureInfo.InvariantCulture, $"users/{userId.Value}/asset-items/{assetItemId.Value}/valuations?date={valuationDate:yyyy-MM-dd}");
+		=> $"users/{userId.Value}/asset-items/{assetItemId.Value}/valuations?date={valuationDate:yyyy-MM-dd}";
 
 	internal static string AssetItemsKey(this UserId userId)
 		=> $"users/{userId.Value}/assetItems";
