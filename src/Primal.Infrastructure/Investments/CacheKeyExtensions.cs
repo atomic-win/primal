@@ -1,10 +1,19 @@
 using Primal.Domain.Investments;
+using Primal.Domain.Money;
 using Primal.Domain.Users;
 
 namespace Primal.Infrastructure.Investments;
 
 public static class CacheKeyExtensions
 {
+	public static string ValuationKey(this UserId userId, IReadOnlyList<AssetItemId> assetItemIds, DateOnly valuationDate, Currency currency)
+	{
+		var assetItemIdsHash = assetItemIds.Order()
+			.Aggregate(0, (hash, id) => HashCode.Combine(hash, id.GetHashCode()));
+
+		return $"users/{userId.Value}/asset-items/valuations?date={valuationDate:yyyy-MM-dd}&currency={currency}&assetItemIdsHash={assetItemIdsHash}";
+	}
+
 	public static string ValuationTag(this UserId userId, AssetItemId assetItemId, DateOnly valuationDate)
 		=> $"users/{userId.Value}/asset-items/{assetItemId.Value}/valuations?date={valuationDate:yyyy-MM-dd}";
 

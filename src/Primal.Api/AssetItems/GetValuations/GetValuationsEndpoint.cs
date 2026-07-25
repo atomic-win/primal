@@ -131,7 +131,7 @@ internal sealed class GetValuationsEndpoint : Endpoint<GetValuationsRequest, IRe
 			.ToImmutableArray();
 
 		return await this.cache.GetOrCreateAsync(
-			key: this.GetValuationCacheKey(userId, assetItemIds, valuationDate, currency),
+			key: userId.ValuationKey(assetItemIds, valuationDate, currency),
 			async _ =>
 			{
 				var valuationInputs = await Task.WhenAll(assetItemIds.Select(async assetItemId =>
@@ -158,7 +158,7 @@ internal sealed class GetValuationsEndpoint : Endpoint<GetValuationsRequest, IRe
 					CurrentValue: Math.Round(valuationInputs.Sum(i => i.CurrentValue), 2),
 					XirrPercent: Math.Round(100 * this.CalculateXirr(valuationInputs.SelectMany(i => i.XirrInputs).ToImmutableArray()), 2));
 			},
-			tags: this.GetValuationCacheTags(userId, assetItemIds, valuationDate),
+			tags: assetItemIds.Select(id => userId.ValuationTag(id, valuationDate)).ToImmutableArray(),
 			cancellationToken: ct).AsTask();
 	}
 
@@ -477,29 +477,6 @@ internal sealed class GetValuationsEndpoint : Endpoint<GetValuationsRequest, IRe
 			.Min();
 
 		return this.timeProvider.GetValuationDates(earliestDate);
-	}
-
-	private string GetValuationCacheKey(
-		UserId userId,
-		IReadOnlyList<AssetItemId> assetItemIds,
-		DateOnly valuationDate,
-		Currency currency)
-	{
-		// hashing the assetItemIds to avoid long cache keys and potential issues with special characters
-		var assetItemIdsHash = assetItemIds.Order()
-			.Aggregate(0, (hash, id) => HashCode.Combine(hash, id.GetHashCode()));
-
-		return $"users/{userId.Value}/asset-items/valuations?date={valuationDate:yyyy-MM-dd}&currency={currency}&assetItemIdsHash={assetItemIdsHash}";
-	}
-
-	private IReadOnlyList<string> GetValuationCacheTags(
-		UserId userId,
-		IReadOnlyList<AssetItemId> assetItemIds,
-		DateOnly valuationDate)
-	{
-		return assetItemIds
-			.Select(assetItemId => userId.ValuationTag(assetItemId, valuationDate))
-			.ToImmutableArray();
 	}
 
 	private sealed class ValuationInput
