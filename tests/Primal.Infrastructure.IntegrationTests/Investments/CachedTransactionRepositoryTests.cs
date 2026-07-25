@@ -82,7 +82,7 @@ public sealed class CachedTransactionRepositoryTests
 		var assetRepo = new AssetRepository(db, TimeProvider.System);
 		var assetItemRepo = new AssetItemRepository(db, TimeProvider.System);
 		var inner = new TransactionRepository(db, TimeProvider.System);
-		var cached = new CachedTransactionRepository(cache, inner);
+		var cached = new CachedTransactionRepository(cache, TimeProvider.System, inner);
 
 		var user = await userRepo.AddUserAsync("test@example.com", "Test", "User", "Test User", CancellationToken.None);
 		var asset = await assetRepo.AddAsync("Test", AssetClass.Equity, AssetType.MutualFund, Currency.INR, "mf-123", CancellationToken.None);
