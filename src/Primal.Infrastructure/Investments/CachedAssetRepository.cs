@@ -23,7 +23,7 @@ internal sealed class CachedAssetRepository : IAssetRepository
 		CancellationToken cancellationToken)
 	{
 		return await this.cache.GetOrCreateAsync(
-			$"assets/{assetId.Value}",
+			assetId.AssetKey(),
 			async entry => await this.assetRepository.GetByIdAsync(assetId, cancellationToken),
 			cancellationToken: cancellationToken);
 	}
@@ -33,7 +33,7 @@ internal sealed class CachedAssetRepository : IAssetRepository
 		CancellationToken cancellationToken)
 	{
 		return await this.cache.GetOrCreateAsync(
-			$"assets/external/{externalId}",
+			CacheKeyExtensions.AssetByExternalIdKey(externalId),
 			async entry => await this.assetRepository.GetByExternalIdAsync(externalId, cancellationToken),
 			cancellationToken: cancellationToken);
 	}
@@ -55,7 +55,7 @@ internal sealed class CachedAssetRepository : IAssetRepository
 			cancellationToken);
 
 		await this.cache.RemoveAsync(
-			$"assets/external/{externalId}",
+			CacheKeyExtensions.AssetByExternalIdKey(externalId),
 			cancellationToken: cancellationToken);
 
 		return asset;

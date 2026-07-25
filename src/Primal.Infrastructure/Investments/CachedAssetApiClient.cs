@@ -25,7 +25,7 @@ internal sealed class CachedAssetApiClient<T> : IAssetApiClient<T>
 	public async Task<T> GetBySymbolAsync(string symbol, CancellationToken cancellationToken)
 	{
 		return await this.cache.GetOrCreateAsync(
-			$"asset/{typeof(T).Name}/{symbol}",
+			CacheKeyExtensions.AssetApiKey<T>(symbol),
 			async entry => await this.assetApiClient.GetBySymbolAsync(symbol, cancellationToken),
 			cancellationToken: cancellationToken);
 	}
@@ -33,7 +33,7 @@ internal sealed class CachedAssetApiClient<T> : IAssetApiClient<T>
 	public async Task<IReadOnlyDictionary<DateOnly, decimal>> GetPricesAsync(string symbol, CancellationToken cancellationToken)
 	{
 		return await this.cache.GetOrCreateAsync(
-			$"asset/{typeof(T).Name}/{symbol}/prices",
+			CacheKeyExtensions.AssetApiPricesKey<T>(symbol),
 			async entry => await this.rateRepository.GetOrFetchRatesAsync(
 				symbol,
 				this.rateType,
@@ -45,7 +45,7 @@ internal sealed class CachedAssetApiClient<T> : IAssetApiClient<T>
 	public async Task<decimal> GetOnOrBeforePriceAsync(string symbol, DateOnly date, CancellationToken cancellationToken)
 	{
 		return await this.cache.GetOrCreateAsync(
-			$"asset/{typeof(T).Name}/{symbol}/prices/{date:yyyy-MM-dd}/on-or-before",
+			CacheKeyExtensions.AssetApiOnOrBeforePriceKey<T>(symbol, date),
 			async entry => await this.GetOnOrBeforeValueAsyncInternal(symbol, date, cancellationToken),
 			cancellationToken: cancellationToken);
 	}

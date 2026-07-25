@@ -32,7 +32,7 @@ internal sealed class CachedForexApiClient : IForexApiClient
 		}
 
 		return await this.cache.GetOrCreateAsync(
-			$"forex/{fromCurrency}{toCurrency}/rates",
+			CacheKeyExtensions.ForexRatesKey(fromCurrency, toCurrency),
 			async entry => await this.rateRepository.GetOrFetchRatesAsync(
 				$"{fromCurrency}{toCurrency}",
 				RateType.Forex,
@@ -53,7 +53,7 @@ internal sealed class CachedForexApiClient : IForexApiClient
 		}
 
 		return await this.cache.GetOrCreateAsync(
-			$"forex/{fromCurrency}{toCurrency}/rates/{date:yyyy-MM-dd}/on-or-before",
+			CacheKeyExtensions.ForexOnOrBeforeRateKey(fromCurrency, toCurrency, date),
 			async entry => await this.GetOnOrBeforeForexRateInternalAsync(fromCurrency, toCurrency, date, cancellationToken),
 			cancellationToken: cancellationToken);
 	}

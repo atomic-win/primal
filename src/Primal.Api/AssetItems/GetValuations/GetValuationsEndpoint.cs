@@ -7,7 +7,7 @@ using Primal.Application.Investments;
 using Primal.Domain.Investments;
 using Primal.Domain.Money;
 using Primal.Domain.Users;
-using Primal.Infrastructure.Investments;
+using Primal.Infrastructure;
 
 namespace Primal.Api.AssetItems;
 

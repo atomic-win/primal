@@ -23,7 +23,7 @@ internal sealed class CachedUserRepository : IUserRepository
 		CancellationToken cancellationToken)
 	{
 		return await this.cache.GetOrCreateAsync(
-			$"users/{userId.Value}",
+			userId.UserKey(),
 			async entry => await this.userRepository.GetUserAsync(userId, cancellationToken),
 			cancellationToken: cancellationToken);
 	}
@@ -56,7 +56,7 @@ internal sealed class CachedUserRepository : IUserRepository
 			cancellationToken);
 
 		await this.cache.RemoveAsync(
-			$"users/{userId.Value}",
+			userId.UserKey(),
 			cancellationToken);
 	}
 }
