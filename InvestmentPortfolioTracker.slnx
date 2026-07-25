@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/InvestmentPortfolioTracker.Api/InvestmentPortfolioTracker.Api.csproj" />
+    <Project Path="src/InvestmentPortfolioTracker.Core/InvestmentPortfolioTracker.Core.csproj" />
+    <Project Path="src/InvestmentPortfolioTracker.Domain/InvestmentPortfolioTracker.Domain.csproj" />
+    <Project Path="src/InvestmentPortfolioTracker.Infrastructure/InvestmentPortfolioTracker.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/InvestmentPortfolioTracker.Domain.UnitTests/InvestmentPortfolioTracker.Domain.UnitTests.csproj" />
+    <Project Path="tests/InvestmentPortfolioTracker.Api.UnitTests/InvestmentPortfolioTracker.Api.UnitTests.csproj" />
+    <Project Path="tests/InvestmentPortfolioTracker.Infrastructure.IntegrationTests/InvestmentPortfolioTracker.Infrastructure.IntegrationTests.csproj" />
+    <Project Path="tests/InvestmentPortfolioTracker.E2ETests/InvestmentPortfolioTracker.E2ETests.csproj" />
+  </Folder>
+</Solution>

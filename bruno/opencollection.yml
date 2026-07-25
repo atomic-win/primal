@@ -1,7 +1,7 @@
 opencollection: 1.0.0
 
 info:
-  name: primal
+  name: investment-portfolio-tracker
 bundled: false
 extensions:
   bruno:

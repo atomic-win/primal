@@ -51,6 +51,16 @@ dotnet_diagnostic.SA1633.severity = none
 # SA1200: Using directive should appear within a namespace declaration.
 dotnet_diagnostic.SA1200.severity = none
 
+# SA1208: System using directives should be placed before other using directives.
+dotnet_diagnostic.SA1208.severity = none
+
+# SA1210: Using directives should be ordered alphabetically by the namespaces.
+dotnet_diagnostic.SA1210.severity = none
+
+# Group and sort using directives
+dotnet_sort_system_directives_first = true
+dotnet_separate_import_groups = true
+
 # Verify
 [*.{received,verified}.{txt}]
 charset = utf-8-bom

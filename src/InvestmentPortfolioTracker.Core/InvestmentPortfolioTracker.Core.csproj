@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<ItemGroup>
+		<ProjectReference Include="..\InvestmentPortfolioTracker.Domain\InvestmentPortfolioTracker.Domain.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <PackageReference Include="Autofac" />
+	</ItemGroup>
+
+</Project>
