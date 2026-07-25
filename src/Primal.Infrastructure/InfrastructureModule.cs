@@ -109,6 +109,7 @@ public sealed class InfrastructureModule : Module
 
 		builder.Register(c => new CachedTransactionRepository(
 			c.Resolve<HybridCache>(),
+			c.Resolve<TimeProvider>(),
 			c.Resolve<TransactionRepository>()))
 			.As<ITransactionRepository>()
 			.SingleInstance();
