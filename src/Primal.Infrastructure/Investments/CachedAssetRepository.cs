@@ -7,14 +7,14 @@ namespace Primal.Infrastructure.Investments;
 
 internal sealed class CachedAssetRepository : IAssetRepository
 {
-	private readonly HybridCache hybridCache;
+	private readonly HybridCache cache;
 	private readonly IAssetRepository assetRepository;
 
 	internal CachedAssetRepository(
-		HybridCache hybridCache,
+		HybridCache cache,
 		IAssetRepository assetRepository)
 	{
-		this.hybridCache = hybridCache;
+		this.cache = cache;
 		this.assetRepository = assetRepository;
 	}
 
@@ -22,7 +22,7 @@ internal sealed class CachedAssetRepository : IAssetRepository
 		AssetId assetId,
 		CancellationToken cancellationToken)
 	{
-		return await this.hybridCache.GetOrCreateAsync(
+		return await this.cache.GetOrCreateAsync(
 			$"assets/{assetId.Value}",
 			async entry => await this.assetRepository.GetByIdAsync(assetId, cancellationToken),
 			cancellationToken: cancellationToken);
@@ -32,7 +32,7 @@ internal sealed class CachedAssetRepository : IAssetRepository
 		string externalId,
 		CancellationToken cancellationToken)
 	{
-		return await this.hybridCache.GetOrCreateAsync(
+		return await this.cache.GetOrCreateAsync(
 			$"assets/external/{externalId}",
 			async entry => await this.assetRepository.GetByExternalIdAsync(externalId, cancellationToken),
 			cancellationToken: cancellationToken);
@@ -54,7 +54,7 @@ internal sealed class CachedAssetRepository : IAssetRepository
 			externalId,
 			cancellationToken);
 
-		await this.hybridCache.RemoveAsync(
+		await this.cache.RemoveAsync(
 			$"assets/external/{externalId}",
 			cancellationToken: cancellationToken);
 

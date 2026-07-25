@@ -7,14 +7,14 @@ namespace Primal.Infrastructure.Users;
 
 internal sealed class CachedUserRepository : IUserRepository
 {
-	private readonly HybridCache hybridCache;
+	private readonly HybridCache cache;
 	private readonly IUserRepository userRepository;
 
 	internal CachedUserRepository(
-		HybridCache hybridCache,
+		HybridCache cache,
 		IUserRepository userRepository)
 	{
-		this.hybridCache = hybridCache;
+		this.cache = cache;
 		this.userRepository = userRepository;
 	}
 
@@ -22,7 +22,7 @@ internal sealed class CachedUserRepository : IUserRepository
 		UserId userId,
 		CancellationToken cancellationToken)
 	{
-		return await this.hybridCache.GetOrCreateAsync(
+		return await this.cache.GetOrCreateAsync(
 			$"users/{userId.Value}",
 			async entry => await this.userRepository.GetUserAsync(userId, cancellationToken),
 			cancellationToken: cancellationToken);
@@ -55,7 +55,7 @@ internal sealed class CachedUserRepository : IUserRepository
 			preferredLocale,
 			cancellationToken);
 
-		await this.hybridCache.RemoveAsync(
+		await this.cache.RemoveAsync(
 			$"users/{userId.Value}",
 			cancellationToken);
 	}

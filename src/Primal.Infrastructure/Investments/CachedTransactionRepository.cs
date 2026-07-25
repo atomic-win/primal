@@ -8,16 +8,16 @@ namespace Primal.Infrastructure.Investments;
 
 internal sealed class CachedTransactionRepository : ITransactionRepository
 {
-	private readonly HybridCache hybridCache;
+	private readonly HybridCache cache;
 	private readonly TimeProvider timeProvider;
 	private readonly ITransactionRepository transactionRepository;
 
 	internal CachedTransactionRepository(
-		HybridCache hybridCache,
+		HybridCache cache,
 		TimeProvider timeProvider,
 		ITransactionRepository transactionRepository)
 	{
-		this.hybridCache = hybridCache;
+		this.cache = cache;
 		this.timeProvider = timeProvider;
 		this.transactionRepository = transactionRepository;
 	}
@@ -27,7 +27,7 @@ internal sealed class CachedTransactionRepository : ITransactionRepository
 		AssetItemId assetItemId,
 		CancellationToken cancellationToken)
 	{
-		return await this.hybridCache.GetOrCreateAsync(
+		return await this.cache.GetOrCreateAsync(
 			$"users/{userId.Value}/assetItems/{assetItemId.Value}/transactions",
 			async entry => (await this.transactionRepository.GetByAssetItemIdAsync(
 				userId,
@@ -43,7 +43,7 @@ internal sealed class CachedTransactionRepository : ITransactionRepository
 		TransactionId transactionId,
 		CancellationToken cancellationToken)
 	{
-		return await this.hybridCache.GetOrCreateAsync(
+		return await this.cache.GetOrCreateAsync(
 			$"users/{userId.Value}/assetItems/{assetItemId.Value}/transactions/{transactionId.Value}",
 			async entry => await this.transactionRepository.GetByIdAsync(
 				userId,
@@ -133,14 +133,14 @@ internal sealed class CachedTransactionRepository : ITransactionRepository
 		DateOnly transactionDate,
 		CancellationToken cancellationToken)
 	{
-		await this.hybridCache.RemoveByTagAsync(
+		await this.cache.RemoveByTagAsync(
 			$"users/{userId.Value}/assetItems/{assetItemId.Value}/transactions",
 			cancellationToken: cancellationToken);
 
 		var valuationDates = this.timeProvider.GetValuationDates(transactionDate);
 
 		await Task.WhenAll(valuationDates.Select(valuationDate =>
-			this.hybridCache.RemoveByTagAsync(
+			this.cache.RemoveByTagAsync(
 				$"users/{userId.Value}/asset-items/{assetItemId.Value}/valuations?date={valuationDate:yyyy-MM-dd}",
 				cancellationToken: cancellationToken).AsTask()));
 	}
