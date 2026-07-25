@@ -1,5 +1,7 @@
 using System.Globalization;
+
 using Dapper;
+
 using InvestmentPortfolioTracker.Core.Users;
 using InvestmentPortfolioTracker.Domain.Users;
 using InvestmentPortfolioTracker.Infrastructure.Persistence;

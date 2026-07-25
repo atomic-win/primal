@@ -1,7 +1,9 @@
 using System.Collections.Immutable;
+
+using Microsoft.Extensions.Caching.Hybrid;
+
 using InvestmentPortfolioTracker.Core.Investments;
 using InvestmentPortfolioTracker.Domain.Money;
-using Microsoft.Extensions.Caching.Hybrid;
 
 namespace InvestmentPortfolioTracker.Infrastructure.Investments;
 

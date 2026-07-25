@@ -1,4 +1,5 @@
 using System.Net;
+
 using NSubstitute;
 using RichardSzalay.MockHttp;
 

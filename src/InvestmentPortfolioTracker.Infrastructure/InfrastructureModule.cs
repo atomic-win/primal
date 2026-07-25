@@ -1,11 +1,12 @@
 using Autofac;
+using Microsoft.Extensions.Caching.Hybrid;
+using Microsoft.Extensions.Configuration;
+
 using InvestmentPortfolioTracker.Core.Investments;
 using InvestmentPortfolioTracker.Core.Users;
 using InvestmentPortfolioTracker.Infrastructure.Investments;
 using InvestmentPortfolioTracker.Infrastructure.Persistence;
 using InvestmentPortfolioTracker.Infrastructure.Users;
-using Microsoft.Extensions.Caching.Hybrid;
-using Microsoft.Extensions.Configuration;
 
 namespace InvestmentPortfolioTracker.Infrastructure;
 

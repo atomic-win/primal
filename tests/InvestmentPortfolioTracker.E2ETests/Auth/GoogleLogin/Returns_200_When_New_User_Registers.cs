@@ -1,7 +1,9 @@
 using System.Net;
 using System.Net.Http.Json;
-using InvestmentPortfolioTracker.Domain.Users;
+
 using NSubstitute;
+
+using InvestmentPortfolioTracker.Domain.Users;
 
 namespace InvestmentPortfolioTracker.E2ETests.Auth.GoogleLogin;
 

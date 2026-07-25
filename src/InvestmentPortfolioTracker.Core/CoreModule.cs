@@ -1,4 +1,5 @@
 using Autofac;
+
 using InvestmentPortfolioTracker.Core.Investments;
 
 namespace InvestmentPortfolioTracker.Core;

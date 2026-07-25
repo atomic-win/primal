@@ -1,8 +1,10 @@
 using System.Collections.Frozen;
 using System.Collections.Immutable;
 using System.Globalization;
+
 using CsvHelper;
 using CsvHelper.Configuration.Attributes;
+
 using InvestmentPortfolioTracker.Core.Investments;
 using InvestmentPortfolioTracker.Domain.Investments;
 using InvestmentPortfolioTracker.Domain.Money;

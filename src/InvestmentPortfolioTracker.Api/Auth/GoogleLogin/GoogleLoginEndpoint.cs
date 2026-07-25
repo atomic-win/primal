@@ -1,13 +1,15 @@
 using System.Globalization;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+
 using FastEndpoints;
 using FastEndpoints.Security;
 using Google.Apis.Auth;
+using Microsoft.AspNetCore.Authorization;
+
 using InvestmentPortfolioTracker.Api.Errors;
 using InvestmentPortfolioTracker.Core.Users;
 using InvestmentPortfolioTracker.Domain.Users;
-using Microsoft.AspNetCore.Authorization;
 
 namespace InvestmentPortfolioTracker.Api.Auth;
 

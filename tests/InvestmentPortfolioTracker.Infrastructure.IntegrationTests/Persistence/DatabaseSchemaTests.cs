@@ -1,4 +1,5 @@
 using Dapper;
+
 using InvestmentPortfolioTracker.Domain.Investments;
 using InvestmentPortfolioTracker.Domain.Money;
 using InvestmentPortfolioTracker.Infrastructure.Investments;

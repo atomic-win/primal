@@ -1,10 +1,12 @@
 using System.Globalization;
 using System.Net;
 using System.Net.Http.Json;
+
 using Dapper;
-using InvestmentPortfolioTracker.Domain.Users;
 using Microsoft.Data.Sqlite;
 using NSubstitute;
+
+using InvestmentPortfolioTracker.Domain.Users;
 
 namespace InvestmentPortfolioTracker.E2ETests.Auth.GoogleLogin;
 

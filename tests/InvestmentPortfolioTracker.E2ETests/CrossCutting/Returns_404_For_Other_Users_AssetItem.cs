@@ -1,8 +1,10 @@
 using System.Globalization;
 using System.Net;
+
 using Dapper;
-using InvestmentPortfolioTracker.Domain.Users;
 using Microsoft.Data.Sqlite;
+
+using InvestmentPortfolioTracker.Domain.Users;
 
 namespace InvestmentPortfolioTracker.E2ETests.CrossCutting;
 

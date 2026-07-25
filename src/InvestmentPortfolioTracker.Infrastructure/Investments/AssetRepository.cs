@@ -1,5 +1,7 @@
 using System.Globalization;
+
 using Dapper;
+
 using InvestmentPortfolioTracker.Core.Investments;
 using InvestmentPortfolioTracker.Domain.Investments;
 using InvestmentPortfolioTracker.Domain.Money;

@@ -3,7 +3,9 @@ using System.Collections.Immutable;
 using System.Data.Common;
 using System.Globalization;
 using System.Text;
+
 using Dapper;
+
 using InvestmentPortfolioTracker.Infrastructure.Persistence;
 
 namespace InvestmentPortfolioTracker.Infrastructure.Investments;

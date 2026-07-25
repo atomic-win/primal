@@ -1,5 +1,7 @@
 using System.Runtime.CompilerServices;
+
 using FastEndpoints;
+
 using InvestmentPortfolioTracker.Core.Investments;
 using InvestmentPortfolioTracker.Domain.Investments;
 using InvestmentPortfolioTracker.Domain.Users;

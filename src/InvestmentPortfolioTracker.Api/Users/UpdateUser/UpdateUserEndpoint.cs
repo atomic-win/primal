@@ -1,4 +1,5 @@
 using FastEndpoints;
+
 using InvestmentPortfolioTracker.Api.Errors;
 using InvestmentPortfolioTracker.Core.Users;
 using InvestmentPortfolioTracker.Domain.Money;

@@ -1,5 +1,6 @@
 using FastEndpoints;
 using FluentValidation;
+
 using InvestmentPortfolioTracker.Api.Errors;
 using InvestmentPortfolioTracker.Domain.Investments;
 using InvestmentPortfolioTracker.Domain.Money;

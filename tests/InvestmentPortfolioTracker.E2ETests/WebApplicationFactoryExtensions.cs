@@ -1,7 +1,9 @@
 using System.Globalization;
+
 using Dapper;
-using InvestmentPortfolioTracker.Domain.Users;
 using Microsoft.Data.Sqlite;
+
+using InvestmentPortfolioTracker.Domain.Users;
 
 namespace InvestmentPortfolioTracker.E2ETests;
 

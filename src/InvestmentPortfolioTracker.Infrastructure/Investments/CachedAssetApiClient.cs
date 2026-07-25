@@ -1,5 +1,6 @@
-using InvestmentPortfolioTracker.Core.Investments;
 using Microsoft.Extensions.Caching.Hybrid;
+
+using InvestmentPortfolioTracker.Core.Investments;
 
 namespace InvestmentPortfolioTracker.Infrastructure.Investments;
 

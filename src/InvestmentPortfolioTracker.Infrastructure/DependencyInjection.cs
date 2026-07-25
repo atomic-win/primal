@@ -1,9 +1,10 @@
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+
 using InvestmentPortfolioTracker.Core.Users;
 using InvestmentPortfolioTracker.Infrastructure.Investments;
 using InvestmentPortfolioTracker.Infrastructure.Persistence;
 using InvestmentPortfolioTracker.Infrastructure.Users;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace InvestmentPortfolioTracker.Infrastructure;
 

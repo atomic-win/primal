@@ -1,8 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using InvestmentPortfolioTracker.Core.Users;
-using InvestmentPortfolioTracker.Domain.Users;
+
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
@@ -10,6 +9,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using NSubstitute;
 using WireMock.Server;
+
+using InvestmentPortfolioTracker.Core.Users;
+using InvestmentPortfolioTracker.Domain.Users;
 
 #nullable enable
 

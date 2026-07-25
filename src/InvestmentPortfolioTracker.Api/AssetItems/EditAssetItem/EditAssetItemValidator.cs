@@ -1,5 +1,6 @@
 using FastEndpoints;
 using FluentValidation;
+
 using InvestmentPortfolioTracker.Api.Errors;
 
 namespace InvestmentPortfolioTracker.Api.AssetItems;

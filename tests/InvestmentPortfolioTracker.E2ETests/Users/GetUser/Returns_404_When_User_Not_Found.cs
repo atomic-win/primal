@@ -1,4 +1,5 @@
 using System.Net;
+
 using InvestmentPortfolioTracker.Domain.Users;
 
 namespace InvestmentPortfolioTracker.E2ETests.Users.GetUser;

@@ -1,13 +1,15 @@
 using System.Text;
 using System.Text.Json.Serialization;
+
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using FastEndpoints;
-using InvestmentPortfolioTracker.Core;
-using InvestmentPortfolioTracker.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.IdentityModel.Tokens;
+
+using InvestmentPortfolioTracker.Core;
+using InvestmentPortfolioTracker.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 {

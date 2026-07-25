@@ -1,5 +1,7 @@
 using System.Security.Claims;
+
 using FastEndpoints;
+
 using InvestmentPortfolioTracker.Domain.Investments;
 
 namespace InvestmentPortfolioTracker.Api.Transactions;

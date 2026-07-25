@@ -1,9 +1,11 @@
 using System.Collections.Frozen;
+
+using NSubstitute;
+
 using InvestmentPortfolioTracker.Core.Investments;
 using InvestmentPortfolioTracker.Domain.Investments;
 using InvestmentPortfolioTracker.Domain.Money;
 using InvestmentPortfolioTracker.Infrastructure.Investments;
-using NSubstitute;
 
 namespace InvestmentPortfolioTracker.Infrastructure.IntegrationTests.Investments;
 

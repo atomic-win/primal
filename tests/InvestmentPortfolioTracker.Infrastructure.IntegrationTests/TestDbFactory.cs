@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Data;
+
 using InvestmentPortfolioTracker.Infrastructure.Persistence;
 
 namespace InvestmentPortfolioTracker.Infrastructure.IntegrationTests;

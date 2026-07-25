@@ -1,7 +1,8 @@
+using Microsoft.Extensions.Caching.Hybrid;
+
 using InvestmentPortfolioTracker.Core.Users;
 using InvestmentPortfolioTracker.Domain.Money;
 using InvestmentPortfolioTracker.Domain.Users;
-using Microsoft.Extensions.Caching.Hybrid;
 
 namespace InvestmentPortfolioTracker.Infrastructure.Users;
 

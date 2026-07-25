@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Security.Claims;
 using System.Text;
+
 using Microsoft.IdentityModel.Tokens;
 
 namespace InvestmentPortfolioTracker.E2ETests.Users.GetUser;

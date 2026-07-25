@@ -1,6 +1,8 @@
 using System.Net;
-using InvestmentPortfolioTracker.Infrastructure.Investments;
+
 using RichardSzalay.MockHttp;
+
+using InvestmentPortfolioTracker.Infrastructure.Investments;
 
 namespace InvestmentPortfolioTracker.Infrastructure.IntegrationTests.Investments;
 

@@ -1,6 +1,8 @@
 using System.Collections.Frozen;
-using InvestmentPortfolioTracker.Infrastructure.Investments;
+
 using Microsoft.Extensions.Time.Testing;
+
+using InvestmentPortfolioTracker.Infrastructure.Investments;
 
 namespace InvestmentPortfolioTracker.Infrastructure.IntegrationTests.Investments.Repositories;
 
