@@ -125,17 +125,13 @@ internal sealed class GetValuationsEndpoint : Endpoint<GetValuationsRequest, IRe
 		CancellationToken ct)
 	{
 		var valuationInputs = await Task.WhenAll(assetItems.Select(assetItem =>
-			this.cache.GetOrCreateAsync(
-				key: $"users/{userId.Value}/assetItems/{assetItem.Id.Value}/valuationInput?valuationDate={valuationDate}&currency={currency}",
-				async _ => await this.CalculateValuationInputAsync(
-					userId,
-					assetItem,
-					transactionsByAssetItem[assetItem.Id],
-					valuationDate,
-					currency,
-					ct),
-				tags: new[] { $"users/{userId.Value}/assetItems/{assetItem.Id.Value}/valuations" },
-				cancellationToken: ct).AsTask()));
+			this.CalculateValuationInputAsync(
+				userId,
+				assetItem,
+				transactionsByAssetItem[assetItem.Id],
+				valuationDate,
+				currency,
+				ct)));
 
 		if (!valuationInputs.SelectMany(i => i.XirrInputs).Any())
 		{
