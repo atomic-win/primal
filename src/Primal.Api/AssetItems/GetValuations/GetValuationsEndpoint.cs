@@ -93,17 +93,12 @@ internal sealed class GetValuationsEndpoint : Endpoint<GetValuationsRequest, IRe
 		var transactionsByAssetItem = await this.GetTransactionsByAssetItemAsync(userId, assetItems, ct);
 
 		return await Task.WhenAll(this.GetValuationDates(transactionsByAssetItem)
-			.Select(valuationDate => this.cache.GetOrCreateAsync(
-				key: this.GetValuationCacheKey(userId, transactionsByAssetItem, valuationDate, currency),
-				async _ => await this.CalculateValuationAsync(
-					userId,
-					assetItems,
-					transactionsByAssetItem,
-					valuationDate,
-					currency,
-					ct),
-				tags: this.GetValuationCacheTags(userId, transactionsByAssetItem, valuationDate),
-				cancellationToken: ct).AsTask()));
+			.Select(valuationDate => this.CalculateValuationAsync(
+				userId,
+				transactionsByAssetItem,
+				valuationDate,
+				currency,
+				ct)));
 	}
 
 	private async Task<IReadOnlyDictionary<AssetItemId, IReadOnlyList<Transaction>>> GetTransactionsByAssetItemAsync(
@@ -122,35 +117,48 @@ internal sealed class GetValuationsEndpoint : Endpoint<GetValuationsRequest, IRe
 
 	private async Task<ValuationResponse> CalculateValuationAsync(
 		UserId userId,
-		IReadOnlyList<AssetItem> assetItems,
 		IReadOnlyDictionary<AssetItemId, IReadOnlyList<Transaction>> transactionsByAssetItem,
 		DateOnly valuationDate,
 		Currency currency,
 		CancellationToken ct)
 	{
-		var valuationInputs = await Task.WhenAll(assetItems.Select(assetItem =>
-			this.CalculateValuationInputAsync(
-				userId,
-				assetItem,
-				transactionsByAssetItem[assetItem.Id],
-				valuationDate,
-				currency,
-				ct)));
+		var assetItemIds = transactionsByAssetItem.Values
+			.SelectMany(transactions => transactions)
+			.Where(transaction => transaction.Date <= valuationDate)
+			.Select(transaction => transaction.AssetItemId)
+			.Distinct()
+			.ToImmutableArray();
 
-		if (!valuationInputs.SelectMany(i => i.XirrInputs).Any())
-		{
-			return new ValuationResponse(
-				Date: valuationDate,
-				InvestedValue: 0,
-				CurrentValue: 0,
-				XirrPercent: 0);
-		}
+		return await this.cache.GetOrCreateAsync(
+			key: this.GetValuationCacheKey(userId, assetItemIds, valuationDate, currency),
+			async _ =>
+			{
+				var valuationInputs = await Task.WhenAll(assetItemIds.Select(async assetItemId =>
+					await this.CalculateValuationInputAsync(
+						userId,
+						await this.assetItemRepository.GetByIdAsync(userId, assetItemId, ct),
+						transactionsByAssetItem[assetItemId],
+						valuationDate,
+						currency,
+						ct)));
 
-		return new ValuationResponse(
-			Date: valuationDate,
-			InvestedValue: Math.Round(valuationInputs.Sum(i => i.InvestedValue), 2),
-			CurrentValue: Math.Round(valuationInputs.Sum(i => i.CurrentValue), 2),
-			XirrPercent: Math.Round(100 * this.CalculateXirr(valuationInputs.SelectMany(i => i.XirrInputs).ToImmutableArray()), 2));
+				if (!valuationInputs.SelectMany(i => i.XirrInputs).Any())
+				{
+					return new ValuationResponse(
+						Date: valuationDate,
+						InvestedValue: 0,
+						CurrentValue: 0,
+						XirrPercent: 0);
+				}
+
+				return new ValuationResponse(
+					Date: valuationDate,
+					InvestedValue: Math.Round(valuationInputs.Sum(i => i.InvestedValue), 2),
+					CurrentValue: Math.Round(valuationInputs.Sum(i => i.CurrentValue), 2),
+					XirrPercent: Math.Round(100 * this.CalculateXirr(valuationInputs.SelectMany(i => i.XirrInputs).ToImmutableArray()), 2));
+			},
+			tags: this.GetValuationCacheTags(userId, assetItemIds, valuationDate),
+			cancellationToken: ct).AsTask();
 	}
 
 	private async Task<ValuationInput> CalculateValuationInputAsync(
@@ -472,34 +480,23 @@ internal sealed class GetValuationsEndpoint : Endpoint<GetValuationsRequest, IRe
 
 	private string GetValuationCacheKey(
 		UserId userId,
-		IReadOnlyDictionary<AssetItemId, IReadOnlyList<Transaction>> transactionsByAssetItem,
+		IReadOnlyList<AssetItemId> assetItemIds,
 		DateOnly valuationDate,
 		Currency currency)
 	{
-		var assetItemIds = transactionsByAssetItem.Values
-			.SelectMany(transactions => transactions)
-			.Where(transaction => transaction.Date <= valuationDate)
-			.Select(transaction => transaction.AssetItemId)
-			.Distinct()
-			.Order()
-			.ToImmutableArray();
+		// hashing the assetItemIds to avoid long cache keys and potential issues with special characters
+		var assetItemIdsHash = assetItemIds.Order()
+			.Select(id => id.Value)
+			.Aggregate(0, (hash, id) => HashCode.Combine(hash, id.GetHashCode()));
 
-		return $"users/{userId.Value}/asset-items/valuations?date={valuationDate:yyyy-MM-dd}&currency={currency}&assetItemIds={string.Join(',', assetItemIds.Select(id => id.Value))}";
+		return $"users/{userId.Value}/asset-items/valuations?date={valuationDate:yyyy-MM-dd}&currency={currency}&assetItemIdsHash={assetItemIdsHash}";
 	}
 
 	private IReadOnlyList<string> GetValuationCacheTags(
 		UserId userId,
-		IReadOnlyDictionary<AssetItemId, IReadOnlyList<Transaction>> transactionsByAssetItem,
+		IReadOnlyList<AssetItemId> assetItemIds,
 		DateOnly valuationDate)
 	{
-		var assetItemIds = transactionsByAssetItem.Values
-			.SelectMany(transactions => transactions)
-			.Where(transaction => transaction.Date <= valuationDate)
-			.Select(transaction => transaction.AssetItemId)
-			.Distinct()
-			.Order()
-			.ToImmutableArray();
-
 		return assetItemIds
 			.Select(assetItemId => $"users/{userId.Value}/asset-items/{assetItemId.Value}/valuations?date={valuationDate:yyyy-MM-dd}")
 			.ToImmutableArray();
