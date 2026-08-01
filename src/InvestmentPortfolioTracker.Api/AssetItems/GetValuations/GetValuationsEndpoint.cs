@@ -162,7 +162,7 @@ internal sealed class GetValuationsEndpoint : Endpoint<GetValuationsRequest, IRe
 					Date: valuationDate,
 					InvestedValue: Math.Round(valuationInputs.Sum(i => i.InvestedValue), 2),
 					CurrentValue: Math.Round(valuationInputs.Sum(i => i.CurrentValue), 2),
-					XirrPercent: Math.Round(100 * this.CalculateXirr(valuationInputs.SelectMany(i => i.XirrInputs).ToImmutableArray()), 2));
+					XirrPercent: Math.Round(100.00m * this.CalculateXirr(valuationInputs.SelectMany(i => i.XirrInputs).ToImmutableArray()), 2));
 			},
 			tags: assetItemIds.Select(id => userId.ValuationTag(id, valuationDate)).ToImmutableArray(),
 			cancellationToken: ct).AsTask();
@@ -228,13 +228,13 @@ internal sealed class GetValuationsEndpoint : Endpoint<GetValuationsRequest, IRe
 		return new XirrInput
 		{
 			YearDiff = (valuationDate.DayNumber - transaction.Date.DayNumber) / 365.25,
-			TransactionAmount = await this.CalculateXIRRTransactionAmountAsync(
+			TransactionAmount = (double)await this.CalculateXIRRTransactionAmountAsync(
 				userId,
 				transaction,
 				valuationDate,
 				currency,
 				ct),
-			BalanceAmount = await this.CalculateXIRRBalanceAmountAsync(
+			BalanceAmount = (double)await this.CalculateXIRRBalanceAmountAsync(
 				userId,
 				transaction,
 				valuationDate,
@@ -438,7 +438,7 @@ internal sealed class GetValuationsEndpoint : Endpoint<GetValuationsRequest, IRe
 			})
 			.ToImmutableArray();
 
-		decimal balanceAmount = xirrInputs.Sum(i => i.BalanceAmount);
+		double balanceAmount = xirrInputs.Sum(i => i.BalanceAmount);
 
 		var allLessThanYear = xirrInputs.All(i => i.YearDiff < 1);
 
@@ -451,14 +451,14 @@ internal sealed class GetValuationsEndpoint : Endpoint<GetValuationsRequest, IRe
 			})
 			.ToImmutableArray();
 
-		decimal xirrLowerBound = -1;
-		decimal xirrUpperBound = 1;
+		double xirrLowerBound = -1;
+		double xirrUpperBound = 1;
 
-		while (xirrUpperBound - xirrLowerBound > 0.0001m)
+		while (xirrUpperBound - xirrLowerBound > 0.0001)
 		{
-			decimal xirr = (xirrLowerBound + xirrUpperBound) / 2;
-			decimal npv = inValues
-				.Sum(i => i.Value * (decimal)Math.Pow((double)(1 + xirr), (double)i.YearDiff));
+			double xirr = (xirrLowerBound + xirrUpperBound) / 2;
+			double npv = inValues
+				.Sum(i => i.Value * Math.Pow(1 + xirr, i.YearDiff));
 
 			if (npv > balanceAmount)
 			{
@@ -470,7 +470,7 @@ internal sealed class GetValuationsEndpoint : Endpoint<GetValuationsRequest, IRe
 			}
 		}
 
-		return (xirrLowerBound + xirrUpperBound) / 2;
+		return (decimal)(xirrLowerBound + xirrUpperBound) / 2;
 	}
 
 	private IReadOnlyList<DateOnly> GetValuationDates(
@@ -498,8 +498,8 @@ internal sealed class GetValuationsEndpoint : Endpoint<GetValuationsRequest, IRe
 	{
 		public required double YearDiff { get; init; }
 
-		public required decimal TransactionAmount { get; init; }
+		public required double TransactionAmount { get; init; }
 
-		public required decimal BalanceAmount { get; init; }
+		public required double BalanceAmount { get; init; }
 	}
 }
