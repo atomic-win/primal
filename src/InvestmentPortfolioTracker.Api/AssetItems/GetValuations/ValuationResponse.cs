@@ -4,4 +4,4 @@ internal sealed record ValuationResponse(
 	DateOnly Date,
 	decimal InvestedValue,
 	decimal CurrentValue,
-	double XirrPercent);
+	decimal XirrPercent);

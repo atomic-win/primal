@@ -162,7 +162,7 @@ internal sealed class GetValuationsEndpoint : Endpoint<GetValuationsRequest, IRe
 					Date: valuationDate,
 					InvestedValue: Math.Round(valuationInputs.Sum(i => i.InvestedValue), 2),
 					CurrentValue: Math.Round(valuationInputs.Sum(i => i.CurrentValue), 2),
-					XirrPercent: Math.Round(100 * this.CalculateXirr(valuationInputs.SelectMany(i => i.XirrInputs).ToImmutableArray()), 2));
+					XirrPercent: Math.Round(100.00m * this.CalculateXirr(valuationInputs.SelectMany(i => i.XirrInputs).ToImmutableArray()), 2));
 			},
 			tags: assetItemIds.Select(id => userId.ValuationTag(id, valuationDate)).ToImmutableArray(),
 			cancellationToken: ct).AsTask();
@@ -420,7 +420,7 @@ internal sealed class GetValuationsEndpoint : Endpoint<GetValuationsRequest, IRe
 			ct);
 	}
 
-	private double CalculateXirr(
+	private decimal CalculateXirr(
 		IReadOnlyCollection<XirrInput> xirrInputs)
 	{
 		if (xirrInputs.Count == 0)
@@ -470,7 +470,7 @@ internal sealed class GetValuationsEndpoint : Endpoint<GetValuationsRequest, IRe
 			}
 		}
 
-		return (xirrLowerBound + xirrUpperBound) / 2;
+		return (decimal)(xirrLowerBound + xirrUpperBound) / 2;
 	}
 
 	private IReadOnlyList<DateOnly> GetValuationDates(
