@@ -160,9 +160,9 @@ internal sealed class GetValuationsEndpoint : Endpoint<GetValuationsRequest, IRe
 
 				return new ValuationResponse(
 					Date: valuationDate,
-					InvestedValue: Math.Round(valuationInputs.Sum(i => i.InvestedValue), 2),
-					CurrentValue: Math.Round(valuationInputs.Sum(i => i.CurrentValue), 2),
-					XirrPercent: Math.Round(100 * this.CalculateXirr(valuationInputs.SelectMany(i => i.XirrInputs).ToImmutableArray()), 2));
+					InvestedValue: valuationInputs.Sum(i => i.InvestedValue),
+					CurrentValue: valuationInputs.Sum(i => i.CurrentValue),
+					XirrPercent: 100m * (decimal)this.CalculateXirr(valuationInputs.SelectMany(i => i.XirrInputs).ToImmutableArray()));
 			},
 			tags: assetItemIds.Select(id => userId.ValuationTag(id, valuationDate)).ToImmutableArray(),
 			cancellationToken: ct).AsTask();
@@ -454,7 +454,7 @@ internal sealed class GetValuationsEndpoint : Endpoint<GetValuationsRequest, IRe
 		double xirrLowerBound = -1;
 		double xirrUpperBound = 1;
 
-		while (xirrUpperBound - xirrLowerBound > 0.0001)
+		while (xirrUpperBound - xirrLowerBound > 1e-6)
 		{
 			double xirr = (xirrLowerBound + xirrUpperBound) / 2;
 			double npv = inValues
