@@ -228,13 +228,13 @@ internal sealed class GetValuationsEndpoint : Endpoint<GetValuationsRequest, IRe
 		return new XirrInput
 		{
 			YearDiff = (valuationDate.DayNumber - transaction.Date.DayNumber) / 365.25,
-			TransactionAmount = await this.CalculateXIRRTransactionAmountAsync(
+			TransactionAmount = (double)await this.CalculateXIRRTransactionAmountAsync(
 				userId,
 				transaction,
 				valuationDate,
 				currency,
 				ct),
-			BalanceAmount = await this.CalculateXIRRBalanceAmountAsync(
+			BalanceAmount = (double)await this.CalculateXIRRBalanceAmountAsync(
 				userId,
 				transaction,
 				valuationDate,
@@ -420,7 +420,7 @@ internal sealed class GetValuationsEndpoint : Endpoint<GetValuationsRequest, IRe
 			ct);
 	}
 
-	private decimal CalculateXirr(
+	private double CalculateXirr(
 		IReadOnlyCollection<XirrInput> xirrInputs)
 	{
 		if (xirrInputs.Count == 0)
@@ -438,7 +438,7 @@ internal sealed class GetValuationsEndpoint : Endpoint<GetValuationsRequest, IRe
 			})
 			.ToImmutableArray();
 
-		decimal balanceAmount = xirrInputs.Sum(i => i.BalanceAmount);
+		double balanceAmount = xirrInputs.Sum(i => i.BalanceAmount);
 
 		var allLessThanYear = xirrInputs.All(i => i.YearDiff < 1);
 
@@ -451,14 +451,14 @@ internal sealed class GetValuationsEndpoint : Endpoint<GetValuationsRequest, IRe
 			})
 			.ToImmutableArray();
 
-		decimal xirrLowerBound = -1;
-		decimal xirrUpperBound = 1;
+		double xirrLowerBound = -1;
+		double xirrUpperBound = 1;
 
-		while (xirrUpperBound - xirrLowerBound > 0.0001m)
+		while (xirrUpperBound - xirrLowerBound > 0.0001)
 		{
-			decimal xirr = (xirrLowerBound + xirrUpperBound) / 2;
-			decimal npv = inValues
-				.Sum(i => i.Value * (decimal)Math.Pow((double)(1 + xirr), (double)i.YearDiff));
+			double xirr = (xirrLowerBound + xirrUpperBound) / 2;
+			double npv = inValues
+				.Sum(i => i.Value * Math.Pow(1 + xirr, i.YearDiff));
 
 			if (npv > balanceAmount)
 			{
@@ -498,8 +498,8 @@ internal sealed class GetValuationsEndpoint : Endpoint<GetValuationsRequest, IRe
 	{
 		public required double YearDiff { get; init; }
 
-		public required decimal TransactionAmount { get; init; }
+		public required double TransactionAmount { get; init; }
 
-		public required decimal BalanceAmount { get; init; }
+		public required double BalanceAmount { get; init; }
 	}
 }
