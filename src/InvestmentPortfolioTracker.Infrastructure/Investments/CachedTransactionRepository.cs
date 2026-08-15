@@ -89,11 +89,13 @@ internal sealed class CachedTransactionRepository : ITransactionRepository
 
 	public async Task UpdateAsync(
 		UserId userId,
+		AssetItemId assetItemId,
 		Transaction transaction,
 		CancellationToken cancellationToken)
 	{
 		await this.transactionRepository.UpdateAsync(
 			userId,
+			assetItemId,
 			transaction,
 			cancellationToken);
 

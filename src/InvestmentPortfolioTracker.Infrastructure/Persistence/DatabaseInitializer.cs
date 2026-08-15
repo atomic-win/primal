@@ -41,6 +41,8 @@ internal static class DatabaseInitializer
 				PRIMARY KEY (Id, IdentityProvider),
 				FOREIGN KEY (UserId) REFERENCES users(Id) ON DELETE CASCADE
 			);
+
+			CREATE INDEX IF NOT EXISTS IX_user_ids_UserId ON user_ids (UserId);
 			""");
 	}
 
@@ -72,6 +74,10 @@ internal static class DatabaseInitializer
 			);
 
 			CREATE INDEX IF NOT EXISTS IX_asset_items_UserId ON asset_items (UserId);
+
+			CREATE INDEX IF NOT EXISTS IX_asset_items_AssetId ON asset_items (AssetId);
+
+			CREATE UNIQUE INDEX IF NOT EXISTS IX_asset_items_Name_UserId_AssetId ON asset_items (Name, UserId, AssetId);
 			""");
 	}
 
@@ -95,6 +101,9 @@ internal static class DatabaseInitializer
 			);
 
 			CREATE INDEX IF NOT EXISTS IX_transactions_UserId_AssetItemId ON transactions (UserId, AssetItemId);
+
+			CREATE UNIQUE INDEX IF NOT EXISTS IX_transactions_Date_Name_Type_AssetItemId_UserId_Units_Price_Amount
+				ON transactions (Date, Name, TransactionType, AssetItemId, UserId, Units, Price, Amount);
 			""");
 	}
 

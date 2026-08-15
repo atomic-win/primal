@@ -29,6 +29,7 @@ public interface ITransactionRepository
 
 	Task UpdateAsync(
 		UserId userId,
+		AssetItemId assetItemId,
 		Transaction transaction,
 		CancellationToken cancellationToken);
 

@@ -108,6 +108,7 @@ internal sealed class TransactionRepository : ITransactionRepository
 
 	public async Task UpdateAsync(
 		UserId userId,
+		AssetItemId assetItemId,
 		Transaction transaction,
 		CancellationToken cancellationToken)
 	{
@@ -120,12 +121,13 @@ internal sealed class TransactionRepository : ITransactionRepository
 			UPDATE transactions
 			SET Date = @Date, Name = @Name, TransactionType = @TransactionType,
 				Units = @Units, Price = @Price, Amount = @Amount, UpdatedAt = @UpdatedAt
-			WHERE UserId = @UserId AND Id = @Id
+			WHERE UserId = @UserId AND AssetItemId = @AssetItemId AND Id = @Id
 			""",
 			new
 			{
 				Id = transaction.Id.Value.ToString("D", CultureInfo.InvariantCulture).ToUpperInvariant(),
 				UserId = userId.Value.ToString("D", CultureInfo.InvariantCulture).ToUpperInvariant(),
+				AssetItemId = assetItemId.Value.ToString("D", CultureInfo.InvariantCulture).ToUpperInvariant(),
 				Date = transaction.Date.ToString("O"),
 				Name = transaction.Name,
 				TransactionType = transaction.TransactionType.ToString(),

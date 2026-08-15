@@ -46,6 +46,7 @@ internal sealed class EditTransactionEndpoint : Endpoint<EditTransactionRequest>
 
 		await this.transactionRepository.UpdateAsync(
 			userId,
+			assetItemId,
 			new Transaction(
 				id: transactionId,
 				normalized.Date,
