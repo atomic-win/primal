@@ -60,7 +60,7 @@ public sealed class TransactionRepositoryTests
 		var transaction = await repository.AddAsync(userId, assetItemId, new DateOnly(2026, 1, 15), "Buy Units", TransactionType.Buy, 10, 100, 0, CancellationToken.None);
 
 		var updated = new Transaction(transaction.Id, new DateOnly(2026, 1, 15), "Updated Name", TransactionType.Buy, assetItemId, 20, 200, 0);
-		await repository.UpdateAsync(userId, updated, CancellationToken.None);
+		await repository.UpdateAsync(userId, assetItemId, updated, CancellationToken.None);
 
 		var result = await repository.GetByIdAsync(userId, assetItemId, transaction.Id, CancellationToken.None);
 

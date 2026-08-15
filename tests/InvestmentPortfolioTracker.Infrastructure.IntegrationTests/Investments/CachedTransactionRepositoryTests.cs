@@ -49,7 +49,7 @@ public sealed class CachedTransactionRepositoryTests
 
 		// Update
 		var updated = new Transaction(txn.Id, txn.Date, "Updated", txn.TransactionType, assetItemId, 20, 200, 0);
-		await cached.UpdateAsync(userId, updated, CancellationToken.None);
+		await cached.UpdateAsync(userId, assetItemId, updated, CancellationToken.None);
 
 		var result = await cached.GetByIdAsync(userId, assetItemId, txn.Id, CancellationToken.None);
 
